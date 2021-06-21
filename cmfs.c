@@ -3,6 +3,7 @@
 
 #include <fuse.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -12,25 +13,24 @@
 #include <dirent.h>
 #include <sys/time.h>
 #include <libgen.h>
+#include <stddef.h>
 
+#include "cmfs.h"
 
-#define BLOCKSIZE 4096
+static struct cmfs_options g_opts;
 
-#define O_WRITE(flags) ((flags) & (O_RDWR | O_WRONLY))
-#define O_READ(flags)  (((flags) & (O_RDWR | O_RDONLY)) | !O_WRITE(flags))
-
-#define U_ATIME (1 << 0)
-#define U_CTIME (1 << 1)
-#define U_MTIME (1 << 2)
-
-#define MAX_KEY_LEN 256
-
-typedef struct key_info{
-	unsigned char crypt_key[MAX_KEY_LEN/8];
-	unsigned char iv[MAX_KEY_LEN/8];
-}KEY_INFO;
-
-
+#define CMFS_OPT(t, p, v) { t, offsetof(struct cmfs_options, p), v }
+/*
+#define OPTION(t, p)                           \
+    { t, offsetof(struct cmfs_options, p), 1 }
+static const struct fuse_opt option_spec[] = {
+	OPTION("--name=%s", filename),
+	OPTION("--contents=%s", contents),
+	OPTION("-h", show_help),
+	OPTION("--help", show_help),
+	FUSE_OPT_END
+};
+*/
 //
 // Utility functions
 //
@@ -631,7 +631,7 @@ static int cmfs_getattr(const char *path, struct stat *stbuf) {
 }
 
 static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
-  DIR* dir=opendir("/root");
+  DIR* dir=opendir(g_opts.src_dir);
   struct dirent * drt;
   printf("readdir path: %s",path);
   if(!dir){
@@ -675,9 +675,25 @@ void cmfs_init(struct fuse_args* args)
 //
 
 int main(int argc, char *argv[]) {
-//	parse_options
-	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-  	cmfs_init(&args);
-  	return fuse_main(argc, argv, &cmfs_oper, NULL);
+//	parse_option//	
+/*	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+	if(g_opts.mnt_point==NULL || g_opts.src_dir==NULL){
+		printf("Too few arguments.\n");
+		return -1;
+	}
+	fuse_opt_insert_arg(&args, 1,"srcdir");
+*/
+	if( argc<3){
+		printf("Usage: cmfs <srcdir> <mntpoint> [options]\n");
+		return -1;
+	}
+	g_opts.src_dir=(char*)malloc(PATH_MAX+1);
+	strcpy(g_opts.src_dir,argv[1]);
+	g_opts.mnt_point=(char*)malloc(PATH_MAX+1);
+	strcpy(g_opts.mnt_point,argv[2]);
+	argv[1]=argv[0];
+	
+  //	cmfs_init(&args);
+  	return fuse_main(argc-1, argv+1, &cmfs_oper, NULL);
 }
 
