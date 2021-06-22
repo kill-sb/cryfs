@@ -50,6 +50,22 @@ char * safe_basename(const char *msg) {
   free(buf);
   return res;
 }
+
+static int get_realname(char *buf, const char* path)
+{
+	int len;
+	int ret=0;
+	sprintf(buf,"%s%s",g_opts.src_dir,path);
+	len=strlen(buf);
+	if(len>4 && strcmp(buf+len-4,".cmc")==0)
+	{
+		buf[len-4]='\0';
+		ret=1;
+	}
+	return ret;
+}
+
+
 /*
 int getnodebypath(const char *path, struct filesystem *fs, struct node **node) {
   return getnoderelativeto(path, fs->root, node);
@@ -488,63 +504,6 @@ static int memfs_truncate(const char *path, off_t size) {
   return 0;
 }
 
-static int memfs_open(const char *path, struct fuse_file_info *fi) {
-  struct node *node;
-  if(!getnodebypath(path, &the_fs, &node)) {
-    return -errno;
-  }
-
-  if(!S_ISREG(node->vstat.st_mode)) {
-    if(S_ISDIR(node->vstat.st_mode)) {
-      return -EISDIR;
-    }
-  }
-
-  // Update file timestamps
-  update_times(node, U_ATIME);
-
-  // The "file handle" is a pointer to a struct we use to keep track of the inode and the
-  // flags passed to open().
-  struct filehandle *fh = malloc(sizeof(struct filehandle));
-  fh->node    = node;
-  fh->o_flags = fi->flags;
-
-  fi->fh = (uint64_t) fh;
-
-  node->fd_count++;
-
-  return 0;
-}
-
-static int memfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
-  struct filehandle *fh = (struct filehandle *) fi->fh;
-
-  // Check whether the file was opened for reading
-  if(!O_READ(fh->o_flags)) {
-    return -EACCES;
-  }
-
-  struct node *node = fh->node;
-
-  off_t filesize = node->vstat.st_size;
-
-  // Check whether offset is at or beyond the end of file
-  if(offset >= filesize) {
-    return 0;
-  }
-
-  // Calculate number of bytes to copy
-  size_t avail = filesize - offset;
-  size_t n = (size < avail) ? size : avail;
-
-  // Copy file contents
-  memcpy(buf, node->data + offset, n);
-
-  update_times(node, U_ATIME);
-
-  return n;
-}
-
 static int memfs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
   struct filehandle *fh = (struct filehandle *) fi->fh;
 
@@ -617,13 +576,9 @@ static void update_attr(const char* path, struct stat *stbuf){
 static int cmfs_getattr(const char *path, struct stat *stbuf) {
   	int ret;
 	char dst[PATH_MAX];
-	int len;
-	sprintf(dst,"%s%s",g_opts.src_dir,path);
-	len=strlen(dst);
-	if(len>4 && strcmp(dst+len-4,".cmc")==0)
-		dst[len-4]='\0';
+	get_realname(dst,path);
   	if((ret=lstat(dst,stbuf))){
-	  	return ret;
+	  	return -errno;
   	}
 	update_attr(dst,stbuf);
   	return 0;
@@ -649,11 +604,103 @@ static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
   closedir(dir);
   return 0;
 }
+static int cmfs_readlink(const char *path, char *buf, size_t size) {
+  	int ret;
+	char dst[PATH_MAX],link[PATH_MAX];
+	
+	get_realname(dst,path);
+	ret=readlink(dst,link,size);
+	if (ret<=0){
+		return ret;
+	}
+	if(ret>size)
+		memcpy(buf,link,ret);
+	else
+		strcpy(buf,link);
+
+  	return 0;
+}
+
+static int cmfs_open(const char *path, struct fuse_file_info *fi) {
+	char dst[PATH_MAX];
+	struct stat st;
+	int fd;
+	int ret;
+	get_realname(dst,path);
+	ret=stat(dst,&st);
+	if(ret){
+		return -errno;
+	}
+	if(S_ISDIR(st.st_mode)) {
+
+		return -EISDIR;
+	}
+
+	fd=open(dst,fi->flags);
+	fi->fh = fd;
+	return 0;
+}
+
+static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+	int ret,i;
+	// Check whether the file was opened for reading
+	if(!O_READ(fi->flags)) {
+		return -EACCES;
+	}
+
+	ret=pread(fi->fh,buf,size,offset);
+	for(i=0;i<ret;i++){
+		if(buf[i]>='a' && buf[i]<='z')
+			buf[i]-='a'-'A';
+	}
+	return ret;
+}
+
+static int cmfs_write(const char *path, const char *buf, size_t size, off_t offset,struct fuse_file_info *fi)
+{
+	char *tmp;
+	int ret,i;
+	if(!O_WRITE(fi->flags)) {
+		return -EACCES;
+	}
+	tmp=(char*)malloc(size);
+	for(i=0;i<size;i++)
+	{
+		if(buf[i]>='A' && buf[i]<='Z')
+			tmp[i]=buf[i]+'a'-'A';
+		else
+			tmp[i]=buf[i];
+	}
+	ret=pwrite(fi->fh,tmp,size,offset);
+	free(tmp);
+	return ret;
+}
+
+static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+    int retstat = 0;
+    char fpath[PATH_MAX];
+    int fd;
+
+	sprintf(fpath,"%s%s",g_opts.src_dir,path);
+	
+    fd = creat(fpath, mode);
+    if (fd < 0)
+        retstat = -errno;
+
+    fi->fh = fd;
+
+    return retstat;
+}
 
 static struct fuse_operations cmfs_oper = {
   .getattr      = cmfs_getattr,
- // .readlink     = cmfs_readlink,
+  .readlink     = cmfs_readlink,
   .readdir      = cmfs_readdir,
+  .open         = cmfs_open,
+  .read         = cmfs_read,
+  .write		= cmfs_write,
+  .create		= cmfs_create,
 //  .mknod        = cmfs_mknod,
 //  .mkdir        = cmfs_mkdir,
  /*
@@ -666,8 +713,6 @@ static struct fuse_operations cmfs_oper = {
   .chown        = cmfs_chown,
   .truncate     = cmfs_truncate,
   .utimens      = cmfs_utimens,
-  .open         = cmfs_open,
-  .read         = cmfs_read,
   .write        = cmfs_write,
   .release      = cmfs_release*/
 };
