@@ -609,37 +609,43 @@ static int memfs_release(const char *path, struct fuse_file_info *fi) {
 }
 */
 
+
+static void update_attr(const char* path, struct stat *stbuf){
+}
+
+
 static int cmfs_getattr(const char *path, struct stat *stbuf) {
-
-  time_t tm=time(NULL);
-  if (strcmp(path,"/")==0){
-	stbuf->st_mode = S_IFDIR | 0755;
-  }else{
-	stbuf->st_mode = S_IFREG | 0444;
-	stbuf->st_size = 1;
-  }
-  stbuf->st_nlink = 1;
-  stbuf->st_mtime  = tm;
-  stbuf->st_atime  = tm;
-  stbuf->st_ctime  = tm;
-
-  // Directories contain the implicit hardlink '.'
-  if(S_ISDIR(stbuf->st_mode)) {
-    stbuf->st_nlink++;
-  }
-  return 0;
+  	int ret;
+	char dst[PATH_MAX];
+	int len;
+	sprintf(dst,"%s%s",g_opts.src_dir,path);
+	len=strlen(dst);
+	if(len>4 && strcmp(dst+len-4,".cmc")==0)
+		dst[len-4]='\0';
+  	if((ret=lstat(dst,stbuf))){
+	  	return ret;
+  	}
+	update_attr(dst,stbuf);
+  	return 0;
 }
 
 static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
-  DIR* dir=opendir(g_opts.src_dir);
+  char dstname[PATH_MAX];
+  DIR* dir;
   struct dirent * drt;
-  printf("readdir path: %s",path);
+  sprintf(dstname,"%s%s",g_opts.src_dir,path);
+  dir=opendir(dstname);
   if(!dir){
 	  return ENOTDIR;
   }
-  for(drt=readdir(dir);drt!=NULL;drt=readdir(dir))
-	filler(buf,drt->d_name,NULL,0);
-
+  	for(drt=readdir(dir);drt!=NULL;drt=readdir(dir))
+  	{
+		if((drt->d_type & DT_DIR) ==0)// nondir
+			sprintf(dstname,"%s.cmc",drt->d_name);
+		else 
+			strcpy(dstname,drt->d_name);
+		filler(buf,dstname,NULL,0);
+	}
   closedir(dir);
   return 0;
 }
