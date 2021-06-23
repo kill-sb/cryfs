@@ -10,9 +10,14 @@
 #define U_CTIME (1 << 1)
 #define U_MTIME (1 << 2)
 
-#define MAX_KEY_LEN 128 
-#define AESBLOCK (MAX_KEY_LEN/8)
+#define AES_KEYLEN 128 
+#define AESBLOCK (AES_KEYLEN/8)
 #define FILEBLOCK 1024
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 
 typedef struct key_info{
     unsigned char crypt_key[AESBLOCK];
@@ -27,4 +32,7 @@ struct cmfs_options{
 	KEY_INFO keyinfo;
 };
 
+int decodeblk(const char* cibuf, const char* passwd,char* plbuf, int len,int last);
+//int encode(const char* src, const char* passwd, char *dst,int len);
+//int decode(const char* src, const char* passwd, char* dst,int len);
 #endif

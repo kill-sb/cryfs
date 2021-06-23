@@ -1,9 +1,9 @@
 
 CC=gcc
-CFLAGS=-g -Wall -D_FILE_OFFSET_BITS=64
-LDFLAGS=-lfuse
+CFLAGS=-g -D_FILE_OFFSET_BITS=64 -O0
+LDFLAGS=-lfuse -lssl -lcrypto 
 
-OBJ=cmfs.o 
+OBJ=cmfs.o crypt.o
 #OBJ=cmfs.o node.o dir.o
 
 %.o: %.c
@@ -11,6 +11,9 @@ OBJ=cmfs.o
 
 cmfs: $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) -o cmfs
+
+test:cmfs
+#	cmfs xxx -o kernel_cache -o auto_cache
 
 .PHONY: clean
 clean:

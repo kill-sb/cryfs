@@ -1,6 +1,6 @@
 
 #define FUSE_USE_VERSION 26
-
+#include <assert.h>
 #include <fuse.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -643,17 +643,56 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 
 static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	int ret,i;
+	off_t iblk,totalrd=0;
+	off_t startblk,endblk;// skip blocks
+	char cibuf[FILEBLOCK],plbuf[FILEBLOCK];
+	struct stat st; 
+	off_t end;// end of file
+	int rd,de;// real read bytes and decrypted plaintext length in each block 
+
 	// Check whether the file was opened for reading
 	if(!O_READ(fi->flags)) {
 		return -EACCES;
 	}
 
-	ret=pread(fi->fh,buf,size,offset);
+/*	ret=pread(fi->fh,buf,size,offset);
 	for(i=0;i<ret;i++){
 		if(buf[i]>='a' && buf[i]<='z')
 			buf[i]-='a'-'A';
+	}*/
+	if(fstat(fi->fh,&st)<0)
+		return -EACCES;
+	if(size==0 || offset>st.st_size)
+		return 0;
+
+	end=offset+size>st.st_size?st.st_size:offset+size;
+	startblk=offset/FILEBLOCK;
+	endblk=end/FILEBLOCK;
+	for(iblk=startblk;iblk<endblk;iblk++){
+		rd=pread(fi->fh,cibuf,FILEBLOCK,i*FILEBLOCK);
+		assert(rd==FILEBLOCK);// we are here means it must not be endblk
+		de=decodeblk(cibuf,g_opts.keyinfo.crypt_key,plbuf,rd,0);
+		assert(de==FILEBLOCK);
+		if(iblk==startblk){
+			int startbyte=offset%FILEBLOCK;
+			memcpy(buf,plbuf+startbyte,FILEBLOCK-startbyte);
+			totalrd+=(FILEBLOCK-startbyte);
+		}else{
+			memcpy(buf+totalrd,plbuf,FILEBLOCK);
+			totalrd+=FILEBLOCK;
+		}
 	}
-	return ret;
+	// last block,but also may be first block
+	rd=pread(fi->fh,cibuf,FILEBLOCK,endblk*FILEBLOCK);
+	assert(rd==end%FILEBLOCK);
+	de=decodeblk(cibuf,g_opts.keyinfo.crypt_key,plbuf,rd,1);
+	if(de<=0) return 0;
+	if(startblk==endblk){
+		int startbyte=offset%FILEBLOCK;
+		memcpy(buf,plbuf+startbyte,de-startbyte);
+		totalrd+=de-startbyte;
+	}
+	return totalrd;
 }
 
 static int cmfs_write(const char *path, const char *buf, size_t size, off_t offset,struct fuse_file_info *fi)
@@ -744,7 +783,7 @@ int main(int argc, char *argv[]) {
 
 	if( argc<3){
 		printf("Usage: cmfs <srcdir> <mntpoint> [options]\n");
-		return -1;
+  		return fuse_main(argc, argv, &cmfs_oper, NULL);
 	}
 	g_opts.src_dir=(char*)malloc(PATH_MAX+1);
 	strcpy(g_opts.src_dir,argv[1]);
