@@ -8,8 +8,9 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#define AES_KEYLEN 128
 #define FILEBLOCK 1024
-#define AESBLOCK 16
+#define AESBLOCK (AES_KEYLEN/8)
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -54,7 +55,7 @@ int encode(const char* src, const char* passwd, char *dst,int len) // cbc only
 {
   	AES_KEY aes;
 	static unsigned char iv[AESBLOCK] = {0};
-	AES_set_encrypt_key(passwd,AESBLOCK*8,&aes);
+	AES_set_encrypt_key(passwd,AES_KEYLEN,&aes);
 	AES_cbc_encrypt(src,dst,len,&aes,iv,AES_ENCRYPT);
 }
 
@@ -62,7 +63,7 @@ int decode(const char* src, const char* passwd, char* dst,int len)
 {
 	AES_KEY aes;
 	static unsigned char iv[AESBLOCK] = {0};
-	AES_set_decrypt_key(passwd,AESBLOCK*8,&aes);
+	AES_set_decrypt_key(passwd,AES_KEYLEN,&aes);
 	AES_cbc_encrypt(src,dst,len,&aes,iv,AES_DECRYPT);
 }
 

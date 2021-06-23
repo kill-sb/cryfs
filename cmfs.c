@@ -719,6 +719,15 @@ static struct fuse_operations cmfs_oper = {
 
 void cmfs_init(struct fuse_args* args)
 {
+    char *pass;
+    int i;
+    memset(g_opts.keyinfo.crypt_key,0,AESBLOCK);
+    pass=getpass("Input passwd:");
+    for (i=0;i<AESBLOCK-1 && pass[i]!='\0';i++)
+	{ 	
+		g_opts.keyinfo.crypt_key[i]=pass[i];
+	}
+	memcpy(g_opts.keyinfo.iv,g_opts.keyinfo.crypt_key,AESBLOCK);
 }
 
 //
@@ -727,13 +736,12 @@ void cmfs_init(struct fuse_args* args)
 
 int main(int argc, char *argv[]) {
 //	parse_option//	
-/*	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-	if(g_opts.mnt_point==NULL || g_opts.src_dir==NULL){
+	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+/*	if(g_opts.mnt_point==NULL || g_opts.src_dir==NULL){
 		printf("Too few arguments.\n");
 		return -1;
-	}
-	fuse_opt_insert_arg(&args, 1,"srcdir");
-*/
+	}*/
+
 	if( argc<3){
 		printf("Usage: cmfs <srcdir> <mntpoint> [options]\n");
 		return -1;
@@ -744,7 +752,8 @@ int main(int argc, char *argv[]) {
 	strcpy(g_opts.mnt_point,argv[2]);
 	argv[1]=argv[0];
 	
-  //	cmfs_init(&args);
+
+  	cmfs_init(&args);
   	return fuse_main(argc-1, argv+1, &cmfs_oper, NULL);
 }
 

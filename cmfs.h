@@ -10,11 +10,13 @@
 #define U_CTIME (1 << 1)
 #define U_MTIME (1 << 2)
 
-#define MAX_KEY_LEN 256
+#define MAX_KEY_LEN 128 
+#define AESBLOCK (MAX_KEY_LEN/8)
+#define FILEBLOCK 1024
 
 typedef struct key_info{
-    unsigned char crypt_key[MAX_KEY_LEN/8];
-    unsigned char iv[MAX_KEY_LEN/8];
+    unsigned char crypt_key[AESBLOCK];
+    unsigned char iv[AESBLOCK];
 }KEY_INFO;
 
 
@@ -22,6 +24,7 @@ struct cmfs_options{
 	char *mnt_point;
 	char *src_dir;
 	char *options;
+	KEY_INFO keyinfo;
 };
 
 #endif
