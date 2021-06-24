@@ -478,6 +478,7 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	int ret,i;
 	off_t iblk,totalrd=0,end;
+	off_t lastfileblk;
 	off_t startblk,endblk;// start from 0(consider as skip blocks)
 	char cibuf[FILEBLOCK],plbuf[FILEBLOCK];
 	struct stat st; 
@@ -498,7 +499,9 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 		return -EACCES;
 	if(size<=0 || offset>=st.st_size)
 		return 0;
-	
+	lastfileblk=st.st_size/FILEBLOCK;	
+	if(lastfileblk%FILEBLOCK==0)
+		lastfileblk--;
 	startblk=offset/FILEBLOCK;
 	end=offset+size;
 	if(end>st.st_size)
@@ -542,7 +545,11 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	}
 
 	// process last block
-	if ((rd=readblk(fi->fh,endblk,plbuf,1))<0)	
+	if (endblk==lastfileblk)
+		rd=readblk(fi->fh,endblk,plbuf,1);	
+	else
+		rd=readblk(fi->fh,endblk,plbuf,0);
+	if (rd<0)	
 	{
 		return -1;
 	}

@@ -22,7 +22,7 @@ const char *get_passwd(char *buf /*16bytes*/)
         return buf;
 }
 
-int pad_buf(const char* src, char* dst,int orgbytes) // return length  after pad
+int pad_buf(const char* src, unsigned char* dst,int orgbytes) // return length  after pad
 {
         int i;
         int padbytes=AESBLOCK-orgbytes%AESBLOCK;
@@ -34,9 +34,9 @@ int pad_buf(const char* src, char* dst,int orgbytes) // return length  after pad
         return padbytes+orgbytes;
 }
 
-int unpad_buf(const char *src, char* dst,int slen) // return original length,-1 on error
+int unpad_buf(const unsigned char *src, char* dst,int slen) // return original length,-1 on error
 {
-        unsigned int padsize=(unsigned int) src[slen-1];
+        unsigned int padsize=src[slen-1];
         if((slen-=padsize)<0)
         {
                 printf("Error padd\n");

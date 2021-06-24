@@ -39,7 +39,7 @@ int pad_buf(const char* src, char* dst,int orgbytes) // return length  after pad
 	return padbytes+orgbytes;
 }
 
-int unpad_buf(const char *src, char* dst,int slen) // return original length,-1 on error
+int unpad_buf(const unsigned char *src, char* dst,int slen) // return original length,-1 on error
 {
 	unsigned int padsize=(unsigned int) src[slen-1];
 	if((slen-=padsize)<0)
