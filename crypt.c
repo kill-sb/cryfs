@@ -49,7 +49,7 @@ int unpad_buf(const char *src, char* dst,int slen) // return original length,-1 
 void encode(const char* src, const char* passwd, char *dst,int len) // cbc only
 {
         AES_KEY aes;
-        static unsigned char iv[AESBLOCK] = {0};
+        unsigned char iv[AESBLOCK] = {0};
         AES_set_encrypt_key(passwd,AES_KEYLEN,&aes);
         AES_cbc_encrypt(src,dst,len,&aes,iv,AES_ENCRYPT);
 }
@@ -57,7 +57,7 @@ void encode(const char* src, const char* passwd, char *dst,int len) // cbc only
 void decode(const char* src, const char* passwd, char* dst,int len)
 {
         AES_KEY aes;
-        static unsigned char iv[AESBLOCK] = {0};
+        unsigned char iv[AESBLOCK] = {0};
         AES_set_decrypt_key(passwd,AES_KEYLEN,&aes);
         AES_cbc_encrypt(src,dst,len,&aes,iv,AES_DECRYPT);
 }
@@ -72,3 +72,5 @@ int decodeblk(const char* cibuf, const char* passwd,char* plbuf, int len,int las
 		assert(len==FILEBLOCK);
 	return orglen;
 }
+
+

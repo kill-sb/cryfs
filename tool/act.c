@@ -47,14 +47,15 @@ int unpad_buf(const char *src, char* dst,int slen) // return original length,-1 
 		printf("Error padd\n");
 		return -1;
 	}
-	memcpy(dst,src,slen);
+	if(slen)
+		memcpy(dst,src,slen);
 	return slen;
 }
 
 void encode(const char* src, const char* passwd, char *dst,int len) // cbc only
 {
   	AES_KEY aes;
-	static unsigned char iv[AESBLOCK] = {0};
+	unsigned char iv[AESBLOCK] = {0};
 	AES_set_encrypt_key(passwd,AES_KEYLEN,&aes);
 	AES_cbc_encrypt(src,dst,len,&aes,iv,AES_ENCRYPT);
 }
@@ -62,7 +63,7 @@ void encode(const char* src, const char* passwd, char *dst,int len) // cbc only
 void decode(const char* src, const char* passwd, char* dst,int len)
 {
 	AES_KEY aes;
-	static unsigned char iv[AESBLOCK] = {0};
+	unsigned char iv[AESBLOCK] = {0};
 	AES_set_decrypt_key(passwd,AES_KEYLEN,&aes);
 	AES_cbc_encrypt(src,dst,len,&aes,iv,AES_DECRYPT);
 }
@@ -120,7 +121,7 @@ long decodefile(int sfd,int dfd, const char* passwd){
 	orglen=unpad_buf(plain,unpad,padlen);
 	if(orglen>0){
 		total+=write(dfd,unpad,orglen);
-	}else{
+	}else if (orglen<0){
 		printf("Error occured on unpadding,check your data\n");
 		return -1;
 	}

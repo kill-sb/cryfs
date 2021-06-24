@@ -57,11 +57,11 @@ static int get_realname(char *buf, const char* path)
 	int ret=0;
 	sprintf(buf,"%s%s",g_opts.src_dir,path);
 	len=strlen(buf);
-	if(len>4 && strcmp(buf+len-4,".cmc")==0)
+/*	if(len>4 && strcmp(buf+len-4,".cmc")==0)
 	{
 		buf[len-4]='\0';
 		ret=1;
-	}
+	}*/
 	return ret;
 }
 
@@ -76,15 +76,6 @@ static void update_times(struct node *node, int which) {
   if(which & U_ATIME) node->vstat.st_atime = now;
   if(which & U_CTIME) node->vstat.st_ctime = now;
   if(which & U_MTIME) node->vstat.st_mtime = now;
-}
-
-static int initstat(struct node *node, mode_t mode) {
-  struct stat *stbuf = &node->vstat;
-  memset(stbuf, 0, sizeof(struct stat));
-  stbuf->st_mode  = mode;
-  stbuf->st_nlink = 0;
-  update_times(node, U_ATIME | U_MTIME | U_CTIME);
-  return 1;
 }
 
 static int createentry(const char *path, mode_t mode, struct node **node) {
@@ -126,90 +117,6 @@ static int createentry(const char *path, mode_t mode, struct node **node) {
   return 0;
 }
 
-
-//
-// Filesystem entry points
-//
-
-static int memfs_getattr(const char *path, struct stat *stbuf) {
-  struct node *node;
-  if(!getnodebypath(path, &the_fs, &node)) {
-    return -errno;
-  }
-
-  stbuf->st_mode   = node->vstat.st_mode;
-  stbuf->st_nlink  = node->vstat.st_nlink;
-  stbuf->st_size   = node->vstat.st_size;
-  stbuf->st_blocks = node->vstat.st_blocks;
-  stbuf->st_uid    = node->vstat.st_uid;
-  stbuf->st_gid    = node->vstat.st_gid;
-  stbuf->st_mtime  = node->vstat.st_mtime;
-  stbuf->st_atime  = node->vstat.st_atime;
-  stbuf->st_ctime  = node->vstat.st_ctime;
-
-  // Directories contain the implicit hardlink '.'
-  if(S_ISDIR(node->vstat.st_mode)) {
-    stbuf->st_nlink++;
-  }
-
-  return 0;
-}
-
-static int memfs_readlink(const char *path, char *buf, size_t size) {
-  struct node *node;
-  if(!getnodebypath(path, &the_fs, &node)) {
-    return -errno;
-  }
-
-  if(!S_ISLNK(node->vstat.st_mode)) {
-    return -ENOLINK;
-  }
-
-  // Fuse breaks compatibility with other readlink() implementations as we cannot use the return
-  // value to indicate how many bytes were written. Instead, we need to null-terminate the string,
-  // unless the buffer is not large enough to hold the path. In that case, fuse will null-terminate
-  // the string before passing it on.
-
-  if(node->vstat.st_size > size) {
-    memcpy(buf, node->data, size);
-  } else {
-    strcpy(buf, node->data);
-  }
-
-  return 0;
-}
-
-static int memfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
-  struct node *dir;
-  if(!getnodebypath(path, &the_fs, &dir)) {
-    return -errno;
-  }
-
-  if(!S_ISDIR(dir->vstat.st_mode)) {
-    return -ENOTDIR;
-  }
-
-  filler(buf, ".",  &dir->vstat, 0);
-  if(dir == the_fs.root) {
-    filler(buf, "..", NULL, 0);
-  } else {
-    char *parent_path = safe_dirname(path);
-    struct node *parent;
-    getnodebypath(parent_path, &the_fs, &parent);
-    free(parent_path);
-    filler(buf, "..", &parent->vstat, 0);
-  }
-
-  struct direntry *entry = dir->data;
-  while(entry != NULL) {
-    if(filler(buf, entry->name, &entry->node->vstat, 0))
-      break;
-    entry = entry->next;
-  }
-
-  return 0;
-}
-
 static int memfs_mknod(const char *path, mode_t mode, dev_t rdev) {
   struct node *node;
   int res = createentry(path, mode, &node);
@@ -232,54 +139,6 @@ static int memfs_mkdir(const char *path, mode_t mode) {
 
   // No entries
   node->data = NULL;
-
-  return 0;
-}
-
-static int memfs_unlink(const char *path) {
-  char *dirpath, *name;
-  struct node *dir, *node;
-
-  // Find inode
-  if(!getnodebypath(path, &the_fs, &node)) {
-    return -errno;
-  }
-
-  if(S_ISDIR(node->vstat.st_mode)) {
-    return -EISDIR;
-  }
-
-  dirpath = safe_dirname(path);
-
-  // Find parent inode
-  if(!getnodebypath(dirpath, &the_fs, &dir)) {
-    free(dirpath);
-    return -errno;
-  }
-
-  free(dirpath);
-
-  name = safe_basename(path);
-
-  // Find directory entry in parent
-  if(!dir_remove(dir, name)) {
-    free(name);
-    return -errno;
-  }
-
-  free(name);
-
-  // If the link count is zero, delete the associated data
-  if(node->vstat.st_nlink == 0) {
-    if(node->fd_count == 0) {
-      // No open file descriptors, we can safely delete the node
-      if(node->data) free(node->data);
-      free(node);
-    } else {
-      // There are open file descriptors, schedule deletion
-      node->delete_on_close = 1;
-    }
-  }
 
   return 0;
 }
@@ -416,24 +275,6 @@ static int memfs_link(const char *from, const char *to) {
   return 0;
 }
 
-static int memfs_chmod(const char *path, mode_t mode) {
-  struct node *node;
-  if(!getnodebypath(path, &the_fs, &node)) {
-    return -errno;
-  }
-
-  mode_t mask = S_ISUID | S_ISGID | S_ISVTX |
-                S_IRUSR | S_IWUSR | S_IXUSR |
-                S_IRGRP | S_IWGRP | S_IXGRP |
-                S_IROTH | S_IWOTH | S_IXOTH;
-
-  node->vstat.st_mode = (node->vstat.st_mode & ~mask) | (mode & mask);
-
-  update_times(node, U_CTIME);
-
-  return 0;
-}
-
 static int memfs_chown(const char *path, uid_t uid, gid_t gid) {
   struct node *node;
   if(!getnodebypath(path, &the_fs, &node)) {
@@ -504,50 +345,6 @@ static int memfs_truncate(const char *path, off_t size) {
   return 0;
 }
 
-static int memfs_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
-  struct filehandle *fh = (struct filehandle *) fi->fh;
-
-  // Check whether the file was opened for writing
-  if(!O_WRITE(fh->o_flags)) {
-    return -EACCES;
-  }
-
-  struct node *node = fh->node;
-
-  // Calculate number of required blocks
-  blkcnt_t req_blocks = (offset + size + BLOCKSIZE - 1) / BLOCKSIZE;
-
-  if(node->vstat.st_blocks < req_blocks) {
-    // Allocate more memory
-    void *newdata = malloc(req_blocks * BLOCKSIZE);
-    if(!newdata) {
-      return -ENOMEM;
-    }
-
-    // Copy old contents
-    if(node->data != NULL) {
-      memcpy(newdata, node->data, node->vstat.st_size);
-      free(node->data);
-    }
-
-    // Update allocation information
-    node->data = newdata;
-    node->vstat.st_blocks = req_blocks;
-  }
-
-  // Write to file buffer
-  memcpy(((char *) node->data) + offset, buf, size);
-
-  // Update file size if necessary
-  off_t minsize = offset + size;
-  if(minsize > node->vstat.st_size) {
-    node->vstat.st_size = minsize;
-  }
-
-  update_times(node, U_CTIME | U_MTIME);
-
-  return size;
-}
 
 static int memfs_release(const char *path, struct fuse_file_info *fi) {
   struct filehandle *fh = (struct filehandle *) fi->fh;
@@ -568,10 +365,49 @@ static int memfs_release(const char *path, struct fuse_file_info *fi) {
 }
 */
 
-
-static void update_attr(const char* path, struct stat *stbuf){
+static int readblk(int fd,off_t blk,char *buf, int needupad)
+{
+	int rd,decode;
+	char cibuf[FILEBLOCK];
+	rd=pread(fd,cibuf,FILEBLOCK,blk*FILEBLOCK);
+	if (rd<=0) return rd;
+	decode=decodeblk(cibuf,g_opts.keyinfo.crypt_key,buf,rd,needupad);
+	return decode;
 }
 
+static size_t get_realsize(const char* realpath, size_t srclen){
+	int endblk=srclen/FILEBLOCK;
+	char plain[FILEBLOCK];
+	int length;
+	int left=srclen%FILEBLOCK;
+	int fd;
+	if(srclen==0) return 0;
+	fd=open(realpath,O_RDONLY);
+	if(fd<0) return srclen;
+	if(left==0){
+		left=FILEBLOCK;
+	   	endblk--;
+	}
+	length=readblk(fd,endblk,plain,1);
+	close(fd);
+
+	if(length<left && left-length<=AESBLOCK)
+		srclen-=left-length;
+	return srclen;
+}
+
+static int cmfs_unlink(const char *path) {
+
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	return unlink(dst);
+}
+
+static int cmfs_chmod(const char *path, mode_t mode) {
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	return chmod(dst,mode);
+}
 
 static int cmfs_getattr(const char *path, struct stat *stbuf) {
   	int ret;
@@ -580,7 +416,8 @@ static int cmfs_getattr(const char *path, struct stat *stbuf) {
   	if((ret=lstat(dst,stbuf))){
 	  	return -errno;
   	}
-	update_attr(dst,stbuf);
+	if(S_ISREG(stbuf->st_mode))
+		stbuf->st_size=get_realsize(dst,stbuf->st_size);
   	return 0;
 }
 
@@ -595,10 +432,7 @@ static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
   }
   	for(drt=readdir(dir);drt!=NULL;drt=readdir(dir))
   	{
-		if((drt->d_type & DT_DIR) ==0)// nondir
-			sprintf(dstname,"%s.cmc",drt->d_name);
-		else 
-			strcpy(dstname,drt->d_name);
+		strcpy(dstname,drt->d_name);
 		filler(buf,dstname,NULL,0);
 	}
   closedir(dir);
@@ -643,75 +477,103 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 
 static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	int ret,i;
-	off_t iblk,totalrd=0;
-	off_t startblk,endblk;// skip blocks
+	off_t iblk,totalrd=0,end;
+	off_t startblk,endblk;// start from 0(consider as skip blocks)
 	char cibuf[FILEBLOCK],plbuf[FILEBLOCK];
 	struct stat st; 
-	off_t end;// end of file
-	int rd,de;// real read bytes and decrypted plaintext length in each block 
+	int startcpy,endcpy; // start and end byte in memcpy between return buf --"buf" and decrypted block --"plbuf"
+
+	int rd; // real read bytes 
+	int de; // decrypted plaintext length (in 1k block) 
+	
 
 	// Check whether the file was opened for reading
 	if(!O_READ(fi->flags)) {
 		return -EACCES;
 	}
 
-/*	ret=pread(fi->fh,buf,size,offset);
-	for(i=0;i<ret;i++){
-		if(buf[i]>='a' && buf[i]<='z')
-			buf[i]-='a'-'A';
-	}*/
+//	return pread(fi->fh,buf,size,offset);
+	
 	if(fstat(fi->fh,&st)<0)
 		return -EACCES;
-	if(size==0 || offset>st.st_size)
+	if(size<=0 || offset>=st.st_size)
 		return 0;
-
-	end=offset+size>st.st_size?st.st_size:offset+size;
+	
 	startblk=offset/FILEBLOCK;
+	end=offset+size;
+	if(end>st.st_size)
+		end=st.st_size;
 	endblk=end/FILEBLOCK;
-	for(iblk=startblk;iblk<endblk;iblk++){
-		rd=pread(fi->fh,cibuf,FILEBLOCK,i*FILEBLOCK);
-		assert(rd==FILEBLOCK);// we are here means it must not be endblk
-		de=decodeblk(cibuf,g_opts.keyinfo.crypt_key,plbuf,rd,0);
-		assert(de==FILEBLOCK);
-		if(iblk==startblk){
-			int startbyte=offset%FILEBLOCK;
-			memcpy(buf,plbuf+startbyte,FILEBLOCK-startbyte);
-			totalrd+=(FILEBLOCK-startbyte);
-		}else{
-			memcpy(buf+totalrd,plbuf,FILEBLOCK);
-			totalrd+=FILEBLOCK;
-		}
+	if(end%FILEBLOCK==0)
+		endblk--;
+
+	// 1. process first block(start with offset%FILEBLOCK) and check if is the last block.
+	// 2. process mid blocks which are all full blocks
+	// 3. process last block 
+
+	if(startblk==endblk)
+	{
+		if((rd=readblk(fi->fh,startblk,plbuf,1))<=0)
+			return rd;
+		if(end>rd)
+			end=rd;
+		totalrd=end-offset;
+		memcpy(buf+offset%FILEBLOCK,plbuf,totalrd);
+		return totalrd;
+		
 	}
-	// last block,but also may be first block
-	rd=pread(fi->fh,cibuf,FILEBLOCK,endblk*FILEBLOCK);
-	assert(rd==end%FILEBLOCK);
-	de=decodeblk(cibuf,g_opts.keyinfo.crypt_key,plbuf,rd,1);
-	if(de<=0) return 0;
-	if(startblk==endblk){
-		int startbyte=offset%FILEBLOCK;
-		memcpy(buf,plbuf+startbyte,de-startbyte);
-		totalrd+=de-startbyte;
+	if((rd=readblk(fi->fh,startblk,plbuf,0))<=0)
+	{
+		assert("readblk error");
+		return rd;
+	}
+
+	// read full block at first
+	totalrd+=(FILEBLOCK-offset%FILEBLOCK);
+	memcpy(buf+offset%FILEBLOCK,plbuf,totalrd);
+
+	// process mid blocks,simply fully  read/copy
+	for(iblk=startblk+1;iblk<endblk;iblk++)
+	{
+		if((rd=readblk(fi->fh,iblk,plbuf,0)<FILEBLOCK))
+			return -1; // error occured
+		memcpy(buf+totalrd,plbuf,FILEBLOCK);
+		totalrd+=FILEBLOCK;
+	}
+
+	// process last block
+	if ((rd=readblk(fi->fh,endblk,plbuf,1))<0)	
+	{
+		return -1;
+	}
+	if (rd) // the last block may has a AESBLOCK size and totally filled with padding data, so readblk will return 0
+	{
+		int lastbytes=end%FILEBLOCK;
+		if(lastbytes==0)
+			lastbytes=FILEBLOCK;
+		if(rd<lastbytes)	
+			lastbytes=rd;
+		memcpy(buf+totalrd,plbuf,lastbytes);
+		totalrd+=lastbytes;
 	}
 	return totalrd;
 }
 
 static int cmfs_write(const char *path, const char *buf, size_t size, off_t offset,struct fuse_file_info *fi)
 {
-	char *tmp;
 	int ret,i;
 	if(!O_WRITE(fi->flags)) {
 		return -EACCES;
 	}
-	tmp=(char*)malloc(size);
+/*	tmp=(char*)malloc(size);
 	for(i=0;i<size;i++)
 	{
 		if(buf[i]>='A' && buf[i]<='Z')
 			tmp[i]=buf[i]+'a'-'A';
 		else
 			tmp[i]=buf[i];
-	}
-	ret=pwrite(fi->fh,tmp,size,offset);
-	free(tmp);
+	}*/
+	ret=pwrite(fi->fh,buf,size,offset);
 	return ret;
 }
 
@@ -740,15 +602,15 @@ static struct fuse_operations cmfs_oper = {
   .read         = cmfs_read,
   .write		= cmfs_write,
   .create		= cmfs_create,
+  .unlink       = cmfs_unlink,
+  .chmod        = cmfs_chmod,
 //  .mknod        = cmfs_mknod,
 //  .mkdir        = cmfs_mkdir,
  /*
   .symlink      = cmfs_symlink,
-  .unlink       = cmfs_unlink,
   .rmdir        = cmfs_rmdir,
   .rename       = cmfs_rename,
   .link         = cmfs_link,
-  .chmod        = cmfs_chmod,
   .chown        = cmfs_chown,
   .truncate     = cmfs_truncate,
   .utimens      = cmfs_utimens,

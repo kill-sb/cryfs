@@ -13,7 +13,7 @@ cmfs: $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) -o cmfs
 
 test:cmfs
-#	cmfs xxx -o kernel_cache -o auto_cache
+	./cmfs  /tmp/aes /mnt -o kernel_cache -o auto_cache
 
 .PHONY: clean
 clean:
