@@ -131,7 +131,7 @@ static int memfs_rmdir(const char *path) {
   }
 
   // Check if directory is empty
-  if(node->data != NULL) {
+  f(node->data != NULL) {
     return -ENOTEMPTY;
   }
 
@@ -291,11 +291,11 @@ static int readblk(int fd,off_t blk,char *buf, int needupad)
 	return decode;
 }
 
-static int writeblk(int fd, off_t blk, const char *buf, int startbyte, int slen /* plaintext length*/,int needpad)
+static int writeblk(int fd, off_t blk, const char *buf, int slen /* plaintext length*/,int needpad)
 {
 	char cibuff[FILEBLOCK+AESBLOCK]; // may need another full AESBLOCK to pad
-	int elen=encodeblk(buf,g_opts.keyinfo.crypt_key,cibuff,slen+startbyte,needpad);
-	return pwrite(fd,cibuff+startbyte,elen-startbyte,blk*FILEBLOCK+startbyte);
+	int elen=encodeblk(buf,g_opts.keyinfo.crypt_key,cibuff,slen,needpad);
+	return pwrite(fd,cibuff,elen,blk*FILEBLOCK);
 }
 
 static size_t get_realsize(const char* realpath, size_t srclen){
@@ -432,6 +432,7 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	off_t startblk,endblk;// start from 0(consider as skip blocks)
 	char cibuf[FILEBLOCK],plbuf[FILEBLOCK];
 	struct stat st; 
+	int firstread;
 	int startcpy,endcpy; // start and end byte in memcpy between return buf --"buf" and decrypted block --"plbuf"
 
 	int rd; // real read bytes 
@@ -552,8 +553,11 @@ static int cmfs_write(const char *path, const char *buf, size_t size, off_t offs
 
 	firstbyte=offset%FILEBLOCK;
 	endbyte=end%FILEBLOCK;
-	if(endbyte==0)
+	if(end>0 && endbyte==0)
+	{
 		endblk--;
+		endbyte=FILEBLOCK;
+	}
 
 	/* brief write pseudo procedure:
 	 	process_first_blk:
@@ -597,29 +601,72 @@ static int cmfs_write(const char *path, const char *buf, size_t size, off_t offs
 
 	*/
 
-// static int writeblk(int fd, off_t blk, const char *buf, int startbyte, int slen /* plaintext length*/,int needpad); // buf should start from beginning of a block,but not byte start to be encrypted
+// static int writeblk(int fd, off_t blk, const char *buf, int startbyte, int slen ,int needpad); // buf should start from beginning of a block,but not byte start to be encrypted, slen is whole buf size(startbyte+size  or FILEBLOCK),because left bytes should be all reencrypted
+
+	// first step , process first block
 
 	if(startblk==endblk){ // only one block,use "size" in memcpy
 		if(startblk>lastfileblk) // need not readblk
 		{
 			// memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,size);
-			totalwr+=writeblk(fi->fh,startblk,plbuf,firstbyte,size,1);
+			writeblk(fi->fh,startblk,plbuf,endbyte,1);
 		}else if(startblk==lastfileblk){
 			if((rd=readblk(fi->fh,startblk,plbuf,1))<=0)
 				memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,size);
 			if(rd>=endbyte) // left bytes need to be reencrypted, but do not need repadding
-				totalwr+=writeblk(fi->fh,startblk,plbuf,firstbyte,rd-firstbyte,0);
+				writeblk(fi->fh,startblk,plbuf,rd,1);
 			else // overwrite the end , need repadding
-				totalwr+=writeblk(fi->fh,startblk,plbuf,firstbyte,endbyte-firstbyte,1);
+				writeblk(fi->fh,startblk,plbuf,endbyte,1);
 		}else{// not last fileblock
 			if((rd=readblk(fi->fh,startblk,plbuf,1))<=0) 
 				memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,size);
-			totalwr+=writeblk(fi->fh,startblk,plbuf,firstbyte,FILEBLOCK-firstbyte,0);
+			writeblk(fi->fh,startblk,plbuf,FILEBLOCK,0);
+		}
+		return size;
+	}else{ // need not pad, more blocks will follow
+		if(startblk>lastfileblk){
+			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
+			writeblk(fi->fh,startblk,plbuf,FILEBLOCK,0);
+		}else if(startblk==lastfileblk){
+			if((rd=readblk(fi->fh,startblk,plbuf,1))<=0)
+				memset(plbuf,0,FILEBLOCK);
+			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
+			writeblk(fi->fh,startblk,plbuf,FILEBLOCK,0);
+		}else{ // mid blocks of file
+			if((rd=readblk(fi->fh,startblk,plbuf,0))<=0)
+				memset(plbuf,0,FILEBLOCK);
+			writeblk(fi->fh,startblk,plbuf,FILEBLOCK,0);
 		}
 	}
+
+	// mid block, write whole block
+	for (iblk=startblk+1;iblk<endblk;iblk++){		
+		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(iblk-startblk-1)*FILEBLOCK,FILEBLOCK);
+		writeblk(fi->fh,iblk,plbuf,FILEBLOCK,0);
+	}
+
+	// last block -- endblk, and must not be firstblk
+	memset(plbuf,0,FILEBLOCK);
+	if(endblk>lastfileblk){// simply memcpy
+		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
+		writeblk(fi->fh,endblk,plbuf,endbyte,1);
+	}else if(endblk==lastfileblk){
+		rd=readblk(fi->fh,endblk,plbuf,1);
+		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
+		if(rd>endbyte)
+			writeblk(fi->fh,endblk,plbuf,rd,1);
+		else
+			writeblk(fi->fh,endblk,plbuf,endbyte,1);
+	}else{ // in mid-file blocks
+		rd=readblk(fi->fh,endblk,plbuf,0);
+		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
+		writeblk(fi->fh,endblk,plbuf,FILEBLOCK,0);
+	}
+
+
 	/*
 	else{ // not last block,memcpy from startbyte to BlockEnd
 		if(startblk>lastfileblk)
