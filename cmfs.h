@@ -33,6 +33,7 @@ struct cmfs_options{
 };
 
 int decodeblk(const char* cibuf, const char* passwd,char* plbuf, int len,int last);
+int encodeblk(const char* cibuf, const char* passwd,char* plbuf, int len,int last);
 //int encode(const char* src, const char* passwd, char *dst,int len);
 //int decode(const char* src, const char* passwd, char* dst,int len);
 #endif

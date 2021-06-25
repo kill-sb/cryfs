@@ -22,19 +22,17 @@ const char *get_passwd(char *buf /*16bytes*/)
         return buf;
 }
 
-int pad_buf(const char* src, unsigned char* dst,int orgbytes) // return length  after pad
+static int pad_buf(unsigned char* dst,int orgbytes/* offset in dst */) // return length  after pad
 {
         int i;
         int padbytes=AESBLOCK-orgbytes%AESBLOCK;
-        if(orgbytes)
-                memcpy(dst,src,orgbytes);
         for(i=0;i<padbytes;i++){
                 dst[orgbytes+i]=padbytes;
         }
         return padbytes+orgbytes;
 }
 
-int unpad_buf(const unsigned char *src, char* dst,int slen) // return original length,-1 on error
+static int unpad_buf(const unsigned char *src,int slen) // return original length,-1 on error
 {
         unsigned int padsize=src[slen-1];
         if((slen-=padsize)<0)
@@ -42,7 +40,7 @@ int unpad_buf(const unsigned char *src, char* dst,int slen) // return original l
                 printf("Error padd\n");
                 return -1;
         }
-        memcpy(dst,src,slen);
+    //    memcpy(dst,src,slen);
         return slen;
 }
 
@@ -64,13 +62,23 @@ void decode(const char* src, const char* passwd, char* dst,int len)
 
 int decodeblk(const char* cibuf, const char* passwd,char* plbuf, int len,int last){
 	int orglen=len;
-	char unpad[FILEBLOCK];
+//	char unpad[FILEBLOCK];
 	decode(cibuf,passwd,plbuf,len);
 	if(last)
-		orglen=unpad_buf(plbuf,unpad,len);
+		orglen=unpad_buf(plbuf,len);
 	else
 		assert(len==FILEBLOCK);
 	return orglen;
 }
 
-
+int encodeblk(const char* plbuf, const char* passwd, char* cibuf, int len, int last)
+{
+	unsigned char padbuf[FILEBLOCK+AESBLOCK];
+	if(last) {
+		memcpy(padbuf,plbuf,len);
+		len=pad_buf(padbuf,len);
+		encode(padbuf,passwd,cibuf,len);
+	}else
+		encode(plbuf,passwd,cibuf,len);
+	return len;
+}

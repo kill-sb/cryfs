@@ -117,32 +117,6 @@ static int createentry(const char *path, mode_t mode, struct node **node) {
   return 0;
 }
 
-static int memfs_mknod(const char *path, mode_t mode, dev_t rdev) {
-  struct node *node;
-  int res = createentry(path, mode, &node);
-  if(res) return res;
-
-  if(S_ISREG(mode)) {
-    node->data = NULL;
-    node->vstat.st_blocks = 0;
-  } else {
-    return -ENOSYS;
-  }
-
-  return 0;
-}
-
-static int memfs_mkdir(const char *path, mode_t mode) {
-  struct node *node;
-  int res = createentry(path, S_IFDIR | mode, &node);
-  if(res) return res;
-
-  // No entries
-  node->data = NULL;
-
-  return 0;
-}
-
 static int memfs_rmdir(const char *path) {
   char *dirpath, *name;
   struct node *dir, *node;
@@ -275,20 +249,6 @@ static int memfs_link(const char *from, const char *to) {
   return 0;
 }
 
-static int memfs_chown(const char *path, uid_t uid, gid_t gid) {
-  struct node *node;
-  if(!getnodebypath(path, &the_fs, &node)) {
-    return -errno;
-  }
-
-  node->vstat.st_uid = uid;
-  node->vstat.st_gid = gid;
-
-  update_times(node, U_CTIME);
-
-  return 0;
-}
-
 static int memfs_utimens(const char *path, const struct timespec ts[2]) {
   struct node *node;
   if(!getnodebypath(path, &the_fs, &node)) {
@@ -297,50 +257,6 @@ static int memfs_utimens(const char *path, const struct timespec ts[2]) {
 
   node->vstat.st_atime = ts[0].tv_sec;
   node->vstat.st_mtime = ts[1].tv_sec;
-
-  return 0;
-}
-
-static int memfs_truncate(const char *path, off_t size) {
-  struct node *node;
-  if(!getnodebypath(path, &the_fs, &node)) {
-    return -errno;
-  }
-
-  // Calculate new block count
-  blkcnt_t newblkcnt = (size + BLOCKSIZE - 1) / BLOCKSIZE;
-  blkcnt_t oldblkcnt = node->vstat.st_blocks;
-
-  if(oldblkcnt < newblkcnt) {
-    // Allocate additional memory
-    void *newdata = malloc(newblkcnt * BLOCKSIZE);
-    if(!newdata) {
-      return -ENOMEM;
-    }
-
-    memcpy(newdata, node->data, node->vstat.st_size);
-    free(node->data);
-    node->data = newdata;
-  } else if(oldblkcnt > newblkcnt) {
-    // Allocate new memory so we can free the unnecessarily large memory
-    void *newdata = malloc(newblkcnt * BLOCKSIZE);
-    if(!newdata) {
-      return -ENOMEM;
-    }
-
-    memcpy(newdata, node->data, size);
-    free(node->data);
-    node->data = newdata;
-  }
-
-  // Fill additional memory with zeroes
-  if(node->vstat.st_size < size) {
-    memset(node->data + node->vstat.st_size, 0, node->vstat.st_size - size);
-  }
-
-  // Update file size
-  node->vstat.st_size = size;
-  node->vstat.st_blocks = newblkcnt;
 
   return 0;
 }
@@ -373,6 +289,13 @@ static int readblk(int fd,off_t blk,char *buf, int needupad)
 	if (rd<=0) return rd;
 	decode=decodeblk(cibuf,g_opts.keyinfo.crypt_key,buf,rd,needupad);
 	return decode;
+}
+
+static int writeblk(int fd, off_t blk, const char *buf, int startbyte, int slen /* plaintext length*/,int needpad)
+{
+	char cibuff[FILEBLOCK+AESBLOCK]; // may need another full AESBLOCK to pad
+	int elen=encodeblk(buf,g_opts.keyinfo.crypt_key,cibuff,slen+startbyte,needpad);
+	return pwrite(fd,cibuff+startbyte,elen-startbyte,blk*FILEBLOCK+startbyte);
 }
 
 static size_t get_realsize(const char* realpath, size_t srclen){
@@ -409,6 +332,27 @@ static int cmfs_chmod(const char *path, mode_t mode) {
 	return chmod(dst,mode);
 }
 
+static int cmfs_mknod(const char *path, mode_t mode, dev_t rdev) {
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	return mknod(dst,mode,rdev);
+}
+
+static int cmfs_truncate(const char *path, off_t size) {
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	if(size==0)
+		return truncate(dst,0);
+	return -1;
+}
+
+
+static int cmfs_chown(const char *path, uid_t uid, gid_t gid) {
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	return chown(dst,uid,gid);
+}
+
 static int cmfs_getattr(const char *path, struct stat *stbuf) {
   	int ret;
 	char dst[PATH_MAX];
@@ -419,6 +363,12 @@ static int cmfs_getattr(const char *path, struct stat *stbuf) {
 	if(S_ISREG(stbuf->st_mode))
 		stbuf->st_size=get_realsize(dst,stbuf->st_size);
   	return 0;
+}
+
+static int cmfs_mkdir(const char *path, mode_t mode) {
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	return mkdir(dst,mode);
 }
 
 static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
@@ -470,7 +420,7 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 		return -EISDIR;
 	}
 
-	fd=open(dst,fi->flags);
+	fd=open(dst,fi->flags|O_RDONLY);
 	fi->fh = fd;
 	return 0;
 }
@@ -500,7 +450,7 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	if(size<=0 || offset>=st.st_size)
 		return 0;
 	lastfileblk=st.st_size/FILEBLOCK;	
-	if(lastfileblk%FILEBLOCK==0)
+	if(st.st_size%FILEBLOCK==0)
 		lastfileblk--;
 	startblk=offset/FILEBLOCK;
 	end=offset+size;
@@ -569,19 +519,175 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 static int cmfs_write(const char *path, const char *buf, size_t size, off_t offset,struct fuse_file_info *fi)
 {
 	int ret,i;
-	if(!O_WRITE(fi->flags)) {
+	off_t iblk,totalwr=0,end;
+	off_t lastfileblk;
+	int firstbyte,endbyte;// byte offset in block
+	off_t startblk,endblk;// start from 0(consider as skip blocks)
+	char cibuf[FILEBLOCK],plbuf[FILEBLOCK]={0};
+	struct stat st; 
+	int startcpy,endcpy; // start and end byte in memcpy between return buf --"buf" and decrypted block --"plbuf"
+
+	int rd; // real read bytes 
+	int de; // decrypted plaintext length (in 1k block) 
+	
+	if(!O_WRITE(fi->flags) ) {
 		return -EACCES;
 	}
-/*	tmp=(char*)malloc(size);
-	for(i=0;i<size;i++)
+
+	//ret=pwrite(fi->fh,buf,size,offset);
+
+
+	if(fstat(fi->fh,&st)<0)
+		return -EACCES;
+	if(size<=0)
+		return 0;
+
+	//  when current blk>lastfileblk => needrd==0
+	lastfileblk=st.st_size/FILEBLOCK;	
+	if(st.st_size>0 && st.st_size%FILEBLOCK==0)
+		lastfileblk--;
+	startblk=offset/FILEBLOCK;
+	end=offset+size;
+	endblk=end/FILEBLOCK; 
+
+	firstbyte=offset%FILEBLOCK;
+	endbyte=end%FILEBLOCK;
+	if(endbyte==0)
+		endblk--;
+
+	/* brief write pseudo procedure:
+	 	process_first_blk:
+			if firstblk>lastfileblk{ // needn't read
+				fillzero(buf); // fill zero before startbyte
+				if firstblk==endblk{
+					writeblk(buf,needpad);
+					return;
+				}else{
+					writeblk(buf,nopad);
+				}
+			}else{
+		   		if firstblk==lastfileblk
+					readblk(buf,needpad)
+				else 
+					readblk(buf,nopad)
+				updatedata(buf);
+				if firstblk==endblk
+					writeblk(buf,needpad);
+				else
+					writeblk(buf,nopad);
+			}
+
+
+		process_mid_blks:
+			writeblk(buf,nopad);
+
+
+		process_last_blk:
+			if lastblk>lastfileblk{ // needn't read
+				writeblk(buf,needpad);
+			}
+			else{
+	   			if lastblk==lastfileblk
+					readblk(buf,needpad)
+				else 
+					readblk(buf,nopad)
+				updatedata(buf);
+				writeblk(buf,needpad);
+			}
+
+	*/
+
+// static int writeblk(int fd, off_t blk, const char *buf, int startbyte, int slen /* plaintext length*/,int needpad); // buf should start from beginning of a block,but not byte start to be encrypted
+
+	if(startblk==endblk){ // only one block,use "size" in memcpy
+		if(startblk>lastfileblk) // need not readblk
+		{
+			// memset(plbuf,0,FILEBLOCK);
+			memcpy(plbuf+firstbyte,buf,size);
+			totalwr+=writeblk(fi->fh,startblk,plbuf,firstbyte,size,1);
+		}else if(startblk==lastfileblk){
+			if((rd=readblk(fi->fh,startblk,plbuf,1))<=0)
+				memset(plbuf,0,FILEBLOCK);
+			memcpy(plbuf+firstbyte,buf,size);
+			if(rd>=endbyte) // left bytes need to be reencrypted, but do not need repadding
+				totalwr+=writeblk(fi->fh,startblk,plbuf,firstbyte,rd-firstbyte,0);
+			else // overwrite the end , need repadding
+				totalwr+=writeblk(fi->fh,startblk,plbuf,firstbyte,endbyte-firstbyte,1);
+		}else{// not last fileblock
+			if((rd=readblk(fi->fh,startblk,plbuf,1))<=0) 
+				memset(plbuf,0,FILEBLOCK);
+			memcpy(plbuf+firstbyte,buf,size);
+			totalwr+=writeblk(fi->fh,startblk,plbuf,firstbyte,FILEBLOCK-firstbyte,0);
+		}
+	}
+	/*
+	else{ // not last block,memcpy from startbyte to BlockEnd
+		if(startblk>lastfileblk)
+		{
+			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
+			writeblk(fi->fh,startblk,plbuf,FILEBLOCK,0);
+		}else if(startblk==lastfileblk){
+			if((rd=readblk(fi->fh,startblk,plbuf,1))<0) return -1;
+			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
+			writeblk(fi->fh,startblk,plbuf,
+		}
+	}
+
+*/
+
+	///////////
+	/*
+	if(startblk==endblk)
 	{
-		if(buf[i]>='A' && buf[i]<='Z')
-			tmp[i]=buf[i]+'a'-'A';
-		else
-			tmp[i]=buf[i];
+		if((rd=readblk(fi->fh,startblk,plbuf,1))<=0)
+			return rd;
+		if(end>rd)
+			end=rd;
+		totalrd=end-offset;
+		memcpy(buf+offset%FILEBLOCK,plbuf,totalrd);
+		return totalrd;
+		
+	}
+	if((rd=readblk(fi->fh,startblk,plbuf,0))<=0)
+	{
+		assert("readblk error");
+		return rd;
+	}
+
+	// read full block at first
+	totalrd+=(FILEBLOCK-offset%FILEBLOCK);
+	memcpy(buf+offset%FILEBLOCK,plbuf,totalrd);
+
+	// process mid blocks,simply fully  read/copy
+	for(iblk=startblk+1;iblk<endblk;iblk++)
+	{
+		if((rd=readblk(fi->fh,iblk,plbuf,0)<FILEBLOCK))
+			return -1; // error occured
+		memcpy(buf+totalrd,plbuf,FILEBLOCK);
+		totalrd+=FILEBLOCK;
+	}
+
+	// process last block
+	if (endblk==lastfileblk)
+		rd=readblk(fi->fh,endblk,plbuf,1);	
+	else
+		rd=readblk(fi->fh,endblk,plbuf,0);
+	if (rd<0)	
+	{
+		return -1;
+	}
+	if (rd) // the last block may has a AESBLOCK size and totally filled with padding data, so readblk will return 0
+	{
+		int lastbytes=end%FILEBLOCK;
+		if(lastbytes==0)
+			lastbytes=FILEBLOCK;
+		if(rd<lastbytes)	
+			lastbytes=rd;
+		memcpy(buf+totalrd,plbuf,lastbytes);
+		totalrd+=lastbytes;
 	}*/
-	ret=pwrite(fi->fh,buf,size,offset);
-	return ret;
+
+	return size;
 }
 
 static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
@@ -611,17 +717,16 @@ static struct fuse_operations cmfs_oper = {
   .create		= cmfs_create,
   .unlink       = cmfs_unlink,
   .chmod        = cmfs_chmod,
-//  .mknod        = cmfs_mknod,
-//  .mkdir        = cmfs_mkdir,
+  .chown        = cmfs_chown,
+  .mkdir        = cmfs_mkdir,
+  .mknod        = cmfs_mknod,
+  .truncate     = cmfs_truncate,
  /*
   .symlink      = cmfs_symlink,
   .rmdir        = cmfs_rmdir,
   .rename       = cmfs_rename,
   .link         = cmfs_link,
-  .chown        = cmfs_chown,
-  .truncate     = cmfs_truncate,
   .utimens      = cmfs_utimens,
-  .write        = cmfs_write,
   .release      = cmfs_release*/
 };
 
