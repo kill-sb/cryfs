@@ -11,13 +11,13 @@
 #include "cmfs.h"
 
 
-const char *get_passwd(char *buf /*16bytes*/)
+const char *get_passwd(char *buf /*AESBLOCK bytes*/)
 {
         char *pass;
         int i;
         memset(buf,0,AESBLOCK);
         pass=getpass("Input passwd:");
-        for (i=0;i<16 && pass[i]!='\0'; i++)
+        for (i=0;i<AESBLOCK && pass[i]!='\0'; i++)
                 buf[i]=pass[i];
         return buf;
 }
