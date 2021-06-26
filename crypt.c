@@ -77,7 +77,12 @@ int encodeblk(const char* plbuf, const char* passwd, char* cibuf, int len, int l
 	if(last) {
 		memcpy(padbuf,plbuf,len);
 		len=pad_buf(padbuf,len);
-		encode(padbuf,passwd,cibuf,len);
+		if(len<=FILEBLOCK)
+			encode(padbuf,passwd,cibuf,len);
+		else{
+			encode(padbuf,passwd,cibuf,FILEBLOCK);
+			encode(padbuf+FILEBLOCK,passwd,cibuf+FILEBLOCK,len-FILEBLOCK);
+		}
 	}else
 		encode(plbuf,passwd,cibuf,len);
 	return len;

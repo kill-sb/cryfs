@@ -559,47 +559,6 @@ static int cmfs_write(const char *path, const char *buf, size_t size, off_t offs
 		endbyte=FILEBLOCK;
 	}
 
-	/* brief write pseudo procedure:
-	 	process_first_blk:
-			if firstblk>lastfileblk{ // needn't read
-				fillzero(buf); // fill zero before startbyte
-				if firstblk==endblk{
-					writeblk(buf,needpad);
-					return;
-				}else{
-					writeblk(buf,nopad);
-				}
-			}else{
-		   		if firstblk==lastfileblk
-					readblk(buf,needpad)
-				else 
-					readblk(buf,nopad)
-				updatedata(buf);
-				if firstblk==endblk
-					writeblk(buf,needpad);
-				else
-					writeblk(buf,nopad);
-			}
-
-
-		process_mid_blks:
-			writeblk(buf,nopad);
-
-
-		process_last_blk:
-			if lastblk>lastfileblk{ // needn't read
-				writeblk(buf,needpad);
-			}
-			else{
-	   			if lastblk==lastfileblk
-					readblk(buf,needpad)
-				else 
-					readblk(buf,nopad)
-				updatedata(buf);
-				writeblk(buf,needpad);
-			}
-
-	*/
 
 // static int writeblk(int fd, off_t blk, const char *buf, int startbyte, int slen ,int needpad); // buf should start from beginning of a block,but not byte start to be encrypted, slen is whole buf size(startbyte+size  or FILEBLOCK),because left bytes should be all reencrypted
 
