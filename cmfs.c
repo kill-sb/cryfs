@@ -189,7 +189,8 @@ static int cmfs_unlink(const char *path) {
 
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	return unlink(dst);
+	unlink(dst);
+	return 0;
 }
 
 
@@ -208,7 +209,8 @@ static int cmfs_release(const char *path, struct fuse_file_info *fi) {
 static int cmfs_chmod(const char *path, mode_t mode) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	return chmod(dst,mode);
+	chmod(dst,mode);
+	return 0;
 }
 
 static int cmfs_mknod(const char *path, mode_t mode, dev_t rdev) {
@@ -227,13 +229,15 @@ static int cmfs_rename(const char *from, const char *to) {
 static int cmfs_chown(const char *path, uid_t uid, gid_t gid) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	return chown(dst,uid,gid);
+	chown(dst,uid,gid);
+	return 0;
 }
 
 static int cmfs_rmdir(const char *path) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	return rmdir(dst);
+	rmdir(dst);
+	return 0;
 }
 
 static int cmfs_getattr(const char *path, struct stat *stbuf) {
@@ -294,7 +298,11 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 	struct stat st;
 	int fd;
 	int ret;
+	char log[1024];
 	get_realname(dst,path);
+
+	sprintf(log,"start open: %s",dst);
+	LOG(log);
 	ret=stat(dst,&st);
 	if(ret){
 		return -errno;
@@ -317,12 +325,16 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	char cibuf[FILEBLOCK],plbuf[FILEBLOCK];
 	struct stat st; 
 	int firstread;
+	int startbyte,lastbyte;
 	int startcpy,endcpy; // start and end byte in memcpy between return buf --"buf" and decrypted block --"plbuf"
 
 	int rd; // real read bytes 
 	int de; // decrypted plaintext length (in 1k block) 
 	
 
+	char log[1024];
+	sprintf(log,"read: size- %ld , offset- %ld",size,offset);
+	LOG(log);
 	// Check whether the file was opened for reading
 	if(!O_READ(fi->flags)) {
 		return -EACCES;
@@ -338,12 +350,18 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	if(st.st_size%FILEBLOCK==0)
 		lastfileblk--;
 	startblk=offset/FILEBLOCK;
+	startbyte=offset%FILEBLOCK;
 	end=offset+size;
 	if(end>st.st_size)
 		end=st.st_size;
+
 	endblk=end/FILEBLOCK;
-	if(end%FILEBLOCK==0)
+	lastbyte=end%FILEBLOCK;
+	if(lastbyte==0)// offset <st_size, so treat the position as last byte of last block
+	{
+		lastbyte=FILEBLOCK;
 		endblk--;
+	}
 
 	// 1. process first block(start with offset%FILEBLOCK) and check if is the last block.
 	// 2. process mid blocks which are all full blocks
@@ -353,10 +371,10 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	{
 		if((rd=readblk(fi->fh,startblk,plbuf,1))<=0)
 			return rd;
-		if(end>rd)
-			end=rd;
-		totalrd=end-offset;
-		memcpy(buf+offset%FILEBLOCK,plbuf,totalrd);
+		if(lastbyte>rd)
+			lastbyte=rd;
+		totalrd=lastbyte-startbyte;
+		memcpy(buf+startbyte,plbuf,totalrd);
 		return totalrd;
 		
 	}
@@ -368,7 +386,7 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 
 	// read full block at first
 	totalrd+=(FILEBLOCK-offset%FILEBLOCK);
-	memcpy(buf+offset%FILEBLOCK,plbuf,totalrd);
+	memcpy(buf+startbyte,plbuf,totalrd);
 
 	// process mid blocks,simply fully  read/copy
 	for(iblk=startblk+1;iblk<endblk;iblk++)
@@ -390,14 +408,13 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	}
 	if (rd) // the last block may has a AESBLOCK size and totally filled with padding data, so readblk will return 0
 	{
-		int lastbytes=end%FILEBLOCK;
-		if(lastbytes==0)
-			lastbytes=FILEBLOCK;
-		if(rd<lastbytes)	
-			lastbytes=rd;
-		memcpy(buf+totalrd,plbuf,lastbytes);
-		totalrd+=lastbytes;
+		if(rd<lastbyte)
+			lastbyte=rd;
+		memcpy(buf+totalrd,plbuf,lastbyte);
+		totalrd+=lastbyte;
 	}
+	sprintf(log,"read will return %ld",totalrd);
+	LOG(log);
 	return totalrd;
 }
 
@@ -417,7 +434,9 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 	
 
 	//ret=pwrite(fi->fh,buf,size,offset);
-
+	char log[1024];
+	sprintf(log,"write: size- %ld , offset- %ld",size,offset);
+	LOG(log);
 
 	if(fstat(fd,&st)<0)
 		return -EACCES;

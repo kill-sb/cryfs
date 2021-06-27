@@ -32,6 +32,12 @@ struct cmfs_options{
 	KEY_INFO keyinfo;
 };
 
+#ifdef __DEBUG
+#define LOG(str) {FILE *fp=fopen("/tmp/fs.log","a+");fprintf(fp,"%s\n",str);fclose(fp);}
+#else
+#define LOG(str)
+#endif 
+
 int decodeblk(const char* cibuf, const char* passwd,char* plbuf, int len,int last);
 int encodeblk(const char* cibuf, const char* passwd,char* plbuf, int len,int last);
 //int encode(const char* src, const char* passwd, char *dst,int len);
