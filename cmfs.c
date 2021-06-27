@@ -117,137 +117,7 @@ static int createentry(const char *path, mode_t mode, struct node **node) {
   return 0;
 }
 
-static int memfs_rmdir(const char *path) {
-  char *dirpath, *name;
-  struct node *dir, *node;
-
-  // Find inode
-  if(!getnodebypath(path, &the_fs, &node)) {
-    return -errno;
-  }
-
-  if(!S_ISDIR(node->vstat.st_mode)) {
-    return -ENOTDIR;
-  }
-
-  // Check if directory is empty
-  f(node->data != NULL) {
-    return -ENOTEMPTY;
-  }
-
-  dirpath = safe_dirname(path);
-
-  // Find parent inode
-  if(!getnodebypath(dirpath, &the_fs, &dir)) {
-    free(dirpath);
-    return -errno;
-  }
-
-  free(dirpath);
-
-  name = safe_basename(path);
-
-  // Find directory entry in parent
-  if(!dir_remove(dir, name)) {
-    free(name);
-    return -errno;
-  }
-
-  free(name);
-
-  free(node);
-
-  return 0;
-}
-
-static int memfs_symlink(const char *from, const char *to) {
-  struct node *node;
-  int res = createentry(to, S_IFLNK | 0766, &node);
-  if(res) return res;
-
-  node->data = strdup(from);
-  node->vstat.st_size = strlen(from);
-
-  return 0;
-}
-
 // TODO: Adapt to description: https://linux.die.net/man/2/rename
-static int memfs_rename(const char *from, const char *to) {
-  char *fromdir, *fromnam, *todir, *tonam;
-  struct node *node, *fromdirnode, *todirnode;
-
-  if(!getnodebypath(from, &the_fs, &node)) {
-    return -errno;
-  }
-
-  fromdir = safe_dirname(from);
-
-  if(!getnodebypath(fromdir, &the_fs, &fromdirnode)) {
-    free(fromdir);
-    return -errno;
-  }
-
-  free(fromdir);
-
-  todir = safe_dirname(to);
-
-  if(!getnodebypath(todir, &the_fs, &todirnode)) {
-    free(todir);
-    return -errno;
-  }
-
-  free(todir);
-
-  tonam = safe_basename(to);
-
-  // TODO: When replacing, perform the same things as when unlinking
-  if(!dir_add_alloc(todirnode, tonam, node, 1)) {
-    free(tonam);
-    return -errno;
-  }
-
-  free(tonam);
-
-  fromnam = safe_basename(from);
-
-  if(!dir_remove(fromdirnode, fromnam)) {
-    free(fromnam);
-    return -errno;
-  }
-
-  free(fromnam);
-
-  return 0;
-}
-
-static int memfs_link(const char *from, const char *to) {
-  char *todir, *tonam;
-  struct node *node, *todirnode;
-
-  if(!getnodebypath(from, &the_fs, &node)) {
-    return -errno;
-  }
-
-  todir = safe_dirname(to);
-
-  if(!getnodebypath(todir, &the_fs, &todirnode)) {
-    free(todir);
-    return -errno;
-  }
-
-  free(todir);
-
-  tonam = safe_basename(to);
-
-  if(!dir_add_alloc(todirnode, tonam, node, 0)) {
-    free(tonam);
-    return -errno;
-  }
-
-  free(tonam);
-
-  return 0;
-}
 
 static int memfs_utimens(const char *path, const struct timespec ts[2]) {
   struct node *node;
@@ -262,23 +132,6 @@ static int memfs_utimens(const char *path, const struct timespec ts[2]) {
 }
 
 
-static int memfs_release(const char *path, struct fuse_file_info *fi) {
-  struct filehandle *fh = (struct filehandle *) fi->fh;
-
-  // If the file was deleted but we could not free it due to open file descriptors,
-  // free the node and its data after all file descriptors have been closed.
-  if(--fh->node->fd_count == 0) {
-    if(fh->node->delete_on_close) {
-      if(fh->node->data) free(fh->node->data);
-      free(fh->node);
-    }
-  }
-
-  // Free "file handle"
-  free(fh);
-
-  return 0;
-}
 */
 
 static int readblk(int fd,off_t blk,char *buf, int needupad)
@@ -319,11 +172,37 @@ static size_t get_realsize(const char* realpath, size_t srclen){
 	return srclen;
 }
 
+static int cmfs_utimens(const char *path, const struct timespec ts[2]) {
+	
+	char dst[PATH_MAX];
+	int fd;
+	int ret;
+	get_realname(dst,path);
+	fd=open(dst,O_WRONLY);
+	if(fd<0) return -1;
+	ret=futimens(fd,ts);
+	close(fd);
+  	return ret;
+}
+
 static int cmfs_unlink(const char *path) {
 
 	char dst[PATH_MAX];
 	get_realname(dst,path);
 	return unlink(dst);
+}
+
+
+static int cmfs_symlink(const char *from, const char *to) {
+	char dst[PATH_MAX];
+	get_realname(dst,to);
+	return symlink(from,dst);
+}
+
+static int cmfs_release(const char *path, struct fuse_file_info *fi) {
+	if(fi->fh>=0)
+		close(fi->fh);
+ 	return 0;
 }
 
 static int cmfs_chmod(const char *path, mode_t mode) {
@@ -338,11 +217,23 @@ static int cmfs_mknod(const char *path, mode_t mode, dev_t rdev) {
 	return mknod(dst,mode,rdev);
 }
 
+static int cmfs_rename(const char *from, const char *to) {
+	char dstfrom[PATH_MAX],dstto[PATH_MAX];
+	get_realname(dstfrom,from);
+	get_realname(dstto,to);
+  	return rename(dstfrom,dstto);
+}
 
 static int cmfs_chown(const char *path, uid_t uid, gid_t gid) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
 	return chown(dst,uid,gid);
+}
+
+static int cmfs_rmdir(const char *path) {
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	return rmdir(dst);
 }
 
 static int cmfs_getattr(const char *path, struct stat *stbuf) {
@@ -380,6 +271,7 @@ static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
   closedir(dir);
   return 0;
 }
+
 static int cmfs_readlink(const char *path, char *buf, size_t size) {
   	int ret;
 	char dst[PATH_MAX],link[PATH_MAX];
@@ -389,12 +281,12 @@ static int cmfs_readlink(const char *path, char *buf, size_t size) {
 	if (ret<=0){
 		return ret;
 	}
-	if(ret>size)
-		memcpy(buf,link,ret);
-	else
-		strcpy(buf,link);
+	if(ret>size-1)
+		ret=size-1;
 
-  	return 0;
+	memcpy(buf,link,ret);
+	buf[ret]='\0';
+	return 0;
 }
 
 static int cmfs_open(const char *path, struct fuse_file_info *fi) {
@@ -735,13 +627,12 @@ static struct fuse_operations cmfs_oper = {
   .mkdir        = cmfs_mkdir,
   .mknod        = cmfs_mknod,
   .truncate     = cmfs_truncate,
- /*
-  .symlink      = cmfs_symlink,
   .rmdir        = cmfs_rmdir,
+  .symlink      = cmfs_symlink,
+//  .link			= cmfs_link,
   .rename       = cmfs_rename,
-  .link         = cmfs_link,
+  .release      = cmfs_release,
   .utimens      = cmfs_utimens,
-  .release      = cmfs_release*/
 };
 
 void cmfs_init(struct fuse_args* args)
