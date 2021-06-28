@@ -16,13 +16,13 @@
 #define PATH_MAX 4096
 #endif
 
-const char *get_passwd(char *buf /*16bytes*/)
+const char *get_passwd(char *buf /* AESBLOCK bytes*/)
 {
 	char *pass;
 	int i;
 	memset(buf,0,AESBLOCK);
 	pass=getpass("Input passwd:");
-	for (i=0;i<16 && pass[i]!='\0'; i++)
+	for (i=0;i<AESBLOCK && pass[i]!='\0'; i++)
 		buf[i]=pass[i];
 	return buf;
 }
@@ -131,7 +131,7 @@ long decodefile(int sfd,int dfd, const char* passwd){
 int main(int c,char**v)
 {
 	char dfile[PATH_MAX];
-	char passwd[16];
+	char passwd[AESBLOCK];
 	int sfd,dfd;
 	int enc=-1;
 	if(c<3) {
