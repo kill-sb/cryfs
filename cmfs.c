@@ -83,6 +83,26 @@ static size_t get_realsize(const char* realpath, size_t srclen){
 	return srclen;
 }
 
+static size_t get_realsize_fd(int fd, size_t srclen)
+{
+	int endblk=srclen/FILEBLOCK;
+	char plain[FILEBLOCK];
+	int length;
+	int left=srclen%FILEBLOCK;
+	if(srclen==0) return 0;
+	if(fd<0) return srclen;
+	if(left==0){
+		left=FILEBLOCK;
+	   	endblk--;
+	}
+	length=readblk(fd,endblk,plain,1);
+
+	if(length<left && left-length<=AESBLOCK)
+		srclen-=left-length;
+	return srclen;
+
+}
+
 static int cmfs_utimens(const char *path, const struct timespec ts[2]) {
 	
 	char dst[PATH_MAX];
@@ -100,7 +120,8 @@ static int cmfs_unlink(const char *path) {
 
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	unlink(dst);
+	if(unlink(dst)<0)
+		return -errno;
 	return 0;
 }
 
@@ -108,7 +129,9 @@ static int cmfs_unlink(const char *path) {
 static int cmfs_symlink(const char *from, const char *to) {
 	char dst[PATH_MAX];
 	get_realname(dst,to);
-	return symlink(from,dst);
+	if(symlink(from,dst)<0)
+		return -errno;
+	return 0;
 }
 
 static int cmfs_release(const char *path, struct fuse_file_info *fi) {
@@ -120,32 +143,41 @@ static int cmfs_release(const char *path, struct fuse_file_info *fi) {
 static int cmfs_chmod(const char *path, mode_t mode) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	return chmod(dst,mode);
+	if(chmod(dst,mode)<0)
+		return -errno;
+	return 0;
 }
 
 static int cmfs_mknod(const char *path, mode_t mode, dev_t rdev) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	return mknod(dst,mode,rdev);
+	if (mknod(dst,mode,rdev)<0)
+		return -errno;
+	return 0;
 }
 
 static int cmfs_rename(const char *from, const char *to) {
 	char dstfrom[PATH_MAX],dstto[PATH_MAX];
 	get_realname(dstfrom,from);
 	get_realname(dstto,to);
-  	return rename(dstfrom,dstto);
+  	if(rename(dstfrom,dstto)<0)
+		return -errno;
+	return 0;
 }
 
 static int cmfs_chown(const char *path, uid_t uid, gid_t gid) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	return lchown(dst,uid,gid);
+	if(lchown(dst,uid,gid)<0)
+		return -errno;
+	return 0;
 }
 
 static int cmfs_rmdir(const char *path) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	rmdir(dst);
+	if (rmdir(dst)<0)
+		return -errno;
 	return 0;
 }
 
@@ -164,7 +196,9 @@ static int cmfs_getattr(const char *path, struct stat *stbuf) {
 static int cmfs_mkdir(const char *path, mode_t mode) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	return mkdir(dst,mode);
+	if(mkdir(dst,mode)<0)
+		return -errno;
+	return 0;
 }
 
 static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
@@ -192,7 +226,7 @@ static int cmfs_readlink(const char *path, char *buf, size_t size) {
 	get_realname(dst,path);
 	ret=readlink(dst,link,size);
 	if (ret<=0){
-		return ret;
+		return -errno;
 	}
 	if(ret>size-1)
 		ret=size-1;
@@ -221,7 +255,7 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 		return -EISDIR;
 	}
 
-	fd=open(dst,fi->flags|O_RDONLY);
+	fd=open(dst,O_RDWR);
 	fi->fh = fd;
 	return 0;
 }
@@ -327,6 +361,7 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	return totalrd;
 }
 
+static int extend_file(int fd, off_t size,off_t fsize);
 static int native_write(const char *buf, size_t size, off_t offset,int fd)
 {
 	int ret,i;
@@ -337,21 +372,26 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 	char cibuf[FILEBLOCK],plbuf[FILEBLOCK]={0};
 	struct stat st; 
 	int startcpy,endcpy; // start and end byte in memcpy between return buf --"buf" and decrypted block --"plbuf"
+	size_t realsize;
 
 	int rd; // real read bytes 
 	int de; // decrypted plaintext length (in 1k block) 
 	
 
 	//ret=pwrite(fi->fh,buf,size,offset);
-	char log[1024];
-	sprintf(log,"write: size- %ld , offset- %ld",size,offset);
+	char log[8192];
+	sprintf(log,"write: size- %ld , offset- %ld:",size,offset);
 	LOG(log);
+	strncpy(log,buf,size);
+	log[size]='\0';
+	LOG(log);
+
 
 	if(fstat(fd,&st)<0)
 		return -EACCES;
 	if(size<=0)
 		return 0;
-
+	realsize=get_realsize_fd(fd,st.st_size);
 	//  when current blk>lastfileblk => needrd==0
 	lastfileblk=st.st_size/FILEBLOCK;	
 	if(st.st_size>0 && st.st_size%FILEBLOCK==0)
@@ -376,7 +416,8 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 	if(startblk==endblk){ // only one block,use "size" in memcpy
 		if(startblk>lastfileblk) // need not readblk
 		{
-			// memset(plbuf,0,FILEBLOCK);
+			//extend_file(int fd, off_t size,off_t fsize);
+			extend_file(fd,end,realsize);
 			memcpy(plbuf+firstbyte,buf,size);
 			writeblk(fd,startblk,plbuf,endbyte,1);
 		}else if(startblk==lastfileblk){
@@ -387,8 +428,8 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 				writeblk(fd,startblk,plbuf,rd,1);
 			else // overwrite the end , need repadding
 				writeblk(fd,startblk,plbuf,endbyte,1);
-		}else{// not last fileblock
-			if((rd=readblk(fd,startblk,plbuf,1))<=0) 
+		}else{// not lastfileblock
+			if((rd=readblk(fd,startblk,plbuf,0))<=0) 
 				memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,size);
 			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
@@ -396,6 +437,7 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 		return size;
 	}else{ // need not pad, more blocks will follow
 		if(startblk>lastfileblk){
+			extend_file(fd,end,realsize);
 			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
 			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
 		}else if(startblk==lastfileblk){
@@ -528,15 +570,14 @@ static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
     int retstat = 0;
     char fpath[PATH_MAX];
-    int fd;
 
 	sprintf(fpath,"%s%s",g_opts.src_dir,path);
 	
-    fd = creat(fpath, mode);
-    if (fd < 0)
+    fi->fh = creat(fpath, mode);
+    if (fi->fh < 0)
         retstat = -errno;
-
-    fi->fh = fd;
+	else
+    	retstat=fi->fh;
 
     return retstat;
 }
@@ -548,7 +589,7 @@ static struct fuse_operations cmfs_oper = {
   .open         = cmfs_open,
   .read         = cmfs_read,
   .write		= cmfs_write,
-  .create		= cmfs_create,
+//  .create		= cmfs_create,
   .unlink       = cmfs_unlink,
   .chmod        = cmfs_chmod,
   .chown        = cmfs_chown,

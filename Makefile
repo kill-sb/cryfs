@@ -1,6 +1,6 @@
 
 CC=gcc
-CFLAGS=-g -D_FILE_OFFSET_BITS=64 -D__DEBUG=1 -O0
+CFLAGS=-g -D_FILE_OFFSET_BITS=64 -D__DEBUG -O0
 LDFLAGS=-lfuse -lssl -lcrypto 
 
 OBJ=cmfs.o crypt.o

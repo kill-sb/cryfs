@@ -25,6 +25,7 @@ int main(int c , char **v)
 	p=(char*)malloc(cnt);
 	memset(p,ch,cnt);
 
+	printf("size:%d-offset:%d\n",cnt,start);
 	pwrite(fd,p,cnt,start);
 	close(fd);
 	return 0;
