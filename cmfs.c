@@ -241,11 +241,8 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 	struct stat st;
 	int fd;
 	int ret;
-	char log[1024];
 	get_realname(dst,path);
 
-	sprintf(log,"start open: %s",dst);
-	LOG(log);
 	ret=stat(dst,&st);
 	if(ret){
 		return -errno;
@@ -275,9 +272,6 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	int de; // decrypted plaintext length (in 1k block) 
 	
 
-	char log[1024];
-	sprintf(log,"read: size- %ld , offset- %ld",size,offset);
-	LOG(log);
 	// Check whether the file was opened for reading
 	if(!O_READ(fi->flags)) {
 		return -EACCES;
@@ -356,8 +350,6 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 		memcpy(buf+totalrd,plbuf,lastbyte);
 		totalrd+=lastbyte;
 	}
-	sprintf(log,"read will return %ld",totalrd);
-	LOG(log);
 	return totalrd;
 }
 
@@ -379,13 +371,6 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 	
 
 	//ret=pwrite(fi->fh,buf,size,offset);
-	char log[8192];
-	sprintf(log,"write: size- %ld , offset- %ld:",size,offset);
-	LOG(log);
-	strncpy(log,buf,size);
-	log[size]='\0';
-	LOG(log);
-
 
 	if(fstat(fd,&st)<0)
 		return -EACCES;
