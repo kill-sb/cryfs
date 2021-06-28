@@ -19,6 +19,7 @@
 
 static struct cmfs_options g_opts;
 
+
 char * safe_dirname(const char *msg) {
   char *buf = strdup(msg);
   char *dir = dirname(buf);
@@ -37,13 +38,9 @@ char * safe_basename(const char *msg) {
 
 static int get_realname(char *buf, const char* path)
 {
-	int len;
-	int ret=0;
 	sprintf(buf,"%s%s",g_opts.src_dir,path);
-	len=strlen(buf);
-	return ret;
+	return 0;
 }
-
 
 static int readblk(int fd,off_t blk,char *buf, int needupad)
 {
@@ -87,13 +84,13 @@ static int cmfs_utimens(const char *path, const struct timespec ts[2]) {
 	
 	char dst[PATH_MAX];
 	int fd;
-	int ret;
+	int ret=0;
 	get_realname(dst,path);
 	fd=open(dst,O_WRONLY);
-	if(fd<0) return -1;
+	if(fd<0) return -errno;
 	ret=futimens(fd,ts);
 	close(fd);
-  	return ret;
+  	return 0;
 }
 
 static int cmfs_unlink(const char *path) {
@@ -119,52 +116,80 @@ static int cmfs_release(const char *path, struct fuse_file_info *fi) {
 
 static int cmfs_chmod(const char *path, mode_t mode) {
 	char dst[PATH_MAX];
+	char log[1024];
+	int ret=0;
 	get_realname(dst,path);
-	return chmod(dst,mode);
+	ret=chmod(dst,mode);
+	if(ret<0){
+		sprintf(log,"%s->%o,error:%s",dst,mode,strerror(errno));
+		LOG(log);
+		ret=-errno;
+	}
+	return ret;
 }
 
 static int cmfs_mknod(const char *path, mode_t mode, dev_t rdev) {
 	char dst[PATH_MAX];
+	int ret=0;
 	get_realname(dst,path);
-	return mknod(dst,mode,rdev);
+	if(mknod(dst,mode,rdev)<0)
+		ret=-errno;
+	return ret;
 }
 
 static int cmfs_rename(const char *from, const char *to) {
 	char dstfrom[PATH_MAX],dstto[PATH_MAX];
+	int ret=0;
 	get_realname(dstfrom,from);
 	get_realname(dstto,to);
-  	return rename(dstfrom,dstto);
+  	if(rename(dstfrom,dstto)<0)
+		ret=-errno;
+	return ret;
 }
 
 static int cmfs_chown(const char *path, uid_t uid, gid_t gid) {
 	char dst[PATH_MAX];
+	char log[1024];
+	int ret=0;
 	get_realname(dst,path);
-	return lchown(dst,uid,gid);
+	ret=lchown(dst,uid,gid);
+	if(ret<0){
+		sprintf(log,"%s->%d:%d,error:%s",dst,uid,gid,strerror(errno));
+		LOG(log);
+		ret=-errno;
+	}
+	return ret;
+//	return 0;
 }
 
 static int cmfs_rmdir(const char *path) {
 	char dst[PATH_MAX];
+	int ret=0;
 	get_realname(dst,path);
-	rmdir(dst);
-	return 0;
+	if(rmdir(dst)<0)
+		ret=-errno;
+	return ret;
 }
 
 static int cmfs_getattr(const char *path, struct stat *stbuf) {
-  	int ret;
+  	int ret=0;
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-  	if((ret=lstat(dst,stbuf))){
-	  	return -errno;
+  	if((ret=lstat(dst,stbuf))<0){
+	  	ret=-errno;
   	}
 	if(S_ISREG(stbuf->st_mode))
 		stbuf->st_size=get_realsize(dst,stbuf->st_size);
-  	return 0;
+  	return ret;
 }
 
 static int cmfs_mkdir(const char *path, mode_t mode) {
 	char dst[PATH_MAX];
+	int ret=0;
 	get_realname(dst,path);
-	return mkdir(dst,mode);
+	if(mkdir(dst,mode)<0)
+		ret=-errno;
+	return ret;
 }
 
 static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
@@ -186,7 +211,7 @@ static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
 }
 
 static int cmfs_readlink(const char *path, char *buf, size_t size) {
-  	int ret;
+  	int ret=0;
 	char dst[PATH_MAX],link[PATH_MAX];
 	
 	get_realname(dst,path);
@@ -210,8 +235,6 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 	char log[1024];
 	get_realname(dst,path);
 
-	sprintf(log,"start open: %s",dst);
-	LOG(log);
 	ret=stat(dst,&st);
 	if(ret){
 		return -errno;
@@ -223,7 +246,11 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 
 	fd=open(dst,fi->flags|O_RDONLY);
 	fi->fh = fd;
-	return 0;
+	if(fd<0) 
+		ret=-errno;
+	else 
+		ret=fd;
+	return ret;
 }
 
 static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
@@ -241,9 +268,6 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	int de; // decrypted plaintext length (in 1k block) 
 	
 
-	char log[1024];
-	sprintf(log,"read: size- %ld , offset- %ld",size,offset);
-	LOG(log);
 	// Check whether the file was opened for reading
 	if(!O_READ(fi->flags)) {
 		return -EACCES;
@@ -322,8 +346,6 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 		memcpy(buf+totalrd,plbuf,lastbyte);
 		totalrd+=lastbyte;
 	}
-	sprintf(log,"read will return %ld",totalrd);
-	LOG(log);
 	return totalrd;
 }
 
@@ -343,9 +365,6 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 	
 
 	//ret=pwrite(fi->fh,buf,size,offset);
-	char log[1024];
-	sprintf(log,"write: size- %ld , offset- %ld",size,offset);
-	LOG(log);
 
 	if(fstat(fd,&st)<0)
 		return -EACCES;
@@ -526,19 +545,18 @@ static int cmfs_truncate(const char *path, off_t size) {
 
 static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
-    int retstat = 0;
+    int ret= 0;
     char fpath[PATH_MAX];
     int fd;
 
 	sprintf(fpath,"%s%s",g_opts.src_dir,path);
 	
-    fd = creat(fpath, mode);
-    if (fd < 0)
-        retstat = -errno;
-
-    fi->fh = fd;
-
-    return retstat;
+    fi->fh = creat(fpath, mode);
+    if(fi->fh<0)
+	    ret=-errno;
+    else
+	    ret=fi->fh;
+    return ret;
 }
 
 static struct fuse_operations cmfs_oper = {
