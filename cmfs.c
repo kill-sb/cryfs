@@ -55,11 +55,19 @@ static int readblk(int fd,off_t blk,char *buf, int needupad)
 	return decode;
 }
 
-static int writeblk(int fd, off_t blk, const char *buf, int slen /* plaintext length*/,int needpad)
+static int writeblk(int fd, off_t blk, const char *buf, int start,int slen /* plaintext length*/,int needpad)
 {
 	char cibuff[FILEBLOCK+AESBLOCK]; // may need another full AESBLOCK to pad
 	int elen=encodeblk(buf,g_opts.keyinfo.crypt_key,cibuff,slen,needpad);
-	return pwrite(fd,cibuff,elen,blk*FILEBLOCK);
+	if(elen>start){
+		elen-=start;
+	}else{
+		char log[1024];
+		sprintf(log,"writeblk: start- %d, len- %d, elen- %d");
+		LOG(log);
+		return  0;
+	}
+	return pwrite(fd,cibuff+start,elen,blk*FILEBLOCK+start);
 }
 
 static size_t get_realsize(const char* realpath, size_t srclen){
@@ -404,62 +412,62 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 			//extend_file(int fd, off_t size,off_t fsize);
 			extend_file(fd,end,realsize);
 			memcpy(plbuf+firstbyte,buf,size);
-			writeblk(fd,startblk,plbuf,endbyte,1);
+			writeblk(fd,startblk,plbuf,firstbyte,endbyte,1);
 		}else if(startblk==lastfileblk){
 			if((rd=readblk(fd,startblk,plbuf,1))<=0)
 				memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,size);
 			if(rd>=endbyte) // left bytes need to be reencrypted, but do not need repadding
-				writeblk(fd,startblk,plbuf,rd,1);
+				writeblk(fd,startblk,plbuf,firstbyte,rd,1);
 			else // overwrite the end , need repadding
-				writeblk(fd,startblk,plbuf,endbyte,1);
+				writeblk(fd,startblk,plbuf,firstbyte,endbyte,1);
 		}else{// not lastfileblock
 			if((rd=readblk(fd,startblk,plbuf,0))<=0) 
 				memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,size);
-			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
+			writeblk(fd,startblk,plbuf,firstbyte,FILEBLOCK,0);
 		}
 		return size;
 	}else{ // need not pad, more blocks will follow
 		if(startblk>lastfileblk){
 			extend_file(fd,end,realsize);
 			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
-			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
+			writeblk(fd,startblk,plbuf,firstbyte,FILEBLOCK,0);
 		}else if(startblk==lastfileblk){
 			if((rd=readblk(fd,startblk,plbuf,1))<=0)
 				memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
-			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
+			writeblk(fd,startblk,plbuf,firstbyte,FILEBLOCK,0);
 		}else{ // mid blocks of file
 			if((rd=readblk(fd,startblk,plbuf,0))<=0)
 				memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
-			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
+			writeblk(fd,startblk,plbuf,firstbyte,FILEBLOCK,0);
 		}
 	}
 
 	// mid block, write whole block
 	for (iblk=startblk+1;iblk<endblk;iblk++){		
 		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(iblk-startblk-1)*FILEBLOCK,FILEBLOCK);
-		writeblk(fd,iblk,plbuf,FILEBLOCK,0);
+		writeblk(fd,iblk,plbuf,0,FILEBLOCK,0);
 	}
 
 	// last block -- endblk, and must not be firstblk
 	memset(plbuf,0,FILEBLOCK);
 	if(endblk>lastfileblk){// simply memcpy
 		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
-		writeblk(fd,endblk,plbuf,endbyte,1);
+		writeblk(fd,endblk,plbuf,0,endbyte,1);
 	}else if(endblk==lastfileblk){
 		rd=readblk(fd,endblk,plbuf,1);
 		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
 		if(rd>endbyte)
-			writeblk(fd,endblk,plbuf,rd,1);
+			writeblk(fd,endblk,plbuf,0,rd,1);
 		else
-			writeblk(fd,endblk,plbuf,endbyte,1);
+			writeblk(fd,endblk,plbuf,0,endbyte,1);
 	}else{ // in mid-file blocks
 		rd=readblk(fd,endblk,plbuf,0);
 		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
-		writeblk(fd,endblk,plbuf,FILEBLOCK,0);
+		writeblk(fd,endblk,plbuf,0,FILEBLOCK,0);// notice, here should write FILEBLOCK , not endbyte.because left bytes should be recrypted
 	}
 
 
@@ -496,7 +504,7 @@ static int shrink_file(int fd, off_t size,off_t fsize){
 		return -1;
 	ret=ftruncate(fd,size);
 	if (ret==0)
-		writeblk(fd,blk,plbuf,endbyte,1);
+		writeblk(fd,blk,plbuf,0,endbyte,1);
 	return ret;
 }
 
