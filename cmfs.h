@@ -26,9 +26,9 @@ typedef struct key_info{
 
 
 struct cmfs_options{
-	char *mnt_point;
-	char *src_dir;
-	char *options;
+	char mnt_point[PATH_MAX];
+	char src_dir[PATH_MAX];
+	char options[1024];
 	KEY_INFO keyinfo;
 };
 
