@@ -1,0 +1,3 @@
+mount.cmfs /root/encrypt /root/plain 
+docker run -it -v /root/plain:/mnt centos /bin/bash
+
