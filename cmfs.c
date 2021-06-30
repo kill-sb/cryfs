@@ -626,12 +626,11 @@ int main(int argc, char *argv[]) {
 		printf("Usage: cmfs <srcdir> <mntpoint> [options]\n");
   		return fuse_main(argc, argv, &cmfs_oper, NULL);
 	}
-	g_opts.src_dir=(char*)malloc(PATH_MAX+1);
-	strcpy(g_opts.src_dir,argv[1]);
-	g_opts.mnt_point=(char*)malloc(PATH_MAX+1);
-	strcpy(g_opts.mnt_point,argv[2]);
+//	g_opts.src_dir=(char*)malloc(PATH_MAX+1);
+	realpath(argv[1],g_opts.src_dir);
+//	g_opts.mnt_point=(char*)malloc(PATH_MAX+1);
+	realpath(argv[2],g_opts.mnt_point);
 	argv[1]=argv[0];
-	
 
   	cmfs_init(&args);
   	return fuse_main(argc-1, argv+1, &cmfs_oper, NULL);
