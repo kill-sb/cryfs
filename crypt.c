@@ -15,9 +15,9 @@ const char *get_passwd(char *buf /*AESBLOCK bytes*/)
 {
         char *pass;
         int i;
-        memset(buf,0,AESBLOCK);
+        memset(buf,0,AES_KEYLEN/8);
         pass=getpass("Input passwd:");
-        for (i=0;i<AESBLOCK && pass[i]!='\0'; i++)
+        for (i=0;i<AES_KEYLEN && pass[i]!='\0'; i++)
                 buf[i]=pass[i];
         return buf;
 }
@@ -47,7 +47,7 @@ static int unpad_buf(const unsigned char *src,int slen) // return original lengt
 void encode(const char* src, const char* passwd, char *dst,int len) // cbc only
 {
         AES_KEY aes;
-        unsigned char iv[AESBLOCK] = {0};
+        unsigned char iv[AES_KEYLEN/8] = {0};
         AES_set_encrypt_key(passwd,AES_KEYLEN,&aes);
         AES_cbc_encrypt(src,dst,len,&aes,iv,AES_ENCRYPT);
 }
@@ -55,7 +55,7 @@ void encode(const char* src, const char* passwd, char *dst,int len) // cbc only
 void decode(const char* src, const char* passwd, char* dst,int len)
 {
         AES_KEY aes;
-        unsigned char iv[AESBLOCK] = {0};
+        unsigned char iv[AES_KEYLEN/8] = {0};
         AES_set_decrypt_key(passwd,AES_KEYLEN,&aes);
         AES_cbc_encrypt(src,dst,len,&aes,iv,AES_DECRYPT);
 }

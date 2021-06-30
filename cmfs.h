@@ -10,18 +10,16 @@
 #define U_CTIME (1 << 1)
 #define U_MTIME (1 << 2)
 
-#define AES_KEYLEN 128 
-#define AESBLOCK (AES_KEYLEN/8)
-#define FILEBLOCK 1024
-
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
 
 
+#include "crypt.h"
+
 typedef struct key_info{
-    unsigned char crypt_key[AESBLOCK];
-    unsigned char iv[AESBLOCK];
+    unsigned char crypt_key[AES_KEYLEN/8];
+    unsigned char iv[AES_KEYLEN/8];
 }KEY_INFO;
 
 
