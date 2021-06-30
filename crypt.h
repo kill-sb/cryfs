@@ -2,7 +2,7 @@
 #define __CRYPT_H__
 
 #ifndef FILEBLOCK
-#define FILEBLOCK 1024
+#define FILEBLOCK 1024 
 #endif
 
 #ifndef AES_KEYLEN
