@@ -1,2 +1,3 @@
 unshare -m ./createpod
+docker rm `docker ps  -aq`
 

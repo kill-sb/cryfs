@@ -10,7 +10,7 @@
 
 #define AES_KEYLEN 128
 #define FILEBLOCK 1024
-#define AESBLOCK (AES_KEYLEN/8)
+#define AESBLOCK 16 
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
