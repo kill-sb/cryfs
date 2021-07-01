@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/xattr.h>
 #include <errno.h>
 #include <dirent.h>
 #include <sys/time.h>
@@ -125,7 +126,6 @@ static int cmfs_utimens(const char *path, const struct timespec ts[2]) {
 }
 
 static int cmfs_unlink(const char *path) {
-
 	char dst[PATH_MAX];
 	get_realname(dst,path);
 	if(unlink(dst)<0)
@@ -133,6 +133,47 @@ static int cmfs_unlink(const char *path) {
 	return 0;
 }
 
+static int cmfs_setxattr(const char * path , const char * name, const char * value, size_t size, int flags)
+{
+	int ret;
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	if(setxattr(dst,name,value,size,flags)<0)
+		return -errno;
+	return 0;
+}
+
+static int cmfs_getxattr(const char * path , const char * name, char * value, size_t size)
+{
+	int ret;
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	ret=getxattr(dst,name,value,size);
+	if (ret<0)
+		return -errno;
+	return ret;
+}
+
+static int cmfs_listxattr(const char *path, char * list , size_t size)
+{
+	int ret;
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	ret=listxattr(dst,list,size);
+	if(ret<0)
+		return -errno;
+	return ret;
+}
+
+static int cmfs_removexattr(const char* path, const char* name)
+{
+        int ret;
+        char dst[PATH_MAX];
+        get_realname(dst,path);
+	if(removexattr(dst,name)<0)
+		return -errno;
+	return 0;
+}
 
 static int cmfs_symlink(const char *from, const char *to) {
 	char dst[PATH_MAX];
@@ -558,7 +599,7 @@ static int cmfs_truncate(const char *path, off_t size) {
 	return ret;
 }
 
-
+/*
 static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
     int retstat = 0;
@@ -570,10 +611,10 @@ static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
     if (fi->fh < 0)
         retstat = -errno;
 	else
-    	retstat=fi->fh;
+    	retstat=0;
 
     return retstat;
-}
+}*/
 
 static struct fuse_operations cmfs_oper = {
   .getattr      = cmfs_getattr,
@@ -595,6 +636,10 @@ static struct fuse_operations cmfs_oper = {
   .rename       = cmfs_rename,
   .release      = cmfs_release,
   .utimens      = cmfs_utimens,
+  .setxattr	= cmfs_setxattr,
+  .getxattr	= cmfs_getxattr,
+  .listxattr	= cmfs_listxattr,
+  .removexattr	= cmfs_removexattr
 };
 
 void cmfs_init(struct fuse_args* args)
