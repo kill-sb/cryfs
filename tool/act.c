@@ -68,8 +68,6 @@ void decode(const char* src, const char* passwd, char* dst,int len)
 	AES_cbc_encrypt(src,dst,len,&aes,iv,AES_DECRYPT);
 }
 
-
-
 long encodefile(int sfd,int dfd, const char* passwd){
 	off_t flen,total=0;
 	struct stat st;
@@ -133,6 +131,7 @@ int main(int c,char**v)
 	char dfile[PATH_MAX];
 	char passwd[AESBLOCK];
 	int sfd,dfd;
+	struct stat st;
 	int enc=-1;
 	if(c<3) {
 		printf("Usage: %s -e(enc)/-d(dec) sourcefile\n",v[0]);
@@ -155,14 +154,17 @@ int main(int c,char**v)
 		close(sfd);
 		return enc;
 	}
-	dfd=creat(dfile,0777);
-	get_passwd(passwd);
-	if(enc){
-		printf("%ld bytes encoded\n",encodefile(sfd,dfd,passwd));
-	}else {
-		printf("%ld bytes decoded\n",decodefile(sfd,dfd,passwd));
+	fstat(sfd,&st);
+	dfd=creat(dfile,st.st_mode);
+	if(dfd){
+		get_passwd(passwd);
+		if(enc){
+			printf("%ld bytes encoded\n",encodefile(sfd,dfd,passwd));
+		}else {
+			printf("%ld bytes decoded\n",decodefile(sfd,dfd,passwd));
+		}
+		close(dfd);
 	}
-	close(dfd);
 	close(sfd);
 	return 0;
 }

@@ -1,6 +1,8 @@
 
-#define FUSE_USE_VERSION 26
+#define FUSE_USE_VERSION 39
+//#define FUSE_USE_VERSION 26
 #include <assert.h>
+#include <utime.h>
 #include <fuse.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -77,6 +79,7 @@ static size_t get_realsize(const char* realpath, size_t srclen){
 	int length;
 	int left=srclen%FILEBLOCK;
 	int fd;
+
 	if(srclen==0) return 0;
 	fd=open(realpath,O_RDONLY);
 	if(fd<0) return srclen;
@@ -98,6 +101,7 @@ static size_t get_realsize_fd(int fd, size_t srclen)
 	char plain[FILEBLOCK];
 	int length;
 	int left=srclen%FILEBLOCK;
+
 	if(srclen==0) return 0;
 	if(fd<0) return srclen;
 	if(left==0){
@@ -112,22 +116,26 @@ static size_t get_realsize_fd(int fd, size_t srclen)
 
 }
 
-static int cmfs_utimens(const char *path, const struct timespec ts[2]) {
+static int cmfs_utimens(const char *path, const struct timespec ts[2],struct fuse_file_info *fi) {
 	
 	char dst[PATH_MAX];
-	int fd;
 	int ret;
+	struct timeval tv[2];
 	get_realname(dst,path);
-	fd=open(dst,O_WRONLY);
-	if(fd<0) return -1;
-	ret=futimens(fd,ts);
-	close(fd);
-  	return ret;
+	tv[0].tv_sec=ts[0].tv_sec;
+	tv[0].tv_usec=ts[0].tv_nsec/1000000;
+	tv[1].tv_sec=ts[1].tv_sec;
+	tv[1].tv_usec=ts[1].tv_nsec/1000000;
+	if(utimes(dst,tv)<0)
+		return -errno;
+	return 0;
 }
 
 static int cmfs_unlink(const char *path) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
+	LOG("unlink:");
+	LOG(dst);
 	if(unlink(dst)<0)
 		return -errno;
 	return 0;
@@ -189,7 +197,7 @@ static int cmfs_release(const char *path, struct fuse_file_info *fi) {
  	return 0;
 }
 
-static int cmfs_chmod(const char *path, mode_t mode) {
+static int cmfs_chmod(const char *path, mode_t mode,struct fuse_file_info * fi) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
 	if(chmod(dst,mode)<0)
@@ -205,7 +213,7 @@ static int cmfs_mknod(const char *path, mode_t mode, dev_t rdev) {
 	return 0;
 }
 
-static int cmfs_rename(const char *from, const char *to) {
+static int cmfs_rename(const char *from, const char *to,unsigned int flags) {
 	char dstfrom[PATH_MAX],dstto[PATH_MAX];
 	get_realname(dstfrom,from);
 	get_realname(dstto,to);
@@ -214,7 +222,7 @@ static int cmfs_rename(const char *from, const char *to) {
 	return 0;
 }
 
-static int cmfs_chown(const char *path, uid_t uid, gid_t gid) {
+static int cmfs_chown(const char *path, uid_t uid, gid_t gid,struct fuse_file_info * fi) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
 	if(lchown(dst,uid,gid)<0)
@@ -225,15 +233,19 @@ static int cmfs_chown(const char *path, uid_t uid, gid_t gid) {
 static int cmfs_rmdir(const char *path) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
+	LOG("rmdir:");
+	LOG(dst);
 	if (rmdir(dst)<0)
 		return -errno;
 	return 0;
 }
 
-static int cmfs_getattr(const char *path, struct stat *stbuf) {
+static int cmfs_getattr(const char *path, struct stat *stbuf,struct fuse_file_info* fi) {
   	int ret;
 	char dst[PATH_MAX];
 	get_realname(dst,path);
+	LOG("getattr:");
+	LOG(dst);
   	if((ret=lstat(dst,stbuf))){
 	  	return -errno;
   	}
@@ -245,12 +257,14 @@ static int cmfs_getattr(const char *path, struct stat *stbuf) {
 static int cmfs_mkdir(const char *path, mode_t mode) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
+	LOG("mkdir:");
+	LOG(path);
 	if(mkdir(dst,mode)<0)
 		return -errno;
 	return 0;
 }
 
-static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
+static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flag) {
   char dstname[PATH_MAX];
   DIR* dir;
   struct dirent * drt;
@@ -259,11 +273,11 @@ static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off
   if(!dir){
 	  return ENOTDIR;
   }
-  	for(drt=readdir(dir);drt!=NULL;drt=readdir(dir))
-  	{
-		strcpy(dstname,drt->d_name);
-		filler(buf,dstname,NULL,0);
-	}
+  for(drt=readdir(dir);drt!=NULL;drt=readdir(dir))
+  {
+	strcpy(dstname,drt->d_name);
+	filler(buf,dstname,NULL,0,FUSE_FILL_DIR_PLUS);
+  }
   closedir(dir);
   return 0;
 }
@@ -571,12 +585,15 @@ static int extend_file(int fd, off_t size,off_t fsize){
 	return 0;
 }
 
-static int cmfs_truncate(const char *path, off_t size) {
+static int cmfs_truncate(const char *path, off_t size,struct fuse_file_info *fi) {
 	char dst[PATH_MAX];
 	int ret;
 	struct stat st;
 	off_t fsize;
 	int fd;
+	char log[1024];
+	sprintf(log,"truncate fd: %d",fi->fh);
+	LOG(log);
 	get_realname(dst,path);
 	if(size<=0)
 		return truncate(dst,size);
@@ -587,7 +604,7 @@ static int cmfs_truncate(const char *path, off_t size) {
 	if(S_ISDIR(st.st_mode)) {
 		return -EISDIR;
 	}
-    fsize=get_realsize(dst,st.st_size);
+    	fsize=get_realsize(dst,st.st_size);
 	if((fd=open(dst,O_RDWR))<0)
 		return -1;
 	if(size<fsize){
