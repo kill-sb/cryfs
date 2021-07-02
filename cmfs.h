@@ -10,9 +10,17 @@
 #define U_CTIME (1 << 1)
 #define U_MTIME (1 << 2)
 
+#ifndef AES_KEYLEN
 #define AES_KEYLEN 128 
-#define AESBLOCK (AES_KEYLEN/8)
+#endif 
+
+#ifndef AESBLOCK
+#define AESBLOCK 16 
+#endif
+
+#ifndef FILEBLOCK
 #define FILEBLOCK 1024
+#endif
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096

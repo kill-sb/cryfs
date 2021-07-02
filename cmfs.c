@@ -109,10 +109,9 @@ static int cmfs_utimens(const char *path, const struct timespec ts[2]) {
 	int fd;
 	int ret;
 	get_realname(dst,path);
-	fd=open(dst,O_WRONLY);
-	if(fd<0) return -1;
-	ret=futimens(fd,ts);
-	close(fd);
+	ret=utimensat(0,dst,ts,AT_SYMLINK_NOFOLLOW);
+	if(ret<0)
+		return -errno;
   	return ret;
 }
 
@@ -564,7 +563,7 @@ static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 	else
     	retstat=fi->fh;
 
-    return retstat;
+    return 0;
 }
 
 static struct fuse_operations cmfs_oper = {
