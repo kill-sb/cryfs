@@ -1,9 +1,9 @@
 
 CC=gcc
-CFLAGS=-g -D_FILE_OFFSET_BITS=64 -DFILEBLOCK=1024 -O2
+CFLAGS=-g  -D_FILE_OFFSET_BITS=64 -DFILEBLOCK=512 -I/usr/include/fuse3 -O2 
 #CFLAGS=-g -D_FILE_OFFSET_BITS=64 -O2
 #CFLAGS=-g -D_FILE_OFFSET_BITS=64 -D__DEBUG -O0
-LDFLAGS=-lfuse -lssl -lcrypto 
+LDFLAGS=-lfuse3 -lssl -lcrypto 
 
 OBJ=cmfs.o crypt.o
 #OBJ=cmfs.o node.o dir.o
