@@ -405,6 +405,10 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 			memcpy(plbuf+firstbyte,buf,size);
 			writeblk(fd,startblk,plbuf,endbyte,1);
 		}else if(startblk==lastfileblk){
+			if(firstbyte==0 && offset+size>=realsize){
+				memcpy(plbuf+firstbyte,buf,size);
+				writeblk(fd,startblk,plbuf,endbyte,1);
+			}else{
 			if((rd=readblk(fd,startblk,plbuf,1))<=0)
 				memset(plbuf,0,FILEBLOCK);
 			memcpy(plbuf+firstbyte,buf,size);
@@ -412,9 +416,12 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 				writeblk(fd,startblk,plbuf,rd,1);
 			else // overwrite the end , need repadding
 				writeblk(fd,startblk,plbuf,endbyte,1);
+			}
 		}else{// not lastfileblock
-			if((rd=readblk(fd,startblk,plbuf,0))<=0) 
-				memset(plbuf,0,FILEBLOCK);
+			if(firstbyte){
+				if((rd=readblk(fd,startblk,plbuf,0))<=0) 
+					memset(plbuf,0,FILEBLOCK);
+			}
 			memcpy(plbuf+firstbyte,buf,size);
 			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
 		}
@@ -425,13 +432,17 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
 			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
 		}else if(startblk==lastfileblk){
+			if(firstbyte){
 			if((rd=readblk(fd,startblk,plbuf,1))<=0)
 				memset(plbuf,0,FILEBLOCK);
+			}
 			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
 			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
 		}else{ // mid blocks of file
+			if(firstbyte){
 			if((rd=readblk(fd,startblk,plbuf,0))<=0)
 				memset(plbuf,0,FILEBLOCK);
+			}
 			memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
 			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
 		}
@@ -449,14 +460,21 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
 		writeblk(fd,endblk,plbuf,endbyte,1);
 	}else if(endblk==lastfileblk){
+		if(offset+size>=realsize){
+			memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
+			writeblk(fd,endblk,plbuf,endbyte,1);
+		}else{
 		rd=readblk(fd,endblk,plbuf,1);
 		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
 		if(rd>endbyte)
 			writeblk(fd,endblk,plbuf,rd,1);
 		else
 			writeblk(fd,endblk,plbuf,endbyte,1);
+		}
 	}else{ // in mid-file blocks
+		if(endbyte<FILEBLOCK){
 		rd=readblk(fd,endblk,plbuf,0);
+		}
 		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
 		writeblk(fd,endblk,plbuf,FILEBLOCK,0);
 	}
