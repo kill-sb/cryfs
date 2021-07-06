@@ -41,7 +41,7 @@ struct cmfs_options{
 };
 
 #ifdef __DEBUG
-#define LOG(str) {FILE *fp=fopen("/tmp/fs.log","a+");fprintf(fp,"%s\n",str);fclose(fp);}
+#define LOG(str) {FILE *fp=fopen("/tmp/fs.log","a+");time_t t=time(NULL);fprintf(fp,"%s-%s:%d--> %s\n",ctime(&t),__FILE__,__LINE__,str);fclose(fp);}
 #else
 #define LOG(str)
 #endif 
