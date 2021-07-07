@@ -6,6 +6,8 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/xattr.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -107,12 +109,10 @@ static int cmfs_utimens(const char *path, const struct timespec ts[2]) {
 	
 	char dst[PATH_MAX];
 	int fd;
-	int ret;
 	get_realname(dst,path);
-	ret=utimensat(0,dst,ts,AT_SYMLINK_NOFOLLOW);
-	if(ret<0)
+	if(utimensat(0,dst,ts,AT_SYMLINK_NOFOLLOW)<0)
 		return -errno;
-  	return ret;
+  	return 0;
 }
 
 static int cmfs_unlink(const char *path) {
@@ -183,10 +183,10 @@ static int cmfs_rmdir(const char *path) {
 static int cmfs_getattr(const char *path, struct stat *stbuf) {
 	char dst[PATH_MAX];
 	get_realname(dst,path);
-	LOG(dst);
+//	LOG(dst);
   	if(lstat(dst,stbuf)<0){
-		LOG("stat error");
-		LOG(strerror(errno));
+//		LOG("------------stat error----------------");
+//		LOG(strerror(errno));
 	  	return -errno;
   	}
 	if(S_ISREG(stbuf->st_mode))
@@ -203,21 +203,21 @@ static int cmfs_mkdir(const char *path, mode_t mode) {
 }
 
 static int cmfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
-  char dstname[PATH_MAX];
-  DIR* dir;
-  struct dirent * drt;
-  sprintf(dstname,"%s%s",g_opts.src_dir,path);
-  dir=opendir(dstname);
-  if(!dir){
-	  return ENOTDIR;
-  }
-  	for(drt=readdir(dir);drt!=NULL;drt=readdir(dir))
-  	{
+	char dstname[PATH_MAX];
+	DIR* dir;
+	struct dirent * drt;
+	sprintf(dstname,"%s%s",g_opts.src_dir,path);
+	dir=opendir(dstname);
+	if(!dir){
+		return ENOTDIR;
+	}
+	for(drt=readdir(dir);drt!=NULL;drt=readdir(dir))
+	{
 		strcpy(dstname,drt->d_name);
 		filler(buf,dstname,NULL,0);
 	}
-  closedir(dir);
-  return 0;
+	closedir(dir);
+	return 0;
 }
 
 static int cmfs_readlink(const char *path, char *buf, size_t size) {
@@ -252,8 +252,8 @@ static int cmfs_open(const char *path, struct fuse_file_info *fi) {
 
 		return -EISDIR;
 	}
-
-	fd=open(dst,O_RDWR);
+	
+	fd=open(dst, O_RDWR);
 	fi->fh = fd;
 	return 0;
 }
@@ -267,7 +267,6 @@ static int cmfs_read(const char *path, char *buf, size_t size, off_t offset, str
 	struct stat st; 
 	int firstread;
 	int startbyte,lastbyte;
-	int startcpy,endcpy; // start and end byte in memcpy between return buf --"buf" and decrypted block --"plbuf"
 
 	int rd; // real read bytes 
 	int de; // decrypted plaintext length (in 1k block) 
@@ -368,7 +367,7 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 
 	int rd; // real read bytes 
 	int de; // decrypted plaintext length (in 1k block) 
-	
+
 
 	//ret=pwrite(fi->fh,buf,size,offset);
 
@@ -394,90 +393,92 @@ static int native_write(const char *buf, size_t size, off_t offset,int fd)
 	}
 
 
-// static int writeblk(int fd, off_t blk, const char *buf, int slen ,int needpad); // buf should start from beginning of a block,but not byte start to be encrypted, slen is whole buf size(startbyte+size  or FILEBLOCK),because left bytes should be all reencrypted
+	// static int writeblk(int fd, off_t blk, const char *buf, int slen ,int needpad); // buf should start from beginning of a block,but not byte start to be encrypted, slen is whole buf size(startbyte+size  or FILEBLOCK),because left bytes should be all reencrypted
 
 	// first step , process first block
 
 	if(startblk==endblk){ // only one block,use "size" in memcpy
-	    if(startblk>lastfileblk) // need not readblk
-	    {
-		//extend_file(int fd, off_t size,off_t fsize);
-		extend_file(fd,end,realsize);
-		memcpy(plbuf+firstbyte,buf,size);
-		writeblk(fd,startblk,plbuf,endbyte,1);
-	    }else if(startblk==lastfileblk){
-		if(firstbyte==0 && offset+size>=realsize){
-		    memcpy(plbuf+firstbyte,buf,size);
-		    writeblk(fd,startblk,plbuf,endbyte,1);
-		}else{
-		    if((rd=readblk(fd,startblk,plbuf,1))<=0)
-			memset(plbuf,0,FILEBLOCK);
-		    memcpy(plbuf+firstbyte,buf,size);
-		    if(rd>=endbyte) // left bytes need to be reencrypted(actually do not need repadding)
-			writeblk(fd,startblk,plbuf,rd,1);
-		    else // overwrite the end , need repadding
+		if(startblk>lastfileblk) // need not readblk
+		{
+			//extend_file(int fd, off_t size,off_t fsize);
+			extend_file(fd,end,realsize);
+			memcpy(plbuf+firstbyte,buf,size);
 			writeblk(fd,startblk,plbuf,endbyte,1);
+		}else if(startblk==lastfileblk){
+			if(firstbyte==0 && offset+size>=realsize){
+				memcpy(plbuf,buf,size);
+				writeblk(fd,startblk,plbuf,size,1);
+			}else{// need readblk
+				if((rd=readblk(fd,startblk,plbuf,1))<=0)
+					memset(plbuf,0,FILEBLOCK);
+				memcpy(plbuf+firstbyte,buf,size);
+				if(rd>=endbyte) // left bytes need to be reencrypted(actually do not need repadding)
+					writeblk(fd,startblk,plbuf,rd,1);
+				else // overwrite the end , need repadding
+					writeblk(fd,startblk,plbuf,endbyte,1);
+			}
+		}else{// not lastfileblock
+			if(firstbyte!=0 || endbyte!=FILEBLOCK){
+				if(readblk(fd,startblk,plbuf,0)<=0) 
+					memset(plbuf,0,FILEBLOCK);
+			}
+			memcpy(plbuf+firstbyte,buf,size);
+			writeblk(fd,startblk,plbuf,FILEBLOCK,0);
 		}
-	    }else{// not lastfileblock
-		if(firstbyte!=0 || endbyte!=FILEBLOCK){
-		    if(readblk(fd,startblk,plbuf,0)<=0) 
-			memset(plbuf,0,FILEBLOCK);
-		}
-		memcpy(plbuf+firstbyte,buf,size);
-		writeblk(fd,startblk,plbuf,FILEBLOCK,0);
-	    }
-	    return size;
-	}else{ // need not pad, more blocks will follow
-	    if(startblk>lastfileblk){
+		return size;
+	} 
+	// two or more blocks to be written, first block need not padding, more blocks will follow
+	if(startblk>lastfileblk){
 		extend_file(fd,end,realsize);
 		memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
 		writeblk(fd,startblk,plbuf,FILEBLOCK,0);
-	    }else if(startblk==lastfileblk){
+	}else if(startblk==lastfileblk){
 		if(firstbyte){
-		    if((rd=readblk(fd,startblk,plbuf,1))<=0)
-			memset(plbuf,0,FILEBLOCK);
+			if(readblk(fd,startblk,plbuf,1)<=0)
+				memset(plbuf,0,FILEBLOCK);
 		}
 		memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
 		writeblk(fd,startblk,plbuf,FILEBLOCK,0);
-	    }else{ // mid blocks of file
+	}else{ // mid blocks of file
 		if(firstbyte){
-		    if(readblk(fd,startblk,plbuf,0)<=0)
-			memset(plbuf,0,FILEBLOCK);
+			if(readblk(fd,startblk,plbuf,0)<=0)
+				memset(plbuf,0,FILEBLOCK);
 		}
 		memcpy(plbuf+firstbyte,buf,FILEBLOCK-firstbyte);
 		writeblk(fd,startblk,plbuf,FILEBLOCK,0);
-	    }
 	}
 
 	// mid block, write whole block
 	for (iblk=startblk+1;iblk<endblk;iblk++){		
-	    memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(iblk-startblk-1)*FILEBLOCK,FILEBLOCK);
-	    writeblk(fd,iblk,plbuf,FILEBLOCK,0);
+		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(iblk-startblk-1)*FILEBLOCK,FILEBLOCK);
+		writeblk(fd,iblk,plbuf,FILEBLOCK,0);
 	}
 
 	// last block -- endblk, and must not be firstblk
 	memset(plbuf,0,FILEBLOCK);
 	if(endblk>lastfileblk){// simply memcpy
-	    memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
-	    writeblk(fd,endblk,plbuf,endbyte,1);
-	}else if(endblk==lastfileblk){
-	    if(offset+size>=realsize){ // overwrite the end of file, do not need read and reencrypt orginal data 
 		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
 		writeblk(fd,endblk,plbuf,endbyte,1);
-	    }else{
-		rd=readblk(fd,endblk,plbuf,1);
-		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
-		if(rd>endbyte)
-		    writeblk(fd,endblk,plbuf,rd,1);
-		else
-		    writeblk(fd,endblk,plbuf,endbyte,1);
-	    }
+	}else if(endblk==lastfileblk){
+		if(offset+size>=realsize){ // overwrite the end of file, do not need read and reencrypt orginal data 
+			memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
+			writeblk(fd,endblk,plbuf,endbyte,1);
+		}else{
+			rd=readblk(fd,endblk,plbuf,1);
+			memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
+			if(rd>endbyte) // should be assert true
+				writeblk(fd,endblk,plbuf,rd,1);
+			else{
+				LOG("Impossible here");
+				writeblk(fd,endblk,plbuf,endbyte,1);
+			}
+		}
 	}else{ // in mid-file blocks
-	    if(endbyte<FILEBLOCK){
-		rd=readblk(fd,endblk,plbuf,0);
-	    }
-	    memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
-	    writeblk(fd,endblk,plbuf,FILEBLOCK,0);
+		if(endbyte<FILEBLOCK){
+			readblk(fd,endblk,plbuf,0);
+		}
+		memcpy(plbuf,buf+(FILEBLOCK-firstbyte)+(endblk-startblk-1)*FILEBLOCK,endbyte);
+		writeblk(fd,endblk,plbuf,FILEBLOCK,0);
 	}
 
 	return size;
@@ -567,7 +568,48 @@ static int cmfs_truncate(const char *path, off_t size) {
 	return ret;
 }
 
+static int cmfs_setxattr(const char * path , const char * name, const char * value, size_t size, int flags)
+{
+	int ret;
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	if(setxattr(dst,name,value,size,flags)<0)
+		return -errno;
+	return 0;
+}
 
+static int cmfs_getxattr(const char * path , const char * name, char * value, size_t size)
+{
+	int ret;
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	ret=getxattr(dst,name,value,size);
+	if (ret<0)
+		return -errno;
+	return ret;
+}
+
+static int cmfs_listxattr(const char *path, char * list , size_t size)
+{
+	int ret;
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	ret=listxattr(dst,list,size);
+	if(ret<0)
+		return -errno;
+	return ret;
+}
+
+static int cmfs_removexattr(const char* path, const char* name)
+{
+        int ret;
+        char dst[PATH_MAX];
+        get_realname(dst,path);
+	if(removexattr(dst,name)<0)
+		return -errno;
+	return 0;
+}
+/* "creat" will lead reading  unusable
 static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
     int retstat = 0;
@@ -582,7 +624,7 @@ static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
     	retstat=fi->fh;
 
     return 0;
-}
+}*/
 
 static struct fuse_operations cmfs_oper = {
   .getattr      = cmfs_getattr,
@@ -591,7 +633,7 @@ static struct fuse_operations cmfs_oper = {
   .open         = cmfs_open,
   .read         = cmfs_read,
   .write		= cmfs_write,
-  .create		= cmfs_create,
+//  .create		= cmfs_create,
   .unlink       = cmfs_unlink,
   .chmod        = cmfs_chmod,
   .chown        = cmfs_chown,
@@ -604,6 +646,10 @@ static struct fuse_operations cmfs_oper = {
   .rename       = cmfs_rename,
   .release      = cmfs_release,
   .utimens      = cmfs_utimens,
+  .setxattr     = cmfs_setxattr,
+  .getxattr     = cmfs_getxattr,
+  .listxattr    = cmfs_listxattr,
+  .removexattr  = cmfs_removexattr,
 };
 
 void cmfs_init(struct fuse_args* args)

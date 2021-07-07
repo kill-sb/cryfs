@@ -18,6 +18,7 @@ int main(int c , char **v)
 		perror("fail:");
 		return 1;
 	}
+	/*
 	printf("ch:");
 	ch=getchar();
 	printf("Start,cnt:\n");
@@ -27,6 +28,8 @@ int main(int c , char **v)
 
 	printf("size:%d-offset:%d\n",cnt,start);
 	pwrite(fd,p,cnt,start);
+	*/
+	printf("fd: %d\n",fd);
 	close(fd);
 	return 0;
 }
