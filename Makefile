@@ -14,8 +14,9 @@ cmfs: $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) -o cmfs
 
 test:cmfs
-	./cmfs  /tmp/aes /mnt -o kernel_cache -o auto_cache
-#-o big_writes -o max_write=32768 -o entry_timeout=60 -o attr_timeout=120  -o kernel_cache -o auto_cache
+#	./cmfs  /tmp/mnt  /mnt -o big_writes -o max_write=65536 -o entry_timeout=120 -o attr_timeout=120
+#	./cmfs  /tmp/mnt  /mnt -o big_writes -o max_write=65536 -o entry_timeout=120 -o attr_timeout=120  -o kernel_cache -o auto_cache
+	./cmfs  /tmp/mnt  /mnt  -o kernel_cache -o auto_cache
 .PHONY: clean
 clean:
 	rm -f *.o cmfs
