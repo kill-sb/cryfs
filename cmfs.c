@@ -121,12 +121,16 @@ static int cmfs_utimens(const char *path, const struct timespec ts[2],struct fus
 	char dst[PATH_MAX];
 	int ret;
 	struct timeval tv[2];
+	char buf[1024];
 	get_realname(dst,path);
+	sprintf(buf,"%ld-%ld\t,%ld-%ld",ts[0].tv_sec,ts[0].tv_nsec,ts[1].tv_sec,ts[1].tv_nsec);
+	LOG(buf);
 	tv[0].tv_sec=ts[0].tv_sec;
-	tv[0].tv_usec=ts[0].tv_nsec/1000000;
+	tv[0].tv_usec=0;//ts[0].tv_nsec/1000;
 	tv[1].tv_sec=ts[1].tv_sec;
-	tv[1].tv_usec=ts[1].tv_nsec/1000000;
-	if(utimes(dst,tv)<0)
+	tv[1].tv_usec=0;//ts[1].tv_nsec/1000;
+	//if(utimes(dst,tv)<0)
+	if(utimensat(0,dst,ts,AT_SYMLINK_NOFOLLOW)<0)
 		return -errno;
 	return 0;
 }
