@@ -9,12 +9,15 @@
 #include <errno.h>
 
 #define AES_KEYLEN 128
-#define FILEBLOCK 1024
+#define FILEBLOCK 4096 
+//#define FILEBLOCK 1024
 #define AESBLOCK 16 
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
+
+/* aes 128 cbc-mode encrypt, 4096 bytes per file block, PKCS/7 padding */
 
 const char *get_passwd(char *buf /* AESBLOCK bytes*/)
 {
@@ -27,7 +30,7 @@ const char *get_passwd(char *buf /* AESBLOCK bytes*/)
 	return buf;
 }
 
-int pad_buf(const char* src, char* dst,int orgbytes) // return length  after pad
+int pad_buf(const char* src, char* dst,int orgbytes) // return length  after padding
 {
 	int i;
 	int padbytes=AESBLOCK-orgbytes%AESBLOCK;

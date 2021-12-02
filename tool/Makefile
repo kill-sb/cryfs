@@ -1,4 +1,7 @@
-GCCFLAGS=-g -O0 -lssl -lcrypto
+GCCFLAGS=-g -O2 -lssl -lcrypto
 
-cmtool:act.c
-	gcc act.c $(GCCFLAGS) -o cmtool 
+cmtest:act.c
+	gcc act.c $(GCCFLAGS) -o cmtest
+
+clean:
+	rm -f cmtest
