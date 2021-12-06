@@ -49,10 +49,23 @@ func GetDB() *sql.DB {
 }
 
 func LookupPasswdSHA(user string)(string,error){
-	db:=GetDB(0
+	db:=GetDB()
 	query:=fmt.Sprintf("select pwdsha256 from users where name='%s'",user)
+	res,err:=db.Query(query)
+	if err!=nil{
+		return "",err
+	}
+	if res.Next(){
+		var shasum string
+		if err:=res.Scan(&shasum);err!=nil{
+			return "",err
+		}else{
+			return shasum,nil
+		}
+	}
+	return "",errors.New("No such user")
 }
-
+/*
 func Lookup(year, term int) (*Info, error) {
 	db := GetDB()
 	var id int
@@ -189,4 +202,4 @@ func (info *Info) AddInfo() error {
 		return err
 	}
 	return nil
-}
+}*/

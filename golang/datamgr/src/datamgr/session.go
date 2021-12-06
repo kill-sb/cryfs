@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net"
 	"unsafe"
+	"errors"
+	"crypto/sha256"
+	"dbop"
 )
 
 /*
@@ -40,7 +43,15 @@ func (*LoginInfo) Logout() error{
 }
 
 func do_login(user string,passwd []byte)error{
-	return nil
+	if shasum,err:=dbop.LookupPasswdSHA(user);err!=nil{
+		return err
+	}else{
+		sharet:=sha256.Sum256(passwd)
+		if	string(sharet[:])==shasum{
+			return nil
+		}
+	}
+	return errors.New("Auth error")
 }
 
 func Login(user string)(*LoginInfo, error){
