@@ -1,8 +1,6 @@
 #ifndef __CMFS_H__
 #define __CMFS_H__
 
-#define BLOCKSIZE 4096
-
 #define O_WRITE(flags) ((flags) & (O_RDWR | O_WRONLY))
 #define O_READ(flags)  (((flags) & (O_RDWR | O_RDONLY)) | !O_WRITE(flags))
 
