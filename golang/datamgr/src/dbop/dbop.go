@@ -48,22 +48,24 @@ func GetDB() *sql.DB {
 	return curdb
 }
 
-func LookupPasswdSHA(user string)(string,error){
+func LookupPasswdSHA(user string)(int,string,string,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select pwdsha256 from users where name='%s'",user)
+	query:=fmt.Sprintf("select id,pwdsha256,enclocalkey from users where name='%s'",user)
 	res,err:=db.Query(query)
 	if err!=nil{
-		return "",err
+		return -1,"","",err
 	}
 	if res.Next(){
+		var key string
 		var shasum string
-		if err:=res.Scan(&shasum);err!=nil{
-			return "",err
+		var id int
+		if err:=res.Scan(&id,&shasum,&key);err!=nil{
+			return -1,"","",err
 		}else{
-			return shasum,nil
+			return id,shasum,key,nil
 		}
 	}
-	return "",errors.New("No such user")
+	return -1,"","",errors.New("No such user")
 }
 /*
 func Lookup(year, term int) (*Info, error) {
