@@ -7,24 +7,10 @@ import (
 	"fmt"
 	"os"
 	"time"
+	core "coredata"
 )
 
 var curdb *sql.DB
-
-type Info struct {
-	RedBalls [6]int
-	BlueBall int
-	Year     int
-	Term     int
-	Date     string
-}
-
-type MySelInfo struct {
-	RedBalls []int
-	BlueBall int
-	Date     string
-	Id       int
-}
 
 func init() {
 	ConnDB()
@@ -46,6 +32,10 @@ func GetDB() *sql.DB {
 		ConnDB()
 	}
 	return curdb
+}
+
+func SaveMeta(pdata *core.EncryptedData) error{
+	return nil
 }
 
 func LookupPasswdSHA(user string)(int,string,string,error){

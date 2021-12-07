@@ -148,8 +148,10 @@ import(
 	"os/exec"
 	"strings"
 	"crypto/rand"
+	"dbop"
+	core "coredata"
 )
-
+/*
 const (
 	INVALID=iota
 	ENCODE
@@ -170,6 +172,7 @@ type EncryptedData struct{
 	OwnerId int
 	EncryptedKey []byte
 }
+*/
 
 const AES_KEY_LEN=128
 
@@ -177,7 +180,7 @@ var definpath , inpath string
 var defoutpath,outpath string
 var defuser, user string
 
-func (linfo* LoginInfo)GetRawKey(src []byte)([]byte, error){
+func GetRawKey(linfo *core.LoginInfo ,src []byte)([]byte, error){
     if(linfo.Keylocalkey!=nil && len(linfo.Keylocalkey)!=0){
         srclen:=len(src)
         dst:=make([]byte,srclen)
@@ -208,29 +211,45 @@ func GetFunction() int {
 	flag.Parse()
 	if bEnc{
 		if (bShare || bMnt ==false){
-			return ENCODE
+			return core.ENCODE
 		}else{
-			return INVALID
+			return core.INVALID
 		}
 	}else if bShare{
 		if bMnt==false{
-			return DISTRIBUTE
+			return core.DISTRIBUTE
 		}else{
-			return INVALID
+			return core.INVALID
 		}
 	}else if bMnt{
-		return MOUNT
+		return core.MOUNT
 	}
-	return INVALID
+	return core.INVALID
 }
 
 func EncodeDir(ipath string, opath string, user string) error{
 	return nil
 }
 
-func RecordMetaFromRaw(pdata *EncryptedData ,linfo *LoginInfo, passwd []byte,ipath string, opath string)error{
+func SaveLocalTag(pdata* core.EncryptedData, savedkey []byte)error{
+	return nil
+}
+
+func SendMetaToServer(pdata *core.EncryptedData)error{
+	dbop.SaveMeta(pdata)
+	return nil
+}
+
+func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string)error{
 	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
 	// RecordLocal && Record Remote
+	savedkey:=make([]byte,128/8)
+	cdstkey:=(*C.char)(unsafe.Pointer(&savedkey[0]))
+	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
+	clocalkey:=(*C.char)(unsafe.Pointer(&keylocalkey[0]))
+	C.encode(cpasswd,clocalkey,cdstkey,128/8)
+	SaveLocalTag(pdata,savedkey)
+	SendMetaToServer(pdata)
 	return nil
 }
 
@@ -257,25 +276,24 @@ func EncodeFile(ipath string, opath string, user string) error{
 
 	passwd,err:=RandPasswd()
 	if err!=nil{
-		return nil
+		return err
 	}else{
-	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
-	cipath:=C.CString(ipath)
-	copath:=C.CString(opath)
-//	tmpkey:=C.CString(linfo.Keylocalkey)
-	defer C.free(unsafe.Pointer(cipath))
-	defer C.free(unsafe.Pointer(copath))
-//	defer C.free(unsafe.Pointer(tmpkey))
-//	C.do_encode(cipath,copath,tmpkey) // just for test, next line is the real final way
-	C.do_encode(cipath,copath,cpasswd)
-	pdata:=new(EncryptedData)
+	pdata:=new(core.EncryptedData)
 	pdata.Uuid,_=GetUuid()
 	pdata.Descr=""
-	pdata.FromType=RAWDATA
+	pdata.FromType=core.RAWDATA
 	pdata.FromObj=ipath
 	pdata.OwnerId=linfo.Id
 	pdata.EncryptedKey=passwd
-	RecordMetaFromRaw(pdata,linfo,passwd,ipath,opath)
+
+	ofile:=opath+"/"+pdata.Uuid
+	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
+	cipath:=C.CString(ipath)
+	cofile:=C.CString(ofile)
+	defer C.free(unsafe.Pointer(cipath))
+	defer C.free(unsafe.Pointer(cofile))
+	C.do_encode(cipath,cofile,cpasswd)
+	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath)
 	linfo.Logout()
 	return nil
 	}
@@ -298,6 +316,8 @@ func doEncode(){
 	}
 	if outpath==""{
 		outpath="./"
+	}else{
+		os.MkdirAll(outpath,0755)
 	}
 	if info,err:=os.Stat(inpath);err!=nil{
 		fmt.Println("Can't find ",inpath)
@@ -315,10 +335,10 @@ func main(){
 	LoadConfig()
 	fun:=GetFunction()
 	switch fun{
-	case ENCODE:
+	case core.ENCODE:
 		doEncode()
-	case DISTRIBUTE:
-	case MOUNT:
+	case core.DISTRIBUTE:
+	case core.MOUNT:
 	default:
 		fmt.Println("Error parameters,use -h or --help for usage")
 	}

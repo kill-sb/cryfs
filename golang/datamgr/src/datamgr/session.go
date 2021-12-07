@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"unsafe"
 	"errors"
 	"crypto/sha256"
 	"dbop"
+	core "coredata"
 )
 
 /*
@@ -31,18 +31,7 @@ int get_passwd(char *buf,int len)
 }*/
 import "C"
 
-type LoginInfo struct{
-	Conn net.Conn
-	Name string
-	Id int
-	Keylocalkey []byte
-}
-
-func (info *LoginInfo) Logout() error{
-	return  nil
-}
-
-func do_login(user string, passwd []byte)(*LoginInfo,error){
+func do_login(user string, passwd []byte)(*core.LoginInfo,error){
 	if id,shasum,key,err:=dbop.LookupPasswdSHA(user);err!=nil{
 		return nil,err
 	}else{
@@ -53,7 +42,7 @@ func do_login(user string, passwd []byte)(*LoginInfo,error){
 		}
 		fmt.Printf("login info: sharet %s, sha in db: %s\n",shastr,shasum)
 		if	shastr==shasum{
-			linfo:=&LoginInfo{Name:user,Id:id}
+			linfo:=&core.LoginInfo{Name:user,Id:id}
 			keylen:=len(key)/2
 			linfo.Keylocalkey=make([]byte,keylen)
 			for i:=0;i<keylen;i++{
@@ -79,7 +68,7 @@ func (linfo* LoginInfo)GetRawKey(src []byte)([]byte, error){
 	return nil,errors.New("Load key for decrypt localkey error")
 }
 */
-func Login(user string)(*LoginInfo, error){
+func Login(user string)(*core.LoginInfo, error){
 //	linfo:=new (LoginInfo)
 //	linfo.Name=user
 	passwd:=make([]byte,16) // max 16 bytes password
