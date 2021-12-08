@@ -35,6 +35,12 @@ func GetDB() *sql.DB {
 }
 
 func SaveMeta(pdata *core.EncryptedData) error{
+	db:=GetDB()
+	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5) values ('%s','%s','%d','%s','%d','%s')",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5)
+	if _, err := db.Exec(query); err != nil {
+		fmt.Println("Insert into db error:", err)
+		return err
+	}
 	return nil
 }
 
@@ -58,25 +64,6 @@ func LookupPasswdSHA(user string)(int32,string,string,error){
 	return -1,"","",errors.New("No such user")
 }
 /*
-func Lookup(year, term int) (*Info, error) {
-	db := GetDB()
-	var id int
-	query := fmt.Sprintf("select * from records where year='%d' and term='%d'", year, term)
-	res, err := db.Query(query)
-	if err != nil {
-		fmt.Println("Lookup in database error:", err)
-		return nil, err
-	}
-	if res.Next() {
-		info := new(Info)
-		if err := res.Scan(&info.Year, &info.Term, &info.RedBalls[0], &info.RedBalls[1], &info.RedBalls[2], &info.RedBalls[3], &info.RedBalls[4], &info.RedBalls[5], &info.BlueBall, &info.Date, &id); err == nil {
-			return info, nil
-		} else {
-			fmt.Println("Scan err", err)
-		}
-	}
-	return nil, nil
-}
 
 func DelSel(id int) bool {
 	db := GetDB()
@@ -91,22 +78,6 @@ func DelSel(id int) bool {
 	return false
 }
 
-func findLeastID() (int, error) {
-	db := GetDB()
-	for i := 1; ; i++ {
-		query := fmt.Sprintf("select bb from mysel where id=%d", i)
-		if res, err := db.Query(query); err != nil {
-			return 0, err
-		} else {
-			if res.Next() {
-				continue
-			} else {
-				return i, nil
-			}
-		}
-	}
-	return 0, errors.New("Impossible error")
-}
 
 func (info *MySelInfo) UpdateInfo() (bool, error) {
 	db := GetDB()
@@ -121,77 +92,34 @@ func (info *MySelInfo) UpdateInfo() (bool, error) {
 	return ret, nil
 }
 
-func InsertSel(info *MySelInfo) {
-	db := GetDB()
-	var err error
-	if info.Id, err = findLeastID(); err != nil {
-		fmt.Println("Find id error:", err.Error())
-		return
-	}
-	query := fmt.Sprintf("insert into mysel(id,rb1,rb2,rb3,rb4,rb5,rb6,bb,date) values ('%d','%d','%d','%d','%d','%d','%d','%d','%s')", info.Id, info.RedBalls[0], info.RedBalls[1], info.RedBalls[2], info.RedBalls[3], info.RedBalls[4], info.RedBalls[5], info.BlueBall, info.Date)
-	if _, err := db.Exec(query); err != nil {
-		fmt.Println("insert failed:", err.Error())
-	}
-}
-
-func GetSelected() []*MySelInfo {
-	db := GetDB()
-	query := fmt.Sprintf("Select * from mysel order by id asc")
-	if res, err := db.Query(query); err != nil {
-		fmt.Println("select in db error", err.Error())
-		return nil
-	} else {
-		list := make([]*MySelInfo, 0, 100) // should <10
-		for res.Next() {
-			info := new(MySelInfo)
-			info.RedBalls = make([]int, 6)
-			if err := res.Scan(&info.Id, &info.RedBalls[0], &info.RedBalls[1], &info.RedBalls[2], &info.RedBalls[3], &info.RedBalls[4], &info.RedBalls[5], &info.BlueBall, &info.Date); err != nil {
-				fmt.Println("Scan query error in GetSeled:", err.Error())
-				return nil
-			} else {
-				list = append(list, info)
-			}
-		}
-		return list
-	}
-}
-
 func EnumAll(startyear int, limit int64, proc func(info *Info)) {
-	db := GetDB()
-	query := fmt.Sprintf("select count(*) as value from records")
-	var rows int64
-	if err := db.QueryRow(query).Scan(&rows); err != nil {
-		fmt.Println("Query rows error")
-		return
-	}
-	if rows < limit || limit < 0 {
-		limit = rows
-	}
+    db := GetDB()
+    query := fmt.Sprintf("select count(*) as value from records")
+    var rows int64
+    if err := db.QueryRow(query).Scan(&rows); err != nil {
+        fmt.Println("Query rows error")
+        return
+    }
+    if rows < limit || limit < 0 {
+        limit = rows
+    }
 
-	query = fmt.Sprintf("select * from records where year>=%d limit %d,%d", startyear, rows-limit, limit)
-	if res, err := db.Query(query); err != nil {
-		fmt.Println("slect in db error")
-		return
-	} else {
-		info := new(Info)
-		var id int
-		for res.Next() {
-			if err := res.Scan(&info.Year, &info.Term, &info.RedBalls[0], &info.RedBalls[1], &info.RedBalls[2], &info.RedBalls[3], &info.RedBalls[4], &info.RedBalls[5], &info.BlueBall, &info.Date, &id); err == nil {
-				proc(info)
-			} else {
-				fmt.Println("Scan query data error", err)
-				break
-			}
-		}
-	}
+    query = fmt.Sprintf("select * from records where year>=%d limit %d,%d", startyear, rows-limit, limit)
+    if res, err := db.Query(query); err != nil {
+        fmt.Println("slect in db error")
+        return
+    } else {
+        info := new(Info)
+        var id int
+        for res.Next() {
+            if err := res.Scan(&info.Year, &info.Term, &info.RedBalls[0], &info.RedBalls[1], &info.RedBalls[2], &info.RedBalls[3], &info.RedBalls[4], &info.RedBalls[5], &info.BlueBall, &info.Date, &id); err == nil {
+                proc(info)
+            } else {
+                fmt.Println("Scan query data error", err)
+                break
+            }
+        }
+    }
 }
 
-func (info *Info) AddInfo() error {
-	db := GetDB()
-	query := fmt.Sprintf("insert into records (year,term,rb1,rb2,rb3,rb4,rb5,rb6,bb,runtime) values ('%d','%d','%d','%d','%d','%d','%d','%d','%d','%s')", info.Year, info.Term, info.RedBalls[0], info.RedBalls[1], info.RedBalls[2], info.RedBalls[3], info.RedBalls[4], info.RedBalls[5], info.BlueBall, info.Date)
-	if _, err := db.Exec(query); err != nil {
-		fmt.Println("Insert into db error:", err)
-		return err
-	}
-	return nil
-}*/
+*/

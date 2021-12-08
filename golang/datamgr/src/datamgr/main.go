@@ -138,7 +138,7 @@ void do_encodefile(const char* from, const char* dfile, const char *passwd)
 	sfd=open(from,O_RDONLY);
     struct stat st;
     fstat(sfd,&st);
-	printf("%s->%s,paswd %s\n",from,dfile,passwd);
+	printf("%s->%s\n",from,dfile);
     dfd=creat(dfile,st.st_mode);
     if(dfd){
         printf("%ld bytes encoded\n",encodefd(sfd,dfd,passwd));
@@ -147,6 +147,20 @@ void do_encodefile(const char* from, const char* dfile, const char *passwd)
     close(sfd);
 }
 
+void do_decodefile(const char* from, const char* dfile, const char *passwd)
+{
+	int sfd,dfd;
+	sfd=open(from,O_RDONLY);
+    struct stat st;
+    fstat(sfd,&st);
+	printf("%s->%s\n",from,dfile);
+    dfd=creat(dfile,st.st_mode);
+    if(dfd){
+        printf("%ld bytes encoded\n",decodefd(sfd,dfd,passwd));
+        close(dfd);
+    }
+    close(sfd);
+}
 */
 //#cgo LDFLAGS: -lssl -lcrypto
 import "C"
@@ -202,31 +216,33 @@ func LoadConfig(){
 }
 
 func GetFunction() int {
-	var bEnc,bShare,bMnt,bDec bool
+	var bList,bEnc,bTrace,bShare,bMnt,bDec bool
 	flag.BoolVar(&bEnc,"e",false,"encrypt raw data")
 	flag.BoolVar(&bShare,"s",false,"share data to other users")
 	flag.BoolVar(&bMnt,"m",false,"mount encrypted data")
 	flag.BoolVar(&bDec,"d",false,"decrypted local data(test only)")
+	flag.BoolVar(&bTrace,"t",false,"trace source of data")
+	flag.BoolVar(&bList,"l",false,"list local encrypted data")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&user,"user",defuser, "login user name")
 	flag.Parse()
+	if(bList){
+		return core.LIST
+	}
+	if(bTrace){
+		return core.TRACE
+	}
 	if(bDec){
 		return core.DECODE
 	}
 	if bEnc{
-		if (bShare || bMnt ==false){
-			return core.ENCODE
-		}else{
-			return core.INVALID
-		}
-	}else if bShare{
-		if bMnt==false{
-			return core.DISTRIBUTE
-		}else{
-			return core.INVALID
-		}
-	}else if bMnt{
+		return core.ENCODE
+	}
+	if bShare{
+		return core.DISTRIBUTE
+	}
+	if bMnt{
 		return core.MOUNT
 	}
 	return core.INVALID
@@ -247,9 +263,10 @@ func GetFileMd5(fname string)(string,error){
 func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFile,error){
 	tag:=new (core.TagInFile)
 	tag.OwnerId=pdata.OwnerId
-	md5sum , _:=GetFileMd5(pdata.Path+"/"+pdata.Uuid)
-	fmt.Println(pdata.Uuid," md5 ",md5sum)
-	for i,j:=range []byte(md5sum){
+	for k,v:=range []byte(pdata.Uuid){
+		tag.Uuid[k]=v
+	}
+	for i,j:=range []byte(pdata.HashMd5){
 		tag.Md5Sum[i]=j
 	}
 	tag.FromType=byte(pdata.FromType)
@@ -257,11 +274,12 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 		tag.FromObj[k]=v
 	}
 	tag.Time=time.Now().Unix()
-	for k,v:=range []byte(pdata.EncryptedKey){
+	for k,v:=range []byte(savedkey){
 		tag.EKey[k]=v
 	}
+
 	copy(tag.Descr[:],"cmit encrypted raw data")
-	tag.SaveToDisk(pdata.Path+"/"+pdata.Uuid+".tag")
+	tag.SaveTagToDisk(pdata.Path+"/"+pdata.Uuid+".tag")
 	return tag,nil
 }
 
@@ -270,18 +288,25 @@ func SendMetaToServer(pdata *core.EncryptedData)error{
 	return nil
 }
 
-func DoEncode(src,passwd,dst []byte,length int){
+func DoEncodeInC(src,passwd,dst []byte,length int){
 	csrc:=(*C.char)(unsafe.Pointer(&src[0]))
 	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
 	cdst:=(*C.char)(unsafe.Pointer(&dst[0]))
 	C.encode(csrc,cpasswd,cdst,C.int(length))
 }
 
+func DoDecodeInC(src, passwd, dst []byte,length int){
+	csrc:=(*C.char)(unsafe.Pointer(&src[0]))
+	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
+	cdst:=(*C.char)(unsafe.Pointer(&dst[0]))
+	C.decode(csrc,cpasswd,cdst,C.int(length))
+}
+
 func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string)error{
 	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
 	// RecordLocal && Record Remote
 	savedkey:=make([]byte,128/8)
-	DoEncode(passwd , keylocalkey ,savedkey,128/8)
+	DoEncodeInC(passwd , keylocalkey ,savedkey,128/8)
 	SaveLocalFileTag(pdata,savedkey)
 	SendMetaToServer(pdata)
 	return nil
@@ -303,9 +328,10 @@ func GetFileName(ipath string)(string,error){
 	return finfo.Name(),nil
 }
 
+
+
 func EncodeFile(ipath string, opath string, user string) error{
 //	fmt.Println(ipath,opath,user)
-
 	if user==""{
 		fmt.Println("use parameter -user=NAME to set login user")
 		return errors.New("empty user")
@@ -339,6 +365,7 @@ func EncodeFile(ipath string, opath string, user string) error{
 	defer C.free(unsafe.Pointer(cipath))
 	defer C.free(unsafe.Pointer(cofile))
 	C.do_encodefile(cipath,cofile,cpasswd)
+	pdata.HashMd5,_=GetFileMd5(ofile)
 	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath)
 	linfo.Logout()
 	return nil
@@ -352,6 +379,70 @@ func RandPasswd()([]byte,error){
 	}else {
 		return nil,err
 	}
+}
+
+func DecodeDir(inpath,outpath,user string){
+}
+
+func doDecode(){
+	if inpath==""{
+		fmt.Println("You should set inpath explicitly")
+		return
+	}
+	if outpath==""{
+		outpath="./"
+	}else{
+		os.MkdirAll(outpath,0755)
+	}
+	if info,err:=os.Stat(inpath);err!=nil{
+		fmt.Println("Can't find ",inpath)
+		return
+	}else{
+		if info.IsDir(){
+			DecodeDir(inpath,outpath,user)
+		}else{
+			DecodeFile(inpath,outpath,user)
+		}
+	}
+}
+
+func DecodeFile(ipath,opath,user string)error{
+	if user==""{
+		fmt.Println("use parameter -user=NAME to set login user")
+		return errors.New("empty user")
+	}
+	linfo,err:=Login(user)
+	if err!=nil{
+		fmt.Println("login error:",err)
+		return err
+	}
+	// todo : load tag, decode file
+	tag,err:=core.LoadFromDisk(ipath+".tag")
+	if err!=nil{
+		fmt.Println("load tag information error",err)
+		return err
+	}
+
+	pdata,_:=tag.GetDataInfo()
+	pdata.Path=ipath
+
+	if(pdata.FromType==core.RAWDATA){
+		DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptedKey,16)
+		ofile:=opath+"/"+pdata.FromObj
+		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptedKey[0]))
+		cipath:=C.CString(ipath)
+		cofile:=C.CString(ofile)
+		defer C.free(unsafe.Pointer(cipath))
+		defer C.free(unsafe.Pointer(cofile))
+		C.do_decodefile(cipath,cofile,cpasswd)
+	}else if pdata.FromType==core.TAG{
+		// pdata.EncryptedKey need to be filled first
+//		rootdata:=LoadRootData(pdata)
+		return nil
+	}
+	linfo.Logout()
+	return nil
+
 }
 
 func doEncode(){
@@ -385,6 +476,8 @@ func main(){
 	case core.DISTRIBUTE:
 	case core.MOUNT:
 	case core.DECODE:
+		doDecode()
+	case core.TRACE:
 	default:
 		fmt.Println("Error parameters,use -h or --help for usage")
 	}
