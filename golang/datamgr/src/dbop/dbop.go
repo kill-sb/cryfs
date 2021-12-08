@@ -38,7 +38,7 @@ func SaveMeta(pdata *core.EncryptedData) error{
 	return nil
 }
 
-func LookupPasswdSHA(user string)(int,string,string,error){
+func LookupPasswdSHA(user string)(int32,string,string,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select id,pwdsha256,enclocalkey from users where name='%s'",user)
 	res,err:=db.Query(query)
@@ -48,7 +48,7 @@ func LookupPasswdSHA(user string)(int,string,string,error){
 	if res.Next(){
 		var key string
 		var shasum string
-		var id int
+		var id int32
 		if err:=res.Scan(&id,&shasum,&key);err!=nil{
 			return -1,"","",err
 		}else{
