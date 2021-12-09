@@ -51,7 +51,7 @@ func WriteShareInfo(sinfo *core.ShareInfo) error{
 		recvlist+=user+" "
 	}
 	recvlist=strings.TrimSpace(recvlist)
-	keystr:=core.BinkeyToString(sinfo.EncryptedKey)
+	keystr:=core.BinkeyToString(sinfo.RandKey)
 	db:=GetDB()
 	query:=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d)",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType)
 	if _, err := db.Exec(query); err != nil {
@@ -59,6 +59,19 @@ func WriteShareInfo(sinfo *core.ShareInfo) error{
 		return err
 	}
 
+	return nil
+}
+
+func IsValidUser(user string)error{
+	db:=GetDB()
+	query:=fmt.Sprintf("select id from users where name='%s'",user)
+	res,err:=db.Query(query)
+	if err!=nil{
+		return err
+	}
+	if !res.Next(){
+		return errors.New("No such user ")
+	}
 	return nil
 }
 

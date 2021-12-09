@@ -3,7 +3,9 @@ package coredata
 import (
 	"net"
 	"bytes"
+	"errors"
 	"encoding/binary"
+	"crypto/rand"
 	"os/exec"
 	"strings"
 	"fmt"
@@ -22,7 +24,17 @@ const (
 
 const (
     RAWDATA=iota
-    TAG
+	CSDFILE
+)
+
+const (
+	SINGLEFILE=iota
+	ZIPDIR
+)
+
+const (
+	BINCONTENT=iota
+	REMOTEURL
 )
 
 type LoginInfo struct{
@@ -32,7 +44,7 @@ type LoginInfo struct{
     Keylocalkey []byte
 }
 
-type TagInFile struct{
+type TagInFile struct{ // .tag
 	OwnerId int32
 	Uuid	[36] byte //36
 	Md5Sum	[32] byte //32
@@ -44,6 +56,14 @@ type TagInFile struct{
 	Padding	[60] byte // 512-4--36-32-256-24-100=60
 }
 
+type ShareInfoInFile struct{ // .csd , cmit shared data
+	MagicStr [6] byte // CMIT_FS
+	Uuid	[36] byte // uuid used to search in db
+	EncryptedKey	[16] byte // raw key encrypted with temp key(saved on server)
+	ContentType byte //  0 for direct binary data, for remote file url
+	DataType byte //  data type(both for local and remote): 0 for single file, 1 for compressed dir packge
+}	// 60 bytes total, should be placed in the end of file
+
 type EncryptedData struct{
     Uuid string
     Descr string
@@ -51,7 +71,7 @@ type EncryptedData struct{
     FromObj string
     OwnerId int32
 	HashMd5 string
-    EncryptedKey []byte
+    EncryptingKey []byte
 	Path	string
 }
 
@@ -65,9 +85,10 @@ type ShareInfo struct{
 	MaxUse	int32
 	LeftUse	int32
 	EncryptedKey	[]byte
+	RandKey	[]byte
 	FromType	int
 	FromUuid	string
-	FileUri	string
+	FileUri	string // source local filename or remote url
 }
 
 func GetUuid()(string,error){
@@ -78,9 +99,49 @@ func GetUuid()(string,error){
     }
 }
 
-func NewShareTag(luser* LoginInfo,fromtype int, fromobj string /* need a local file, uuid named raw data or .csd format sharedfile */,recvrs []string, )(*ShareInfo,error){
+func IsValidUuid(uuid string)bool{
+	return true
+}
+
+func RandPasswd()([]byte,error){
+    buf:=make([]byte,16)
+    if rdlen,err:=rand.Read(buf);rdlen==len(buf) && err==nil{
+        fmt.Println(buf)
+        return buf,nil
+    }else {
+        return nil,err
+    }
+}
+
+func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local file, uuid named raw data or .csd format sharedfile */)(*ShareInfo,error){
 	sinfo:=new (ShareInfo)
 	// later register in db outside
+	var err error
+	sinfo.Uuid,err=GetUuid()
+	if err!=nil{
+		return nil,err
+	}
+
+	sinfo.OwnerId=luser.Id
+	sinfo.Descr=""
+	sinfo.Perm=-1
+	sinfo.Receivers=nil
+	sinfo.Expire=""
+	sinfo.MaxUse=-1
+	sinfo.LeftUse=-1
+	sinfo.FromType=fromtype
+	sinfo.RandKey,_=RandPasswd()
+	if fromtype==RAWDATA{
+		st,_:=os.Stat(fromobj)
+		sinfo.FromUuid=st.Name()
+		if !IsValidUuid(sinfo.FromUuid){
+			return nil,errors.New("Local encrypted file does not have a valid uuid filename")
+		}
+	}else{
+		// parse csd file format , and get uuid from end of file
+	}
+	sinfo.FileUri=fromobj
+	sinfo.EncryptedKey=make([]byte,16) // calc outside later
 	return sinfo,nil
 }
 
@@ -102,11 +163,12 @@ func StringToBinkey(strkey string)[]byte{
 	return ret
 }
 
-func (sinfo *ShareInfo)CreateShareFile(fullname string)error{
+func (sinfo *ShareInfo)CreateCSDFile(dstfile string)error{
 	return nil
 }
 
 func DataFromTag(tag *TagInFile) *EncryptedData{
+
 	data:=new(EncryptedData)
 	data.Uuid=string(tag.Uuid[:])
 	data.Descr=string(tag.Descr[:])
@@ -114,7 +176,7 @@ func DataFromTag(tag *TagInFile) *EncryptedData{
 	data.FromObj=string(tag.FromObj[:])
 	data.OwnerId=tag.OwnerId
 	data.HashMd5=string(tag.Md5Sum[:])
-	data.EncryptedKey=make([]byte,16)
+	data.EncryptingKey=make([]byte,16)
 	// EncryptedKey and Path will be filled later outside
 	return data
 }
@@ -126,16 +188,6 @@ func (tag *TagInFile) SaveTagToDisk(fname string)error{
 	}
 	defer fd.Close()
 	buf:=new(bytes.Buffer)
-/*	binary.Write(buf,binary.LittleEndian,&tag.OwnerId)
-	binary.Write(buf,binary.LittleEndian,tag.Uuid)
-	binary.Write(buf,binary.LittleEndian,tag.Md5Sum)
-	binary.Write(buf,binary.LittleEndian,&tag.FromType)
-	binary.Write(buf,binary.LittleEndian,tag.FromObj)
-	binary.Write(buf,binary.LittleEndian,&tag.Time)
-	binary.Write(buf,binary.LittleEndian,tag.EKey)
-	binary.Write(buf,binary.LittleEndian,tag.Descr)
-	binary.Write(buf,binary.LittleEndian,tag.Padding)
-	*/
 	binary.Write(buf,binary.LittleEndian,tag)
 	fd.Write(buf.Bytes())
 	return nil
@@ -150,8 +202,8 @@ func (tag *TagInFile) GetDataInfo()(*EncryptedData,error){
 	}
 }
 
-func LoadFromDisk(fname string)(*TagInFile,error){
-	f,err:=os.Open(fname)
+func LoadTagFromDisk(fname string /* uuid file name*/)(*TagInFile,error){
+	f,err:=os.Open(fname+".tag")
 	if err!=nil{
 		return nil,err
 	}
