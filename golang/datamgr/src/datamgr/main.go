@@ -227,25 +227,36 @@ func GetFunction() int {
 	flag.StringVar(&outpath,"out",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&user,"user",defuser, "login user name")
 	flag.Parse()
+	ret:=core.INVALID
+	count:=0
 	if(bList){
-		return core.LIST
+		ret=core.LIST
+		count++
 	}
 	if(bTrace){
-		return core.TRACE
+		ret=core.TRACE
+		count++
 	}
 	if(bDec){
-		return core.DECODE
+		ret=core.DECODE
+		count++
 	}
 	if bEnc{
-		return core.ENCODE
+		ret= core.ENCODE
+		count++
 	}
 	if bShare{
-		return core.DISTRIBUTE
+		ret=core.DISTRIBUTE
+		count++
 	}
 	if bMnt{
-		return core.MOUNT
+		ret=core.MOUNT
+		count++
 	}
-	return core.INVALID
+	if count!=1{
+		ret=core.INVALID
+	}
+	return ret
 }
 
 func EncodeDir(ipath string, opath string, user string) error{
@@ -312,14 +323,6 @@ func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []b
 	return nil
 }
 
-func GetUuid()(string,error){
-	if output,err:=exec.Command("uuidgen").Output();err!=nil{
-		return "",err
-	}else{
-		return strings.TrimSpace(string(output)),nil
-	}
-}
-
 func GetFileName(ipath string)(string,error){
 	finfo,err:=os.Stat(ipath)
 	if err!=nil{
@@ -333,7 +336,7 @@ func GetFileName(ipath string)(string,error){
 func EncodeFile(ipath string, opath string, user string) error{
 //	fmt.Println(ipath,opath,user)
 	if user==""{
-		fmt.Println("use parameter -user=NAME to set login user")
+		fmt.Println("use parameter -user to set login user")
 		return errors.New("empty user")
 	}
 	linfo,err:=Login(user)
@@ -350,7 +353,7 @@ func EncodeFile(ipath string, opath string, user string) error{
 		return err
 	}
 	pdata:=new(core.EncryptedData)
-	pdata.Uuid,_=GetUuid()
+	pdata.Uuid,_=core.GetUuid()
 	pdata.Descr=""
 	pdata.FromType=core.RAWDATA
 	pdata.FromObj=fname

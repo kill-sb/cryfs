@@ -43,12 +43,13 @@ func do_login(user string, passwd []byte)(*core.LoginInfo,error){
 		fmt.Printf("login info: sharet %s, sha in db: %s\n",shastr,shasum)
 		if	shastr==shasum{
 			linfo:=&core.LoginInfo{Name:user,Id:id}
-			keylen:=len(key)/2
+	/*		keylen:=len(key)/2
 			linfo.Keylocalkey=make([]byte,keylen)
 			for i:=0;i<keylen;i++{
 				onebit:=fmt.Sprintf("%c%c",key[i*2],key[i*2+1])
 				fmt.Sscanf(onebit,"%x",&linfo.Keylocalkey[i])
-			}
+			}*/
+			linfo.Keylocalkey=core.StringToBinkey(key)
 			return linfo,nil
 		}
 	}

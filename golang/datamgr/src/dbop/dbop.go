@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"strings"
 	core "coredata"
 )
 
@@ -38,9 +39,26 @@ func SaveMeta(pdata *core.EncryptedData) error{
 	db:=GetDB()
 	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5) values ('%s','%s','%d','%s','%d','%s')",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5)
 	if _, err := db.Exec(query); err != nil {
-		fmt.Println("Insert into db error:", err)
+		fmt.Println("Insert encrypted data info db error:", err)
 		return err
 	}
+	return nil
+}
+
+func WriteShareInfo(sinfo *core.ShareInfo) error{
+	recvlist:=""
+	for _,user:=range sinfo.Receivers{
+		recvlist+=user+" "
+	}
+	recvlist=strings.TrimSpace(recvlist)
+	keystr:=core.BinkeyToString(sinfo.EncryptedKey)
+	db:=GetDB()
+	query:=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d)",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType)
+	if _, err := db.Exec(query); err != nil {
+		fmt.Println("Insert shareinfo into db error:", err)
+		return err
+	}
+
 	return nil
 }
 

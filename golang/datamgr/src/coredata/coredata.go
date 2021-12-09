@@ -4,6 +4,8 @@ import (
 	"net"
 	"bytes"
 	"encoding/binary"
+	"os/exec"
+	"strings"
 	"fmt"
 	"os"
 )
@@ -51,6 +53,57 @@ type EncryptedData struct{
 	HashMd5 string
     EncryptedKey []byte
 	Path	string
+}
+
+type ShareInfo struct{
+	Uuid string
+	OwnerId int32
+	Descr string
+	Perm	int32
+	Receivers []string
+	Expire	string // convert to time.Time later
+	MaxUse	int32
+	LeftUse	int32
+	EncryptedKey	[]byte
+	FromType	int
+	FromUuid	string
+	FileUri	string
+}
+
+func GetUuid()(string,error){
+    if output,err:=exec.Command("uuidgen").Output();err!=nil{
+        return "",err
+    }else{
+        return strings.TrimSpace(string(output)),nil
+    }
+}
+
+func NewShareTag(luser* LoginInfo,fromtype int, fromobj string /* need a local file, uuid named raw data or .csd format sharedfile */,recvrs []string, )(*ShareInfo,error){
+	sinfo:=new (ShareInfo)
+	// later register in db outside
+	return sinfo,nil
+}
+
+func BinkeyToString(binkey []byte)string{
+	ret:=""
+	for _,onebyte:=range binkey{
+		ret+=fmt.Sprintf("%02x",onebyte)
+	}
+	return ret
+}
+
+func StringToBinkey(strkey string)[]byte{
+	keylen:=len(strkey)/2
+	ret:=make([]byte,keylen)
+	for i:=0;i<keylen;i++{
+		onebit:=fmt.Sprintf("%c%c",strkey[i*2],strkey[i*2+1])
+		fmt.Sscanf(onebit,"%x",&ret[i])
+	}
+	return ret
+}
+
+func (sinfo *ShareInfo)CreateShareFile(fullname string)error{
+	return nil
 }
 
 func DataFromTag(tag *TagInFile) *EncryptedData{
