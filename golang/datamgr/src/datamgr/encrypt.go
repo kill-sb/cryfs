@@ -217,6 +217,7 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 	for k,v:=range []byte(pdata.FromObj){
 		tag.FromObj[k]=v
 	}
+	tag.IsDir=pdata.IsDir
 	tag.Time=time.Now().Unix()
 	for k,v:=range []byte(savedkey){
 		tag.EKey[k]=v
@@ -292,6 +293,7 @@ func EncodeFile(ipath string, opath string, user string) error{
 	pdata.OwnerId=linfo.Id
 	pdata.EncryptingKey=passwd
 	pdata.Path=opath
+	pdata.IsDir=0
 
 	ofile:=opath+"/"+pdata.Uuid
 	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
@@ -351,6 +353,7 @@ func DecodeFile(ipath,opath,user string)error{
 	pdata.Path=ipath
 
 	if(pdata.FromType==core.RAWDATA){
+		if pdata.IsDir==0{
 		DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
 		ofile:=opath+"/"+pdata.FromObj
 		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptingKey[0]))
@@ -359,6 +362,9 @@ func DecodeFile(ipath,opath,user string)error{
 		defer C.free(unsafe.Pointer(cipath))
 		defer C.free(unsafe.Pointer(cofile))
 		C.do_decodefile(cipath,cofile,cpasswd)
+		}else{
+			// todo: it's a zipped dir
+		}
 	}else if pdata.FromType==core.CSDFILE{
 		// should be same with above, FromType is used only for trace source, the file is still a raw encrypted file
 		// pdata.EncryptingKey need to be filled first
@@ -367,7 +373,6 @@ func DecodeFile(ipath,opath,user string)error{
 	}
 	linfo.Logout()
 	return nil
-
 }
 
 func doEncode(){

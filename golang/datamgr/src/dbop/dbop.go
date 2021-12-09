@@ -46,14 +46,23 @@ func SaveMeta(pdata *core.EncryptedData) error{
 }
 
 func WriteShareInfo(sinfo *core.ShareInfo) error{
+	db:=GetDB()
 	recvlist:=""
-	for _,user:=range sinfo.Receivers{
-		recvlist+=user+" "
+	query:=""
+	for i,user:=range sinfo.Receivers{
+		if recvlist!=""{
+			recvlist+=","
+		}
+		recvlist+=user
+		query=fmt.Sprintf("insert into shareusers (taguuid,userid) values ('%s',%d)",sinfo.Uuid,sinfo.RcvrIds[i])
+		if _,err:=db.Exec(query);err!=nil{
+			fmt.Println("Insert into shareusers error",err)
+			return err
+		}
 	}
 	recvlist=strings.TrimSpace(recvlist)
 	keystr:=core.BinkeyToString(sinfo.RandKey)
-	db:=GetDB()
-	query:=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d)",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType)
+	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d)",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert shareinfo into db error:", err)
 		return err
@@ -62,17 +71,20 @@ func WriteShareInfo(sinfo *core.ShareInfo) error{
 	return nil
 }
 
-func IsValidUser(user string)error{
+func IsValidUser(user string)(int32,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select id from users where name='%s'",user)
 	res,err:=db.Query(query)
+	var ret int32=-1
 	if err!=nil{
-		return err
+		return ret,err
 	}
 	if !res.Next(){
-		return errors.New("No such user ")
+		return ret,errors.New("No such user ")
+	}else{
+		res.Scan(&ret)
 	}
-	return nil
+	return ret,nil
 }
 
 func LookupPasswdSHA(user string)(int32,string,string,error){

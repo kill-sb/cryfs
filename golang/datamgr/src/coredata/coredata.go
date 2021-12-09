@@ -4,6 +4,7 @@ import (
 	"net"
 	"bytes"
 	"errors"
+	"io"
 	"encoding/binary"
 	"crypto/rand"
 	"os/exec"
@@ -49,24 +50,18 @@ type TagInFile struct{ // .tag
 	Uuid	[36] byte //36
 	Md5Sum	[32] byte //32
 	FromType byte
-	FromObj [255] byte //255
+	IsDir	byte
+	FromObj [254] byte //254
 	Time	int64
 	EKey	[16] byte //16
 	Descr	[100] byte // 100
 	Padding	[60] byte // 512-4--36-32-256-24-100=60
 }
 
-type ShareInfoInFile struct{ // .csd , cmit shared data
-	MagicStr [6] byte // CMIT_FS
-	Uuid	[36] byte // uuid used to search in db
-	EncryptedKey	[16] byte // raw key encrypted with temp key(saved on server)
-	ContentType byte //  0 for direct binary data, for remote file url
-	DataType byte //  data type(both for local and remote): 0 for single file, 1 for compressed dir packge
-}	// 60 bytes total, should be placed in the end of file
-
 type EncryptedData struct{
     Uuid string
     Descr string
+	IsDir	byte
     FromType int
     FromObj string
     OwnerId int32
@@ -75,12 +70,21 @@ type EncryptedData struct{
 	Path	string
 }
 
+type ShareInfoHeader struct{ // .csd , cmit shared data
+	MagicStr [6] byte // CMITFS
+	Uuid	[36] byte // uuid used to search in db
+	EncryptedKey	[16] byte // raw key encrypted with temp key(saved on server)
+	ContentType byte //  0 for direct binary data, for remote file url
+	IsDir byte //  data type(both for local and remote): 0 for single file, 1 for compressed dir packge
+}	// 60 bytes total, should be placed in the end of file
+
 type ShareInfo struct{
 	Uuid string
 	OwnerId int32
 	Descr string
 	Perm	int32
 	Receivers []string
+	RcvrIds	[]int32
 	Expire	string // convert to time.Time later
 	MaxUse	int32
 	LeftUse	int32
@@ -88,6 +92,7 @@ type ShareInfo struct{
 	RandKey	[]byte
 	FromType	int
 	FromUuid	string
+	IsDir	byte // get info from database by uuid
 	FileUri	string // source local filename or remote url
 }
 
@@ -111,6 +116,10 @@ func RandPasswd()([]byte,error){
     }else {
         return nil,err
     }
+}
+
+func GetIsDirFromUuid(uuid string)byte{
+	return 0 // todo: get from server/db by uuid later
 }
 
 func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local file, uuid named raw data or .csd format sharedfile */)(*ShareInfo,error){
@@ -137,6 +146,7 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 		if !IsValidUuid(sinfo.FromUuid){
 			return nil,errors.New("Local encrypted file does not have a valid uuid filename")
 		}
+		sinfo.IsDir=GetIsDirFromUuid(sinfo.FromUuid)
 	}else{
 		// parse csd file format , and get uuid from end of file
 	}
@@ -163,7 +173,48 @@ func StringToBinkey(strkey string)[]byte{
 	return ret
 }
 
+func IsLocalFile(uri string)bool{
+	return true // may be http,ftp,or nfs...later, then will return false
+}
+
+func (sinfo* ShareInfo)WriteFileHead(fw *os.File)byte /* ContentType*/{
+	head:=new (ShareInfoHeader)
+	copy(head.MagicStr[:],[]byte("CMITFS"))
+	copy(head.Uuid[:],[]byte(sinfo.Uuid))
+	copy(head.EncryptedKey[:],sinfo.EncryptedKey)
+	if IsLocalFile(sinfo.FileUri){
+		head.ContentType=BINCONTENT
+	}else{
+		head.ContentType=REMOTEURL
+	}
+	head.IsDir=sinfo.IsDir
+	buf:=new(bytes.Buffer)
+	binary.Write(buf,binary.LittleEndian,head)
+	fw.Write(buf.Bytes())
+
+	return head.ContentType
+}
+
 func (sinfo *ShareInfo)CreateCSDFile(dstfile string)error{
+	fw,err:=os.Create(dstfile) // fixme: file mode should be assigned later
+	if err!=nil{
+		fmt.Println("CreateCSDFile error:",err)
+			return err
+	}
+	defer fw.Close()
+	if sinfo.FromType==RAWDATA{
+		if sinfo.WriteFileHead(fw)==BINCONTENT{
+			fr,err:=os.Open(sinfo.FileUri)
+			if err!=nil{
+				fmt.Println("Open FileUri error:",err)
+				return err
+			}
+			defer fr.Close()
+			io.Copy(fw,fr)
+		}else{
+			fw.Write([]byte(sinfo.FileUri))
+		}
+	}
 	return nil
 }
 
@@ -177,6 +228,7 @@ func DataFromTag(tag *TagInFile) *EncryptedData{
 	data.OwnerId=tag.OwnerId
 	data.HashMd5=string(tag.Md5Sum[:])
 	data.EncryptingKey=make([]byte,16)
+	data.IsDir=tag.IsDir
 	// EncryptedKey and Path will be filled later outside
 	return data
 }

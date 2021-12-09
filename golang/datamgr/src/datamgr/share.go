@@ -80,28 +80,32 @@ func shareFile(ipath,opath,user string)error {
 	if err!=nil{
 		return err
 	}
-	fmt.Println(dst," created ok, you can share it to ", sinfo.Receivers, " in any way")
+	fmt.Println(dst," created ok, you can share it to ", sinfo.Receivers)
 	return nil
 }
 
-func ParseVisitors(recvlist string) ([]string,error){
-	ret:=strings.Split(recvlist," ")
-	for _,user:=range ret{
-		err:=dbop.IsValidUser(user) // should fix to asking server later
+func ParseVisitors(recvlist string) ([]string,[]int32,error){
+	strret:=strings.Split(recvlist,",")
+	intret:=make([]int32,0,len(strret))
+	for _,user:=range strret{
+		user=strings.TrimSpace(user)
+		fmt.Println(user)
+		id,err:=dbop.IsValidUser(user) // should fix to asking server later
 		if err!=nil{
-			return nil,err
+			return nil,nil,err
 		}
+		intret=append(intret,id)
 	}
-	return ret,nil
+	return strret,intret,nil
 }
 
 func InputShareInfo(sinfo *core.ShareInfo) error{
 	// fill: descr,perm,expire,maxuse/leftuse
 	var recvlist string
-	fmt.Println("Input receivers(seperate with whitespace):")
-	fmt.Scanf("%s",recvlist)
+	fmt.Println("\nInput receivers(seperate with ','):")
+	fmt.Scanf("%s",&recvlist)
 	var err error
-	sinfo.Receivers,err=ParseVisitors(recvlist)
+	sinfo.Receivers,sinfo.RcvrIds,err=ParseVisitors(recvlist)
 	if err!=nil{
 		fmt.Println("Get receivers error:",err)
 		return err
