@@ -58,7 +58,7 @@ func shareFile(ipath,opath,user string)error {
 			fmt.Println("GetEncData error:",err)
 			return err
 		}
-		DoDecodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
+		DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
 		fmt.Println("encrypted key in csd:",core.BinkeyToString(sinfo.EncryptedKey))
 	}else{
 		// todo: from a csdfile, decrypt key and encode with another random key
