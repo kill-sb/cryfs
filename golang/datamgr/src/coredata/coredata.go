@@ -26,6 +26,7 @@ const (
 const (
     RAWDATA=iota
 	CSDFILE
+	UNKNOWN
 )
 
 const (
@@ -92,6 +93,7 @@ type ShareInfo struct{
 	RandKey	[]byte
 	FromType	int
 	FromUuid	string
+	ContentType int
 	IsDir	byte // get info from database by uuid
 	FileUri	string // source local filename or remote url
 }
@@ -111,7 +113,7 @@ func IsValidUuid(uuid string)bool{
 func RandPasswd()([]byte,error){
     buf:=make([]byte,16)
     if rdlen,err:=rand.Read(buf);rdlen==len(buf) && err==nil{
-        fmt.Println(buf)
+        fmt.Println("randpasswd:",BinkeyToString(buf))
         return buf,nil
     }else {
         return nil,err
@@ -121,6 +123,24 @@ func RandPasswd()([]byte,error){
 func GetIsDirFromUuid(uuid string)byte{
 	return 0 // todo: get from server/db by uuid later
 }
+
+func GetFileType(fname string)(int,error){
+    finfo,err:=os.Stat(fname)
+    if err!=nil{
+        return -1,err
+    }
+    if IsValidUuid(finfo.Name()){
+        _,err=os.Stat(fname+".tag")
+        if err==nil{
+            return RAWDATA,nil
+        }
+    }
+    if strings.HasSuffix(fname,".csd") || strings.HasSuffix(fname,".CSD"){
+        return CSDFILE,nil
+    }
+    return UNKNOWN,nil
+}
+
 
 func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local file, uuid named raw data or .csd format sharedfile */)(*ShareInfo,error){
 	sinfo:=new (ShareInfo)
@@ -268,6 +288,28 @@ func LoadTagFromDisk(fname string /* uuid file name*/)(*TagInFile,error){
 		fmt.Println("decode error:",err)
 		return nil,err
 	}
+}
+
+func LoadShareInfoHead(fname string)(*ShareInfoHeader,error){
+	fr,err:=os.Open(fname)
+	if err!=nil{
+		fmt.Println("Open file error",fname)
+		return nil,err
+	}
+	defer fr.Close()
+
+	head:=new (ShareInfoHeader)
+	if err=binary.Read(fr,binary.LittleEndian,head);err!=nil{
+		fmt.Println("Load share info head error",err)
+		return nil,err
+	}
+	if string(head.MagicStr[:])=="CMITFS" && IsValidUuid(string(head.Uuid[:])){
+		fmt.Println("in LoadShareInfoHead get encypted key:",BinkeyToString(head.EncryptedKey[:]))
+		return head,nil
+	}else{
+		return nil,errors.New("Invalid csd file format")
+	}
+
 }
 
 func (info *LoginInfo) Logout() error{

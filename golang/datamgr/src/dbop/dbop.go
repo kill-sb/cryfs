@@ -35,6 +35,21 @@ func GetDB() *sql.DB {
 	return curdb
 }
 
+func ParseVisitors(recvlist string) ([]string,[]int32,error){
+    strret:=strings.Split(recvlist,",")
+    intret:=make([]int32,0,len(strret))
+    for _,user:=range strret{
+        user=strings.TrimSpace(user)
+        fmt.Println(user)
+        id,err:=IsValidUser(user) // should fix to asking server later
+        if err!=nil{
+            return nil,nil,err
+        }
+        intret=append(intret,id)
+    }
+    return strret,intret,nil
+}
+
 func SaveMeta(pdata *core.EncryptedData) error{
 	db:=GetDB()
 	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5) values ('%s','%s','%d','%s','%d','%s')",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5)
@@ -43,6 +58,72 @@ func SaveMeta(pdata *core.EncryptedData) error{
 		return err
 	}
 	return nil
+}
+
+func LoadShareInfo(head *core.ShareInfoHeader)(*core.ShareInfo,error){
+	db:=GetDB()
+	uuid:=string(head.Uuid[:])
+	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype from sharetags where uuid='%s'",uuid)
+   res,err:=db.Query(query)
+    if err!=nil{
+        return nil,err
+    }
+    if res.Next(){
+		info:=new (core.ShareInfo)
+		// info.FileUri will be filled outside
+		info.Uuid=uuid
+		info.IsDir=head.IsDir
+		info.ContentType=int(head.ContentType)
+		var recv,randkey string
+		info.EncryptedKey=make([]byte,16)
+		copy(info.EncryptedKey,head.EncryptedKey[:])
+
+        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&randkey,&info.FromUuid,&info.Perm,&info.FromType);err!=nil{
+			fmt.Println("query",query,"error:",err)
+			return nil,err
+		}
+		info.RandKey=core.StringToBinkey(randkey)
+		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
+		if err!=nil{
+			fmt.Println("Parse visitor from db error",err)
+			return nil,err
+		}
+		return info,nil
+
+	}else{
+		return nil,errors.New("No shared info found in server")
+	}
+
+}
+
+func GetOrgFileName(sinfo *core.ShareInfo)(string,error){
+	from:=sinfo.FromUuid
+	db:=GetDB()
+	for target:=sinfo.FromType;target!=core.RAWDATA;{
+		// referenced from another csd
+		query:=fmt.Sprintf("select datauuid,fromtype from sharetags where uuid='%s'",from)
+		res,err:=db.Query(query)
+		if err!=nil{
+			fmt.Println("GetOrgFileName query ",query,"error:",err)
+			return "",err
+		}
+		if !res.Next(){
+			fmt.Println("GetOrgFileName can't find uuid",from)
+			return "",err
+		}
+		res.Scan(&from,target)
+	}
+	query:=fmt.Sprintf("select fromobj from efilemeta where uuid='%s'",from)
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("GetOrgFileName query", query,"error:",err)
+		return "",err
+	}
+	if res.Next(){
+		res.Scan(&from)
+		return from,nil
+	}
+	return "",errors.New("Can't find org filename")
 }
 
 func WriteShareInfo(sinfo *core.ShareInfo) error{

@@ -98,18 +98,19 @@ long encodefd(int sfd,int dfd, const char* passwd){
 	return total;
 }
 
-long decodefd(int sfd,int dfd, const char* passwd){
+long decodefd(int sfd,int dfd, const char* passwd,off_t offset){
 	long i,blocks;
 	off_t flen,total=0;
 	int padlen,orglen;
 	char buf[FILEBLOCK],plain[FILEBLOCK],unpad[FILEBLOCK];
 	struct stat st;
 	fstat(sfd,&st);
-	flen=st.st_size;
+	flen=st.st_size-offset;
 	if(flen%AESBLOCK){
 		printf("Warning: error file size,decoding may be wrong,cancelled.\n");
 		return -1;
 	}
+	lseek(sfd,offset,SEEK_SET);
 	blocks=flen/FILEBLOCK;
 	if(flen%FILEBLOCK)
 		blocks++;
@@ -145,7 +146,7 @@ void do_encodefile(const char* from, const char* dfile, const char *passwd)
     close(sfd);
 }
 
-void do_decodefile(const char* from, const char* dfile, const char *passwd)
+void do_decodefile(const char* from, const char* dfile, const char *passwd,off_t offset)
 {
 	int sfd,dfd;
 	sfd=open(from,O_RDONLY);
@@ -154,7 +155,8 @@ void do_decodefile(const char* from, const char* dfile, const char *passwd)
 	printf("%s->%s\n",from,dfile);
     dfd=creat(dfile,st.st_mode);
     if(dfd){
-        printf("%ld bytes encoded\n",decodefd(sfd,dfd,passwd));
+//		lseek(sfd,offset,SEEK_SET);
+        printf("%ld bytes encoded\n",decodefd(sfd,dfd,passwd,offset));
         close(dfd);
     }
     close(sfd);
@@ -342,6 +344,72 @@ func DecodeFile(ipath,opath,user string)error{
 		fmt.Println("login error:",err)
 		return err
 	}
+	defer linfo.Logout()
+	// judge raw uuid file or csd file
+	ftype,err:=core.GetFileType(ipath)
+	if err!=nil{
+		fmt.Println("Get file type error",err)
+		return err
+	}
+	switch ftype{
+	case core.RAWDATA:
+		return DecodeRawData(linfo,ipath,opath)
+	case core.CSDFILE:
+		return DecodeCSDFile(linfo,ipath,opath)
+	default:
+		fmt.Println("Unknow filetype of ",ipath)
+		return errors.New("Unknown filetype")
+	}
+}
+
+func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
+	head,err:=core.LoadShareInfoHead(ipath)
+	if err!=nil{
+		return err
+	}
+	// now we have got a valid csd header, then load info from server
+	sinfo,err:=dbop.LoadShareInfo(head)
+	if(err!=nil){
+		return err
+	}
+	sinfo.FileUri=ipath
+	inlist:=false
+	for _,user:=range sinfo.Receivers{
+		if linfo.Name==user{
+			inlist=true
+			break
+		}
+	}
+	if !inlist{
+		fmt.Println(linfo.Name,"is not in shared user list")
+		return errors.New("Not shared user")
+	}
+	ofile,err:=dbop.GetOrgFileName(sinfo)
+	fmt.Println("Get ofile ",ofile)
+	fmt.Println("enc keys:",core.BinkeyToString(sinfo.EncryptedKey),"randkey:",core.BinkeyToString(sinfo.RandKey))
+	if err!=nil{
+		fmt.Println("Get origin file name error",err)
+		return err
+	}
+	ofile=opath+"/"+ofile
+	orgkey:=make([]byte,16)
+
+	if sinfo.IsDir==0{
+		DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
+		fmt.Println("psd file",ipath,"key",core.BinkeyToString(orgkey))
+		cpasswd:=(*C.char)(unsafe.Pointer(&orgkey[0]))
+		cipath:=C.CString(ipath)
+		cofile:=C.CString(ofile)
+		defer C.free(unsafe.Pointer(cipath))
+		defer C.free(unsafe.Pointer(cofile))
+		C.do_decodefile(cipath,cofile,cpasswd,60/* ShareInfoHead offset*/)
+	}else{
+			// todo: it's a zipped dir
+	}
+	return nil
+}
+
+func DecodeRawData(linfo *core.LoginInfo,ipath,opath string)error{
 	// todo : load tag, decode file
 	tag,err:=core.LoadTagFromDisk(ipath)
 	if err!=nil{
@@ -355,23 +423,24 @@ func DecodeFile(ipath,opath,user string)error{
 	if(pdata.FromType==core.RAWDATA){
 		if pdata.IsDir==0{
 		DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
+		fmt.Println("raw file",pdata.Uuid,"key",core.BinkeyToString(pdata.EncryptingKey))
 		ofile:=opath+"/"+pdata.FromObj
 		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptingKey[0]))
 		cipath:=C.CString(ipath)
 		cofile:=C.CString(ofile)
 		defer C.free(unsafe.Pointer(cipath))
 		defer C.free(unsafe.Pointer(cofile))
-		C.do_decodefile(cipath,cofile,cpasswd)
+		C.do_decodefile(cipath,cofile,cpasswd,0)
 		}else{
 			// todo: it's a zipped dir
 		}
-	}else if pdata.FromType==core.CSDFILE{
-		// should be same with above, FromType is used only for trace source, the file is still a raw encrypted file
+	}else {
+		//if pdata.FromType==core.CSDFILE,should be same with above, FromType is used only for trace source, the file is still a raw encrypted file
 		// pdata.EncryptingKey need to be filled first
 //		rootdata:=LoadRootData(pdata)
-		return nil
+		fmt.Println(ipath,"is not valid raw encrypted data")
+		return errors.New("Invalid encrypted file")
 	}
-	linfo.Logout()
 	return nil
 }
 

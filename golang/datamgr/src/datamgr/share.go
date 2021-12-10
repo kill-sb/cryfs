@@ -4,7 +4,6 @@ import(
 	"fmt"
 	"os"
 	"errors"
-	"strings"
 	"dbop"
 	core "coredata"
 )
@@ -15,19 +14,17 @@ func doShare(){
         return
     }
     if outpath==""{
-        outpath="./"
-    }else{
-        os.MkdirAll(outpath,0755)
+        outpath=inpath+".csd"
     }
-    if info,err:=os.Stat(inpath);err!=nil{
+    info,err:=os.Stat(inpath)
+	if err!=nil{
         fmt.Println("Can't find ",inpath)
         return
-    }else{
-		if(info.IsDir()){
-			shareDir(inpath,outpath,loginuser)
-		}else{
-			shareFile(inpath,outpath,loginuser)
-		}
+    }
+	if info.IsDir(){
+		shareDir(inpath,outpath,loginuser)
+	}else{
+		shareFile(inpath,outpath,loginuser)
 	}
 }
 
@@ -62,6 +59,7 @@ func shareFile(ipath,opath,user string)error {
 			return err
 		}
 		DoDecodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
+		fmt.Println("encrypted key in csd:",core.BinkeyToString(sinfo.EncryptedKey))
 	}else{
 		// todo: from a csdfile, decrypt key and encode with another random key
 	}
@@ -75,7 +73,11 @@ func shareFile(ipath,opath,user string)error {
 		fmt.Println(err)
 		return err
 	}
-	dst:=opath+"/"+sinfo.Uuid+".csd"
+	st,err:=os.Stat(opath)
+	dst:=opath
+	if err==nil && st.IsDir(){
+		dst=opath+"/"+sinfo.Uuid+".csd"
+	}
 	err=sinfo.CreateCSDFile(dst) // local or remote uri will be processed in diffrent way in CreateCSDFile
 	if err!=nil{
 		return err
@@ -84,28 +86,13 @@ func shareFile(ipath,opath,user string)error {
 	return nil
 }
 
-func ParseVisitors(recvlist string) ([]string,[]int32,error){
-	strret:=strings.Split(recvlist,",")
-	intret:=make([]int32,0,len(strret))
-	for _,user:=range strret{
-		user=strings.TrimSpace(user)
-		fmt.Println(user)
-		id,err:=dbop.IsValidUser(user) // should fix to asking server later
-		if err!=nil{
-			return nil,nil,err
-		}
-		intret=append(intret,id)
-	}
-	return strret,intret,nil
-}
-
 func InputShareInfo(sinfo *core.ShareInfo) error{
 	// fill: descr,perm,expire,maxuse/leftuse
 	var recvlist string
 	fmt.Println("\nInput receivers(seperate with ','):")
 	fmt.Scanf("%s",&recvlist)
 	var err error
-	sinfo.Receivers,sinfo.RcvrIds,err=ParseVisitors(recvlist)
+	sinfo.Receivers,sinfo.RcvrIds,err=dbop.ParseVisitors(recvlist)
 	if err!=nil{
 		fmt.Println("Get receivers error:",err)
 		return err
