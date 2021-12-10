@@ -155,7 +155,7 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 	sinfo.Descr=""
 	sinfo.Perm=-1
 	sinfo.Receivers=nil
-	sinfo.Expire=""
+	sinfo.Expire="2999:12:31 0:00:00"
 	sinfo.MaxUse=-1
 	sinfo.LeftUse=-1
 	sinfo.FromType=fromtype

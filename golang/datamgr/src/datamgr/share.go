@@ -103,6 +103,6 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	fmt.Scanf("%d",&sinfo.MaxUse)
 	sinfo.LeftUse=sinfo.MaxUse;
 	sinfo.Perm=-1 // all perms
-	sinfo.Expire=""
+	//sinfo.Expire=  set it later
 	return nil
 }

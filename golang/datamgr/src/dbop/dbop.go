@@ -145,7 +145,7 @@ func WriteShareInfo(sinfo *core.ShareInfo) error{
 	keystr:=core.BinkeyToString(sinfo.RandKey)
 	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d)",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType)
 	if _, err := db.Exec(query); err != nil {
-		fmt.Println("Insert shareinfo into db error:", err)
+		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
 		return err
 	}
 
