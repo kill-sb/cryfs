@@ -275,14 +275,16 @@ func (tag *TagInFile) GetDataInfo()(*EncryptedData,error){
 }
 
 func LoadTagFromDisk(fname string /* uuid file name*/)(*TagInFile,error){
-	f,err:=os.Open(fname+".tag")
+	if !strings.HasSuffix(fname,".tag") && !strings.HasSuffix(fname,".TAG"){
+		fname+=".tag"
+	}
+	f,err:=os.Open(fname)
 	if err!=nil{
 		return nil,err
 	}
 	defer f.Close()
 	tag:=new(TagInFile)
 	if err=binary.Read(f,binary.LittleEndian,tag);err==nil{
-		fmt.Printf("uuid: %sTagtype: %d, md5 :%s obj %s, ekey: %x",string(tag.Uuid[:]),tag.FromType,string(tag.Md5Sum[:]),string(tag.FromObj[:]),tag.EKey)
 		return tag,nil
 	}else{
 		fmt.Println("decode error:",err)
@@ -304,7 +306,6 @@ func LoadShareInfoHead(fname string)(*ShareInfoHeader,error){
 		return nil,err
 	}
 	if string(head.MagicStr[:])=="CMITFS" && IsValidUuid(string(head.Uuid[:])){
-		fmt.Println("in LoadShareInfoHead get encypted key:",BinkeyToString(head.EncryptedKey[:]))
 		return head,nil
 	}else{
 		return nil,errors.New("Invalid csd file format")

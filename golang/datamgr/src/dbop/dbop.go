@@ -40,7 +40,6 @@ func ParseVisitors(recvlist string) ([]string,[]int32,error){
     intret:=make([]int32,0,len(strret))
     for _,user:=range strret{
         user=strings.TrimSpace(user)
-        fmt.Println(user)
         id,err:=IsValidUser(user) // should fix to asking server later
         if err!=nil{
             return nil,nil,err
@@ -150,6 +149,23 @@ func WriteShareInfo(sinfo *core.ShareInfo) error{
 	}
 
 	return nil
+}
+
+func GetUserName(uid int32)(string,error){
+	db:=GetDB()
+	query:=fmt.Sprintf("select name from users where id='%d'",uid)
+	res,err:=db.Query(query)
+	var ret string =""
+	if err!=nil{
+		return ret,err
+	}
+	if !res.Next(){
+		return ret,errors.New("No such user ")
+	}else{
+		res.Scan(&ret)
+	}
+	return ret,nil
+
 }
 
 func IsValidUser(user string)(int32,error){

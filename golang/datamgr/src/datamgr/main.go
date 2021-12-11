@@ -75,6 +75,8 @@ func main(){
 	case core.DECODE:
 		doDecode()
 	case core.TRACE:
+	case core.LIST:
+		doList()
 	default:
 		fmt.Println("Error parameters,use -h or --help for usage")
 	}
