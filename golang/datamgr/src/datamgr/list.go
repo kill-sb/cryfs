@@ -64,7 +64,8 @@ func ListTags(tags[]string){
 }
 
 func PrintEncDataInfo(data *core.EncryptedData){
-	fmt.Println("\tData Uuid(filename) :",data.Uuid)
+	fmt.Println("\tData Uuid :",data.Uuid)
+	fmt.Println("\tFilename :",inpath+"/"+data.Uuid)
 	user,err:=dbop.GetUserName(data.OwnerId)
 	if err==nil{
 		fmt.Printf("\tData Owner :%s(%d)\n",user,data.OwnerId)
@@ -88,6 +89,7 @@ func ListCSDs(csds[]string){
 		if err==nil{
 			sinfo,err:=dbop.LoadShareInfo(head)
             if err==nil{
+				sinfo.FileUri=csd
 				if first{
 					fmt.Println("Shared data from users:")
 					first=false
@@ -104,6 +106,7 @@ func ListCSDs(csds[]string){
 
 func PrintShareDataInfo(sinfo *core.ShareInfo){
 	fmt.Println("\tShared tag Uuid :",sinfo.Uuid)
+	fmt.Println("\tFilename :",sinfo.FileUri)
 	user,err:=dbop.GetUserName(sinfo.OwnerId)
 	if err==nil{
 		fmt.Printf("\tShared tag create user :%s(%d)\n",user,sinfo.OwnerId)
