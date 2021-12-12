@@ -63,6 +63,7 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 	db:=GetDB()
 
 	data:=new (core.EncryptedData)
+	data.Uuid=uuid
 	query:=fmt.Sprintf("select descr,fromtype,fromobj,ownerid,hashmd5,isdir from efilemeta where uuid='%s'",uuid)
 	res,err:=db.Query(query)
 	if err!=nil{
