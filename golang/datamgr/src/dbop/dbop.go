@@ -110,7 +110,7 @@ func GetOrgFileName(sinfo *core.ShareInfo)(string,error){
 			fmt.Println("GetOrgFileName can't find uuid",from)
 			return "",err
 		}
-		res.Scan(&from,target)
+		res.Scan(&from,&target)
 	}
 	query:=fmt.Sprintf("select fromobj from efilemeta where uuid='%s'",from)
 	res,err:=db.Query(query)

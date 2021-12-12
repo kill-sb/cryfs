@@ -161,14 +161,15 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 	sinfo.FromType=fromtype
 	sinfo.RandKey,_=RandPasswd()
 	if fromtype==RAWDATA{
+	//if fromtype!=UNKNOWN{
 		st,_:=os.Stat(fromobj)
 		sinfo.FromUuid=st.Name()
 		if !IsValidUuid(sinfo.FromUuid){
 			return nil,errors.New("Local encrypted file does not have a valid uuid filename")
 		}
 		sinfo.IsDir=GetIsDirFromUuid(sinfo.FromUuid)
-	}else{
-		// parse csd file format , and get uuid from end of file
+	}else if fromtype==CSDFILE{
+		// unknown file type: Uuid and IsDir will be filled according to source csd file outside
 	}
 	sinfo.FileUri=fromobj
 	sinfo.EncryptedKey=make([]byte,16) // calc outside later
@@ -234,6 +235,19 @@ func (sinfo *ShareInfo)CreateCSDFile(dstfile string)error{
 		}else{
 			fw.Write([]byte(sinfo.FileUri))
 		}
+	}else{
+        if sinfo.WriteFileHead(fw)==BINCONTENT{
+            fr,err:=os.Open(sinfo.FileUri)
+            if err!=nil{
+                fmt.Println("Open FileUri error:",err)
+                return err
+            }
+            defer fr.Close()
+			fr.Seek(60,0)
+            io.Copy(fw,fr)
+        }else{
+            fw.Write([]byte(sinfo.FileUri))
+        }
 	}
 	return nil
 }

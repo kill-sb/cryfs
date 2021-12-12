@@ -112,7 +112,11 @@ func PrintShareDataInfo(sinfo *core.ShareInfo){
 		fmt.Printf("\tShared tag create user :%s(%d)\n",user,sinfo.OwnerId)
 	}
 	fmt.Println("\tReceive users :",sinfo.Receivers)
-	fmt.Println("\tExpire datetime :",sinfo.Expire)
+	if sinfo.Perm==0{
+		fmt.Println("\tPermission :ReadOnly")
+	}else if sinfo.Perm==1{
+		fmt.Println("\tPermission :Resharable")
+	}
 	orgname,err:=dbop.GetOrgFileName(sinfo)
 	if err==nil{
 		fmt.Println("\tOrignal filename :",orgname)

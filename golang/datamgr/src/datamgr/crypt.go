@@ -365,11 +365,13 @@ func DecodeFile(ipath,opath,user string)error{
 func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 	head,err:=core.LoadShareInfoHead(ipath)
 	if err!=nil{
+		fmt.Println("Load share info head error:",err)
 		return err
 	}
 	// now we have got a valid csd header, then load info from server
 	sinfo,err:=dbop.LoadShareInfo(head)
 	if(err!=nil){
+		fmt.Println("Load share info from head error:",err)
 		return err
 	}
 	sinfo.FileUri=ipath
