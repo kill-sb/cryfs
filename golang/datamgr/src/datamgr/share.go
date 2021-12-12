@@ -117,6 +117,7 @@ func shareFile(ipath,opath,user string)error {
 	}else{
 		LoadShareInfoConfig(sinfo)
 	}
+	sinfo.CrTime=core.GetCurTime()
 	err=dbop.WriteShareInfo(sinfo)
 	if err!=nil{
 		fmt.Println(err)
@@ -159,3 +160,4 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	//sinfo.Expire=  set it later
 	return nil
 }
+

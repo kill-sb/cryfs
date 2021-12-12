@@ -104,6 +104,58 @@ func ListCSDs(csds[]string){
     }
 }
 
+func doTrace(){
+	if inpath==""{
+		fmt.Println("use -in to set .csd file full pathname")
+		return
+	}
+	head,err:=core.LoadShareInfoHead(inpath)
+	var sinfo *core.ShareInfo
+	list:=make ([]*core.ShareInfo,0,50)
+	if err==nil{
+		sinfo,err=dbop.LoadShareInfo(head)
+		if err!=nil{
+			fmt.Println("Load share info from head error",err)
+			return
+		}
+		for ;sinfo.FromType!=core.RAWDATA;{
+			list=append(list,sinfo)
+			sinfo,err=dbop.GetBriefShareInfo(sinfo.FromUuid)
+		}
+
+	}else{
+		fmt.Println("Parse csd file error:",err)
+	}
+	list=append(list,sinfo)
+	orgdata,err:=dbop.GetEncDataInfo(sinfo.FromUuid)
+	if err!=nil{
+		fmt.Println("Load data from db error:",err)
+		return
+	}
+	dtuser,err:=dbop.GetUserName(orgdata.OwnerId)
+	if err!=nil{
+		fmt.Println("Unknown user id :",orgdata.OwnerId)
+		return
+	}
+
+	fmt.Println("--------------------Orginal Data Info-----------------------------")
+	fmt.Println("Original file:",orgdata.FromObj,",  Owner:",dtuser,", File Uuid :",orgdata.Uuid)
+	fmt.Println("\n---------------------File Spead Info------------------------------")
+	var space=4;
+	for i:=len(list)-1;i>=0;i--{
+		for j:=0;j<space;j++{
+			fmt.Print(" ")
+		}
+		user,err:=dbop.GetUserName(list[i].OwnerId)
+		if err!=nil{
+			fmt.Println("Unknown user id :",list[i].OwnerId)
+			return
+		}
+		fmt.Println(user,"-->",list[i].Receivers,"at ",list[i].CrTime,",Permission",list[i].Perm,",","uuid:",list[i].Uuid)
+		space+=4;
+	}
+}
+
 func PrintShareDataInfo(sinfo *core.ShareInfo){
 	fmt.Println("\tShared tag Uuid :",sinfo.Uuid)
 	fmt.Println("\tFilename :",sinfo.FileUri)
@@ -112,11 +164,13 @@ func PrintShareDataInfo(sinfo *core.ShareInfo){
 		fmt.Printf("\tShared tag create user :%s(%d)\n",user,sinfo.OwnerId)
 	}
 	fmt.Println("\tReceive users :",sinfo.Receivers)
+	var perm string
 	if sinfo.Perm==0{
-		fmt.Println("\tPermission :ReadOnly")
-	}else if sinfo.Perm==1{
-		fmt.Println("\tPermission :Resharable")
+		perm="ReadOnly"
+	}else{
+		perm="Resharable"
 	}
+	fmt.Println("\tPermission :",perm)
 	orgname,err:=dbop.GetOrgFileName(sinfo)
 	if err==nil{
 		fmt.Println("\tOrignal filename :",orgname)

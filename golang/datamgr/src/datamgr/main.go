@@ -77,6 +77,7 @@ func main(){
 	case core.DECODE:
 		doDecode()
 	case core.TRACE:
+		doTrace()
 	case core.LIST:
 		doList()
 	default:

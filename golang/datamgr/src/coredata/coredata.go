@@ -2,6 +2,7 @@ package coredata
 
 import (
 	"net"
+	"time"
 	"bytes"
 	"errors"
 	"io"
@@ -95,7 +96,13 @@ type ShareInfo struct{
 	FromUuid	string
 	ContentType int
 	IsDir	byte // get info from database by uuid
+	CrTime	string
 	FileUri	string // source local filename or remote url
+}
+
+func GetCurTime()string{
+	tm:=time.Now()
+	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",tm.Year(),tm.Month,tm.Day(),tm.Hour(),tm.Minute(),tm.Second())
 }
 
 func GetUuid()(string,error){
