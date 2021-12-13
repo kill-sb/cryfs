@@ -44,11 +44,12 @@ func doList(){
 }
 
 func ListTags(tags[]string){
-	for _,tag:=range tags{
+	for i,tag:=range tags{
 		tinfo,err:=core.LoadTagFromDisk(tag)
 		if err==nil{
 			edata,err:=tinfo.GetDataInfo()
 			if err==nil{
+				fmt.Printf("\t%d\n",i+1)
 				PrintEncDataInfo(edata)
 			}else{
 				fmt.Println(err)
@@ -60,7 +61,6 @@ func ListTags(tags[]string){
 }
 
 func PrintEncDataInfo(data *core.EncryptedData){
-	fmt.Println("---------------------------------------------------------------------")
 	fmt.Println("\tData Uuid :",data.Uuid)
 	fmt.Println("\tFilename :",inpath+"/"+data.Uuid)
 	user,err:=dbop.GetUserName(data.OwnerId)
@@ -75,15 +75,17 @@ func PrintEncDataInfo(data *core.EncryptedData){
 	}else{
 		fmt.Println("\tIs Directory :no")
 	}
+	fmt.Println("---------------------------------------------------------------------")
 }
 
 func ListCSDs(csds[]string){
-    for _,csd:=range csds{
+    for i,csd:=range csds{
 		head,err:=core.LoadShareInfoHead(csd)
 		if err==nil{
 			sinfo,err:=dbop.LoadShareInfo(head)
             if err==nil{
 				sinfo.FileUri=csd
+				fmt.Printf("\t%d\n",i+1)
                 PrintShareDataInfo(sinfo)
             }else{
 				fmt.Println(err)
@@ -147,7 +149,6 @@ func doTrace(){
 }
 
 func PrintShareDataInfo(sinfo *core.ShareInfo){
-	fmt.Println("-----------------------------------------------------------------------")
 	fmt.Println("\tShared tag Uuid :",sinfo.Uuid)
 	fmt.Println("\tFilename :",sinfo.FileUri)
 	user,err:=dbop.GetUserName(sinfo.OwnerId)
@@ -164,6 +165,7 @@ func PrintShareDataInfo(sinfo *core.ShareInfo){
 	fmt.Println("\tPermission :",perm)
 	orgname,err:=dbop.GetOrgFileName(sinfo)
 	if err==nil{
-		fmt.Println("\tOrignal filename :",orgname)
+		fmt.Println("\tOriginal filename :",orgname)
 	}
+	fmt.Println("-----------------------------------------------------------------------")
 }
