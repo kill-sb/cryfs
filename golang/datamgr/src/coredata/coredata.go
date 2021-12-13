@@ -102,7 +102,7 @@ type ShareInfo struct{
 
 func GetCurTime()string{
 	tm:=time.Now()
-	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",tm.Year(),tm.Month,tm.Day(),tm.Hour(),tm.Minute(),tm.Second())
+	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",tm.Year(),tm.Month(),tm.Day(),tm.Hour(),tm.Minute(),tm.Second())
 }
 
 func GetUuid()(string,error){

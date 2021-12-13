@@ -37,22 +37,18 @@ func doList(){
 			}
 		}
 	}
+	fmt.Println("\n***********************Local Encrypted Data**************************\n")
 	ListTags(tags)
-	fmt.Println("\n*************************************************\n")
+	fmt.Println("\n***********************Shared Data From Users**************************\n")
 	ListCSDs(csds)
 }
 
 func ListTags(tags[]string){
-	first:=true
 	for _,tag:=range tags{
 		tinfo,err:=core.LoadTagFromDisk(tag)
 		if err==nil{
 			edata,err:=tinfo.GetDataInfo()
 			if err==nil{
-				if first{
-					fmt.Println("Encrypted local data:")
-					first=false
-				}
 				PrintEncDataInfo(edata)
 			}else{
 				fmt.Println(err)
@@ -64,6 +60,7 @@ func ListTags(tags[]string){
 }
 
 func PrintEncDataInfo(data *core.EncryptedData){
+	fmt.Println("---------------------------------------------------------------------")
 	fmt.Println("\tData Uuid :",data.Uuid)
 	fmt.Println("\tFilename :",inpath+"/"+data.Uuid)
 	user,err:=dbop.GetUserName(data.OwnerId)
@@ -71,7 +68,6 @@ func PrintEncDataInfo(data *core.EncryptedData){
 		fmt.Printf("\tData Owner :%s(%d)\n",user,data.OwnerId)
 	}
 
-	fmt.Println("\tData filename :",data.Path)
 	fmt.Println("\tOrginal filename :",data.FromObj)
 	fmt.Println("\tDescription :",data.Descr)
 	if data.IsDir==1{
@@ -79,21 +75,15 @@ func PrintEncDataInfo(data *core.EncryptedData){
 	}else{
 		fmt.Println("\tIs Directory :no")
 	}
-	fmt.Println("------------------------")
 }
 
 func ListCSDs(csds[]string){
-	first:=true
     for _,csd:=range csds{
 		head,err:=core.LoadShareInfoHead(csd)
 		if err==nil{
 			sinfo,err:=dbop.LoadShareInfo(head)
             if err==nil{
 				sinfo.FileUri=csd
-				if first{
-					fmt.Println("Shared data from users:")
-					first=false
-				}
                 PrintShareDataInfo(sinfo)
             }else{
 				fmt.Println(err)
@@ -157,6 +147,7 @@ func doTrace(){
 }
 
 func PrintShareDataInfo(sinfo *core.ShareInfo){
+	fmt.Println("-----------------------------------------------------------------------")
 	fmt.Println("\tShared tag Uuid :",sinfo.Uuid)
 	fmt.Println("\tFilename :",sinfo.FileUri)
 	user,err:=dbop.GetUserName(sinfo.OwnerId)
@@ -175,5 +166,4 @@ func PrintShareDataInfo(sinfo *core.ShareInfo){
 	if err==nil{
 		fmt.Println("\tOrignal filename :",orgname)
 	}
-	fmt.Println("------------------------")
 }

@@ -81,6 +81,6 @@ func main(){
 	case core.LIST:
 		doList()
 	default:
-		fmt.Println("Error parameters,use -h or --help for usage")
+		fmt.Println("datamgr -e|-d|-l|-m|-s|-t  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] (use -h for more help)")
 	}
 }

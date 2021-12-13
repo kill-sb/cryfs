@@ -1,4 +1,5 @@
 package dbop
+// todo: use map to cache db operate result
 
 import (
 	_ "MySQL"
