@@ -92,7 +92,7 @@ func Unzip(src *os.File,size int64,opath string){
 	}
 }
 
-func EncodeDir(ipath string, opath string, luser *core.LoginInfo) error{
+func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) error{
     /* 
 	1. prepare for EncryptData
     2. mkdir a dst dir in opath ,walk src dir , make same directory structure, and encrypt every file 
@@ -113,31 +113,39 @@ func EncodeDir(ipath string, opath string, luser *core.LoginInfo) error{
     pdata.OwnerId=linfo.Id
     pdata.EncryptingKey=passwd
     pdata.Path=opath
-    pdata.IsDir=0
+    pdata.IsDir=1
 
     ofile:=opath+"/"+pdata.Uuid
+	finfo,_:=os.Stat(ipath)
+	os.MkdirAll(ofile,finfo.Mode())
+	/*
     cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
     cipath:=C.CString(ipath)
     cofile:=C.CString(ofile)
     defer C.free(unsafe.Pointer(cipath))
     defer C.free(unsafe.Pointer(cofile))
     C.do_encodefile(cipath,cofile,cpasswd)
-    pdata.HashMd5,_=GetFileMd5(ofile)
+	*/
+//    pdata.HashMd5,_=GetFileMd5(ofile)
+    pdata.HashMd5=""
     RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath)
-    return nil
 
-	filepath.Walk(ipath, func (path string,info os.FileInfo, err error) error{
+	filepath.Walk(ipath, func (pathname string,info os.FileInfo, err error) error{
 		noprefix:=StripAllSlash(ipath)
-		relative:=strings.TrimSuffix(path,noprefix)
+		relative:=strings.TrimSuffix(pathname,noprefix)
+		fmt.Println(pathname,info.IsDir())
 		if info.IsDir(){
-			os.MkdirAll(opath+"/"+relative)
+			os.MkdirAll(ofile+"/"+relative,info.Mode())
 		}else{
-
+			fmt.Println(pathname,"->",ofile+"/"+relative)
+			DoEncodeFileInC(pathname,ofile+"/"+relative,passwd)
 		}
-	}
+		return nil
+	})
     return nil
 }
 
 func DecodeDir(inpath,outpath string , linfo *core.LoginInfo) error{
+	return nil
 }
 

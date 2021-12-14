@@ -262,6 +262,16 @@ func GetFileName(ipath string)(string,error){
 	return finfo.Name(),nil
 }
 
+func DoEncodeFileInC(infile,outfile string,passwd []byte )error{
+	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
+	cipath:=C.CString(infile)
+	cofile:=C.CString(outfile)
+	defer C.free(unsafe.Pointer(cipath))
+	defer C.free(unsafe.Pointer(cofile))
+	C.do_encodefile(cipath,cofile,cpasswd)
+	return nil
+}
+
 func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) error{
 //	fmt.Println(ipath,opath,user)
 	passwd,err:=core.RandPasswd()
@@ -283,12 +293,14 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) error{
 	pdata.IsDir=0
 
 	ofile:=opath+"/"+pdata.Uuid
-	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
+/*	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
 	cipath:=C.CString(ipath)
 	cofile:=C.CString(ofile)
 	defer C.free(unsafe.Pointer(cipath))
 	defer C.free(unsafe.Pointer(cofile))
 	C.do_encodefile(cipath,cofile,cpasswd)
+	*/
+	DoEncodeFileInC(ipath,ofile,passwd)
 	pdata.HashMd5,_=GetFileMd5(ofile)
 	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath)
 	return nil
@@ -320,8 +332,10 @@ func doDecode(){
 		defer linfo.Logout()
 
 		if info.IsDir(){
+			fmt.Println("Decoding dir",inpath,outpath)
 			DecodeDir(inpath,outpath,linfo)
 		}else{
+			fmt.Println("Decoding file",inpath,outpath)
 			DecodeFile(inpath,outpath,linfo)
 		}
 	}
@@ -382,16 +396,28 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 	if sinfo.IsDir==0{
 		DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
 		fmt.Println("psd file",ipath,"key",core.BinkeyToString(orgkey))
-		cpasswd:=(*C.char)(unsafe.Pointer(&orgkey[0]))
+/*		cpasswd:=(*C.char)(unsafe.Pointer(&orgkey[0]))
 		cipath:=C.CString(ipath)
 		cofile:=C.CString(ofile)
 		defer C.free(unsafe.Pointer(cipath))
 		defer C.free(unsafe.Pointer(cofile))
-		C.do_decodefile(cipath,cofile,cpasswd,60/* ShareInfoHead offset*/)
+		C.do_decodefile(cipath,cofile,cpasswd,60) // ShareInfoHead offset
+		*/
+		DoDecodeFileInC(ipath,ofile,orgkey,60)
 	}else{
 			// todo: it's a zipped dir
 	}
 	return nil
+}
+
+func DoDecodeFileInC(ifile,ofile string, passwd []byte,offset int64)error{
+		cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
+		cipath:=C.CString(ifile)
+		cofile:=C.CString(ofile)
+		defer C.free(unsafe.Pointer(cipath))
+		defer C.free(unsafe.Pointer(cofile))
+		C.do_decodefile(cipath,cofile,cpasswd,C.long(offset)/* ShareInfoHead offset*/)
+		return nil
 }
 
 func DecodeRawData(linfo *core.LoginInfo,ipath,opath string)error{
@@ -410,14 +436,16 @@ func DecodeRawData(linfo *core.LoginInfo,ipath,opath string)error{
 		DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
 		fmt.Println("raw file",pdata.Uuid,"key",core.BinkeyToString(pdata.EncryptingKey))
 		ofile:=opath+"/"+pdata.FromObj
-		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptingKey[0]))
+/*		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptingKey[0]))
 		cipath:=C.CString(ipath)
 		cofile:=C.CString(ofile)
 		defer C.free(unsafe.Pointer(cipath))
 		defer C.free(unsafe.Pointer(cofile))
 		C.do_decodefile(cipath,cofile,cpasswd,0)
+		*/
+		DoDecodeFileInC(ipath,ofile,pdata.EncryptingKey,0)
 		}else{
-			// todo: it's a zipped dir
+			// todo: it's a dir, not zipped
 		}
 	}else {
 		//if pdata.FromType==core.CSDFILE,should be same with above, FromType is used only for trace source, the file is still a raw encrypted file
