@@ -193,11 +193,6 @@ func GetEncDataFromDisk(linfo *core.LoginInfo,fname string)(*core.EncryptedData,
 	return data,nil
 }
 
-
-func EncodeDir(ipath string, opath string, user string) error{
-	return nil
-}
-
 func GetFileMd5(fname string)(string,error){
 	if output,err:=exec.Command("md5sum",fname).Output();err!=nil{
 		return "" ,err
@@ -267,18 +262,8 @@ func GetFileName(ipath string)(string,error){
 	return finfo.Name(),nil
 }
 
-func EncodeFile(ipath string, opath string, user string) error{
+func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) error{
 //	fmt.Println(ipath,opath,user)
-	if loginuser==""{
-		fmt.Println("use parameter -user to set login user")
-		return errors.New("empty user")
-	}
-	linfo,err:=Login(loginuser)
-	if err!=nil{
-		fmt.Println("login error:",err)
-		return err
-	}
-	defer linfo.Logout()
 	passwd,err:=core.RandPasswd()
 	if err!=nil{
 		return err
@@ -309,9 +294,6 @@ func EncodeFile(ipath string, opath string, user string) error{
 	return nil
 }
 
-func DecodeDir(inpath,outpath,user string){
-}
-
 func doDecode(){
 	if inpath==""{
 		fmt.Println("You should set inpath explicitly")
@@ -326,25 +308,26 @@ func doDecode(){
 		fmt.Println("Can't find ",inpath)
 		return
 	}else{
+		if loginuser==""{
+			fmt.Println("use parameter -user=NAME to set login user")
+			return
+		}
+		linfo,err:=Login(loginuser)
+		if err!=nil{
+			fmt.Println("login error:",err)
+			return
+		}
+		defer linfo.Logout()
+
 		if info.IsDir(){
-			DecodeDir(inpath,outpath,loginuser)
+			DecodeDir(inpath,outpath,linfo)
 		}else{
-			DecodeFile(inpath,outpath,loginuser)
+			DecodeFile(inpath,outpath,linfo)
 		}
 	}
 }
 
-func DecodeFile(ipath,opath,user string)error{
-	if user==""{
-		fmt.Println("use parameter -user=NAME to set login user")
-		return errors.New("empty user")
-	}
-	linfo,err:=Login(user)
-	if err!=nil{
-		fmt.Println("login error:",err)
-		return err
-	}
-	defer linfo.Logout()
+func DecodeFile(ipath,opath string,linfo *core.LoginInfo)error{
 	// judge raw uuid file or csd file
 	ftype,err:=core.GetFileType(ipath)
 	if err!=nil{
@@ -460,10 +443,21 @@ func doEncode(){
 		fmt.Println("Can't find ",inpath)
 		return
 	}else{
+		if loginuser==""{
+			fmt.Println("use parameter -user to set login user")
+			return
+		}
+		linfo,err:=Login(loginuser)
+		if err!=nil{
+			fmt.Println("login error:",err)
+			return
+		}
+		defer linfo.Logout()
+
 		if info.IsDir(){
-			EncodeDir(inpath,outpath,loginuser)
+			EncodeDir(inpath,outpath,linfo)
 		}else{
-			EncodeFile(inpath,outpath,loginuser)
+			EncodeFile(inpath,outpath,linfo)
 		}
 	}
 }
