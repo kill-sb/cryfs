@@ -142,7 +142,7 @@ func GetFileType(fname string)(int,error){
             return RAWDATA,nil
         }
     }
-    if strings.HasSuffix(fname,".csd") || strings.HasSuffix(fname,".CSD"){
+    if !finfo.IsDir() && (strings.HasSuffix(fname,".csd") || strings.HasSuffix(fname,".CSD")){
         return CSDFILE,nil
     }
     return UNKNOWN,nil

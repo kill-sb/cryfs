@@ -137,10 +137,11 @@ void do_encodefile(const char* from, const char* dfile, const char *passwd)
 	sfd=open(from,O_RDONLY);
     struct stat st;
     fstat(sfd,&st);
-	printf("%s->%s\n",from,dfile);
+//	printf("%s->%s\n",from,dfile);
     dfd=creat(dfile,st.st_mode);
     if(dfd){
-        printf("%ld bytes encoded\n",encodefd(sfd,dfd,passwd));
+//        printf("%ld bytes encoded\n",encodefd(sfd,dfd,passwd));
+		encodefd(sfd,dfd,passwd);
         close(dfd);
     }
     close(sfd);
@@ -152,11 +153,12 @@ void do_decodefile(const char* from, const char* dfile, const char *passwd,off_t
 	sfd=open(from,O_RDONLY);
     struct stat st;
     fstat(sfd,&st);
-	printf("%s->%s\n",from,dfile);
+//	printf("%s->%s\n",from,dfile);
     dfd=creat(dfile,st.st_mode);
     if(dfd){
 //		lseek(sfd,offset,SEEK_SET);
-        printf("%ld bytes encoded\n",decodefd(sfd,dfd,passwd,offset));
+  //      printf("%ld bytes decoded\n",decodefd(sfd,dfd,passwd,offset));
+  		decodefd(sfd,dfd,passwd,offset);
         close(dfd);
     }
     close(sfd);
@@ -316,7 +318,8 @@ func doDecode(){
 	}else{
 		os.MkdirAll(outpath,0755)
 	}
-	if info,err:=os.Stat(inpath);err!=nil{
+	finfo,err:=os.Stat(inpath)
+	if err!=nil{
 		fmt.Println("Can't find ",inpath)
 		return
 	}else{
@@ -330,18 +333,19 @@ func doDecode(){
 			return
 		}
 		defer linfo.Logout()
-
+/*
 		if info.IsDir(){
 			fmt.Println("Decoding dir",inpath,outpath)
 			DecodeDir(inpath,outpath,linfo)
 		}else{
 			fmt.Println("Decoding file",inpath,outpath)
 			DecodeFile(inpath,outpath,linfo)
-		}
+		}*/
+		DecodeFile(inpath,outpath,linfo,finfo)
 	}
 }
 
-func DecodeFile(ipath,opath string,linfo *core.LoginInfo)error{
+func DecodeFile(ipath,opath string,linfo *core.LoginInfo,finfo os.FileInfo)error{
 	// judge raw uuid file or csd file
 	ftype,err:=core.GetFileType(ipath)
 	if err!=nil{
@@ -350,7 +354,7 @@ func DecodeFile(ipath,opath string,linfo *core.LoginInfo)error{
 	}
 	switch ftype{
 	case core.RAWDATA:
-		return DecodeRawData(linfo,ipath,opath)
+		return DecodeRawData(finfo,linfo,ipath,opath)
 	case core.CSDFILE:
 		return DecodeCSDFile(linfo,ipath,opath)
 	default:
@@ -420,7 +424,7 @@ func DoDecodeFileInC(ifile,ofile string, passwd []byte,offset int64)error{
 		return nil
 }
 
-func DecodeRawData(linfo *core.LoginInfo,ipath,opath string)error{
+func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)error{
 	// todo : load tag, decode file
 	tag,err:=core.LoadTagFromDisk(ipath)
 	if err!=nil{
@@ -432,10 +436,10 @@ func DecodeRawData(linfo *core.LoginInfo,ipath,opath string)error{
 	pdata.Path=ipath
 
 	if(pdata.FromType==core.RAWDATA){
-		if pdata.IsDir==0{
 		DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
-		fmt.Println("raw file",pdata.Uuid,"key",core.BinkeyToString(pdata.EncryptingKey))
 		ofile:=opath+"/"+pdata.FromObj
+		if pdata.IsDir==0{
+		fmt.Println("raw file",pdata.Uuid,"key",core.BinkeyToString(pdata.EncryptingKey))
 /*		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptingKey[0]))
 		cipath:=C.CString(ipath)
 		cofile:=C.CString(ofile)
@@ -445,7 +449,14 @@ func DecodeRawData(linfo *core.LoginInfo,ipath,opath string)error{
 		*/
 		DoDecodeFileInC(ipath,ofile,pdata.EncryptingKey,0)
 		}else{
-			// todo: it's a dir, not zipped
+			err:=os.MkdirAll(ofile,0777)
+		//	err:=os.MkdirAll(ofile,finfo.Mode())
+			if err!=nil{
+				fmt.Println("mkdir error:",err)
+			}
+		//	return nil
+	//		exec.Command("mkdir",ofile).Run()
+			DecodeDir(ipath,ofile,pdata.EncryptingKey)
 		}
 	}else {
 		//if pdata.FromType==core.CSDFILE,should be same with above, FromType is used only for trace source, the file is still a raw encrypted file

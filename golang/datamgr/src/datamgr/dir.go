@@ -118,34 +118,52 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) error{
     ofile:=opath+"/"+pdata.Uuid
 	finfo,_:=os.Stat(ipath)
 	os.MkdirAll(ofile,finfo.Mode())
-	/*
-    cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
-    cipath:=C.CString(ipath)
-    cofile:=C.CString(ofile)
-    defer C.free(unsafe.Pointer(cipath))
-    defer C.free(unsafe.Pointer(cofile))
-    C.do_encodefile(cipath,cofile,cpasswd)
-	*/
 //    pdata.HashMd5,_=GetFileMd5(ofile)
     pdata.HashMd5=""
     RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath)
 
 	filepath.Walk(ipath, func (pathname string,info os.FileInfo, err error) error{
+		if ipath==pathname{
+			return nil
+		}
 		noprefix:=StripAllSlash(ipath)
-		relative:=strings.TrimSuffix(pathname,noprefix)
-		fmt.Println(pathname,info.IsDir())
+		relative:=strings.TrimPrefix(pathname,noprefix)
 		if info.IsDir(){
-			os.MkdirAll(ofile+"/"+relative,info.Mode())
+			fmt.Println(ofile+relative,info.Mode())
+			err:=os.MkdirAll(ofile+relative,info.Mode())
+			if err!=nil{
+				fmt.Println("Mkdir error",err)
+			}
 		}else{
-			fmt.Println(pathname,"->",ofile+"/"+relative)
-			DoEncodeFileInC(pathname,ofile+"/"+relative,passwd)
+//			fmt.Println(pathname,"->",ofile+relative)
+			DoEncodeFileInC(pathname,ofile+relative,passwd)
 		}
 		return nil
 	})
     return nil
 }
 
-func DecodeDir(inpath,outpath string , linfo *core.LoginInfo) error{
+func DecodeDir(ipath,opath string , passwd []byte) error{
+	fmt.Println("Decode dir ",ipath,opath)
+	filepath.Walk(ipath, func (pathname string,info os.FileInfo, err error) error{
+		if pathname==ipath{
+			return nil
+		}
+		noprefix:=StripAllSlash(ipath)
+		relative:=strings.TrimPrefix(pathname,noprefix)
+		if info.IsDir(){
+//			fmt.Println("mkdir ",opath+relative)
+err:=os.MkdirAll(opath+relative,info.Mode())
+if err!=nil{
+	fmt.Println("mkdir ",opath+relative,info.Mode(),"error:",err)
+}
+		}else{
+//			fmt.Println(pathname,"->",opath+"/"+relative)
+			DoDecodeFileInC(pathname,opath+relative,passwd,0)
+		}
+		return nil
+	})
+
 	return nil
 }
 
