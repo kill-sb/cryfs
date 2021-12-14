@@ -449,13 +449,14 @@ func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)er
 		*/
 		DoDecodeFileInC(ipath,ofile,pdata.EncryptingKey,0)
 		}else{
-			err:=os.MkdirAll(ofile,0777)
-		//	err:=os.MkdirAll(ofile,finfo.Mode())
+			err:=os.MkdirAll("/tmp/base/cryfs",finfo.Mode())
+			if ofile!="/tmp/base/cryfs"{
+				fmt.Println("not same:",[]byte(ofile),[]byte("/tmp/base/cryfs"))
+			}
+			err=os.MkdirAll(ofile,finfo.Mode())
 			if err!=nil{
 				fmt.Println("mkdir error:",err)
 			}
-		//	return nil
-	//		exec.Command("mkdir",ofile).Run()
 			DecodeDir(ipath,ofile,pdata.EncryptingKey)
 		}
 	}else {

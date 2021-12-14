@@ -265,7 +265,15 @@ func DataFromTag(tag *TagInFile) *EncryptedData{
 	data.Uuid=string(tag.Uuid[:])
 	data.Descr=string(tag.Descr[:])
 	data.FromType=int(tag.FromType)
-	data.FromObj=string(tag.FromObj[:])
+//	data.FromObj=string(tag.FromObj[:])
+	end:=254
+	for i,v:=range tag.FromObj[:]{
+		if v==0{
+			end=i
+			break
+		}
+	}
+	data.FromObj=string(tag.FromObj[0:end])
 	data.OwnerId=tag.OwnerId
 	data.HashMd5=string(tag.Md5Sum[:])
 	data.EncryptingKey=make([]byte,16)

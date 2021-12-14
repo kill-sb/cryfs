@@ -155,7 +155,7 @@ func DecodeDir(ipath,opath string , passwd []byte) error{
 //			fmt.Println("mkdir ",opath+relative)
 err:=os.MkdirAll(opath+relative,info.Mode())
 if err!=nil{
-	fmt.Println("mkdir ",opath+relative,info.Mode(),"error:",err)
+	fmt.Println("mkdir ",opath+relative,len(opath+relative),"error:",err)
 }
 		}else{
 //			fmt.Println(pathname,"->",opath+"/"+relative)
