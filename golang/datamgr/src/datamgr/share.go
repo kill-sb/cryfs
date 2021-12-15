@@ -22,14 +22,22 @@ func doShare(){
         fmt.Println("Can't find ",inpath)
         return
     }
-	if info.IsDir(){
-		shareDir(inpath,outpath,loginuser)
-	}else{
-		shareFile(inpath,outpath,loginuser)
+	if loginuser==""{
+		fmt.Println("use parameter -user=NAME to set login user")
+		return
 	}
-}
+	linfo,err:=Login(loginuser)
+	if err!=nil{
+		fmt.Println("login error:",err)
+		return
+	}
+	defer linfo.Logout()
 
-func shareDir(ipath,opath,user string){
+	if info.IsDir(){
+		shareDir(inpath,outpath,linfo)
+	}else{
+		shareFile(inpath,outpath,linfo)
+	}
 }
 
 func GetDataType(ipath string /* .tag or .csd stand for local encrypted data or data shared from other user */) int{
@@ -44,17 +52,50 @@ func GetDataType(ipath string /* .tag or .csd stand for local encrypted data or 
 	}
 }
 
-func shareFile(ipath,opath,user string)error {
-	if user==""{
-		fmt.Println("use parameter -user=NAME to set login user")
-		return errors.New("empty user")
-	}
-	linfo,err:=Login(user)
+func shareDir(ipath,opath string, linfo *core.LoginInfo){
+/*	fromtype shoud be RAWDATA
+	0. write shareinfo header
+	1. zip path to file after header
+	2. rename the file to ofile
+*/
+	sinfo,err:=core.NewShareInfo(linfo,core.RAWDATA,ipath)
+	dinfo,err:=GetEncDataFromDisk(linfo,ipath)
 	if err!=nil{
-		fmt.Println("login error:",err)
-		return err
+		fmt.Println("GetEncDataFromDisk in shareDir error:",err)
+		return
 	}
-	defer linfo.Logout()
+	DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
+
+	if config==""{
+		err=InputShareInfo(sinfo) // input share info from terminal
+		if(err!=nil){
+			fmt.Println(err)
+			return
+		}
+	}else{
+		LoadShareInfoConfig(sinfo)
+	}
+	sinfo.CrTime=core.GetCurTime()
+	err=dbop.WriteShareInfo(sinfo)
+	if err!=nil{
+		fmt.Println(err)
+		return
+	}
+	st,err:=os.Stat(opath)
+	dst:=opath
+	if err==nil && st.IsDir(){
+		dst=opath+"/"+sinfo.Uuid+".csd"
+	}
+	err=sinfo.CreateCSDFile(dst)
+	if err!=nil{
+		return
+	}
+	fmt.Println(dst," created ok, you can share it to ", sinfo.Receivers)
+	return
+
+}
+
+func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 	fromtype:=GetDataType(ipath)
 	if fromtype==core.UNKNOWN{
 		fmt.Println("Unknown data file format")

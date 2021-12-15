@@ -167,5 +167,11 @@ func PrintShareDataInfo(sinfo *core.ShareInfo){
 	if err==nil{
 		fmt.Println("\tOriginal filename :",orgname)
 	}
+	if sinfo.IsDir==1{
+		fmt.Println("\tIs Directory :yes")
+	}else{
+		fmt.Println("\tIs Directory :no")
+	}
+
 	fmt.Println("-----------------------------------------------------------------------")
 }

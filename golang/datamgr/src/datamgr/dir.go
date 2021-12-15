@@ -1,96 +1,12 @@
 package main
 
 import(
-    "archive/zip"
     "os"
-    "io"
     "fmt"
     "path/filepath"
     "strings"
 	core "coredata"
 )
-func StripAllSlash(path string)string{
-		noprefix:=strings.TrimSuffix(path,"/")
-		for noprefix!=path{
-			path=noprefix
-			noprefix=strings.TrimSuffix(path,"/")
-		}
-		return noprefix
-}
-
-func Zip(ipath string, target* os.File ){
-	acv:=zip.NewWriter(target)
-	defer acv.Close()
-
-	filepath.Walk(ipath, func (path string, info os.FileInfo, err error)error{
-		if path==ipath {
-			if info.IsDir(){
-				return nil // Walk may enumerate the root-path itself
-			}else{
-				header,_:=zip.FileInfoHeader(info)
-				header.Name=info.Name()
-				header.Method=zip.Deflate
-				writer,_:=acv.CreateHeader(header)
-				file,_:=os.Open(path)
-				defer file.Close()
-				io.Copy(writer,file)
-				return nil
-			}
-		}
-		header,_:=zip.FileInfoHeader(info)
-		noprefix:=StripAllSlash(ipath)
-		header.Name=strings.TrimSuffix(path,noprefix)
-		if info.IsDir(){
-			header.Name+="/"
-		}else{
-			header.Method=zip.Deflate
-		}
-
-		writer,_:=acv.CreateHeader(header)
-
-		if !info.IsDir(){
-			file,_:=os.Open(path)
-			defer file.Close()
-			io.Copy(writer,file)
-		}
-		return nil
-	})
-}
-
-func Unzip(src *os.File,size int64,opath string){
-	err:=os.MkdirAll(opath,0755)
-	if err!=nil{
-		fmt.Println("Create path error:",err)
-		return
-	}
-	zrd,err:=zip.NewReader(src,size)
-	if err!=nil{
-		fmt.Println("zip.NewReader error:",err)
-		return
-	}
-	for _,dst:=range zrd.File{
-		info:=dst.FileInfo()
-		dstname:=opath+"/"+dst.Name
-		if info.IsDir(){
-			os.MkdirAll(dstname,info.Mode())
-		}else{
-			lfile,err:=os.OpenFile(dstname,os.O_CREATE,info.Mode())
-			//lfile,err:=os.Create(dstname)
-			if err!=nil{
-				fmt.Println("Create file ",dst.Name,"error:",err)
-				return
-			}
-			defer lfile.Close()
-			rd,err:=dst.Open()
-			if err!=nil{
-				fmt.Println("Open file in zip:",dst.Name,"error:",err)
-				return
-			}
-			defer rd.Close()
-			io.Copy(lfile,rd)
-		}
-	}
-}
 
 func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) error{
     /* 
@@ -126,7 +42,7 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) error{
 		if ipath==pathname{
 			return nil
 		}
-		noprefix:=StripAllSlash(ipath)
+		noprefix:=core.StripAllSlash(ipath)
 		relative:=strings.TrimPrefix(pathname,noprefix)
 		if info.IsDir(){
 			fmt.Println(ofile+relative,info.Mode())
@@ -149,14 +65,14 @@ func DecodeDir(ipath,opath string , passwd []byte) error{
 		if pathname==ipath{
 			return nil
 		}
-		noprefix:=StripAllSlash(ipath)
+		noprefix:=core.StripAllSlash(ipath)
 		relative:=strings.TrimPrefix(pathname,noprefix)
 		if info.IsDir(){
 //			fmt.Println("mkdir ",opath+relative)
-err:=os.MkdirAll(opath+relative,info.Mode())
-if err!=nil{
-	fmt.Println("mkdir ",opath+relative,len(opath+relative),"error:",err)
-}
+			err:=os.MkdirAll(opath+relative,info.Mode())
+			if err!=nil{
+				fmt.Println("mkdir ",opath+relative,len(opath+relative),"error:",err)
+			}
 		}else{
 //			fmt.Println(pathname,"->",opath+"/"+relative)
 			DoDecodeFileInC(pathname,opath+relative,passwd,0)
@@ -167,3 +83,50 @@ if err!=nil{
 	return nil
 }
 
+type CSDReader struct{
+	orgfile *os.File
+}
+
+func NewCSDReader(ifile* os.File)*CSDReader{
+	rdr:=new (CSDReader)
+	rdr.orgfile=ifile
+	return rdr
+}
+
+func (rdr *CSDReader)ReadAt(p[]byte, off int64)(int,error){
+	return rdr.orgfile.ReadAt(p, off+60)
+}
+
+func DecodeCSDToDir(ifile,opath string, passwd []byte)error{
+/*
+	1. unzip left part of csd file(from offset 60) to dst dir
+	2. walk dstdir and decode every file
+*/
+	st,_:=os.Stat(ifile) // we have read fileheader from it before, so Stat should return no error
+	size:=st.Size()-60	// the format of fileheader has been validated before, so the result should not be negtive
+	zfile,_:=os.Open(ifile)
+	csdrd:=NewCSDReader(zfile)
+	err:=core.UnzipFromFile(csdrd,size,opath)
+	if err!=nil{
+		fmt.Println("Unzip from",ifile,"to",opath,"error:",err)
+		return err
+	}
+	zfile.Close()
+
+	filepath.Walk(opath, func (pathname string,info os.FileInfo, err error) error{
+		if pathname==opath{
+			return nil
+		}
+		if !info.IsDir(){
+			tmpfile:=opath+"/.___"+info.Name()+"___.tmp"
+			DoDecodeFileInC(pathname,tmpfile,passwd,0)
+			err=os.Rename(tmpfile,pathname)
+			if err!=nil{
+				fmt.Println("rename error:",err)
+				return err
+			}
+		}
+		return nil
+	})
+	return nil
+}

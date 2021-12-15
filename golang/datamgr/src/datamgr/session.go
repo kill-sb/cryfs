@@ -40,7 +40,7 @@ func do_login(user string, passwd []byte)(*core.LoginInfo,error){
 		for _,ch:=range sharet{
 			shastr=fmt.Sprintf("%s%02x",shastr,ch)
 		}
-		fmt.Printf("login info: sharet %s, sha in db: %s\n",shastr,shasum)
+//		fmt.Printf("login info: sharet %s, sha in db: %s\n",shastr,shasum)
 		if	shastr==shasum{
 			linfo:=&core.LoginInfo{Name:user,Id:id}
 	/*		keylen:=len(key)/2

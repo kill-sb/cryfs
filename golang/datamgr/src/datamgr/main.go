@@ -22,12 +22,12 @@ func LoadConfig(){
 
 func GetFunction() int {
 	var bList,bEnc,bTrace,bShare,bMnt,bDec bool
-	flag.BoolVar(&bEnc,"e",false,"encrypt raw data")
-	flag.BoolVar(&bShare,"s",false,"share data to other users")
-	flag.BoolVar(&bMnt,"m",false,"mount encrypted data")
-	flag.BoolVar(&bDec,"d",false,"decrypted local data(test only)")
-	flag.BoolVar(&bTrace,"t",false,"trace source of data")
-	flag.BoolVar(&bList,"l",false,"list local encrypted data")
+	flag.BoolVar(&bEnc,"enc",false,"encrypt raw data")
+	flag.BoolVar(&bShare,"share",false,"share data to other users")
+	flag.BoolVar(&bMnt,"mnt",false,"mount encrypted data")
+	flag.BoolVar(&bDec,"dec",false,"decrypted local data(test only)")
+	flag.BoolVar(&bTrace,"trace",false,"trace source of data")
+	flag.BoolVar(&bList,"list",false,"list local encrypted data")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
@@ -81,6 +81,6 @@ func main(){
 	case core.LIST:
 		doList()
 	default:
-		fmt.Println("datamgr -e|-d|-l|-m|-s|-t  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] (use -h for more help)")
+		fmt.Println("datamgr -enc|-dec|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] (use -h for more help)")
 	}
 }

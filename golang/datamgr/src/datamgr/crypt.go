@@ -388,8 +388,8 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 		return errors.New("Not shared user")
 	}
 	ofile,err:=dbop.GetOrgFileName(sinfo)
-	fmt.Println("Get ofile ",ofile)
-	fmt.Println("enc keys:",core.BinkeyToString(sinfo.EncryptedKey),"randkey:",core.BinkeyToString(sinfo.RandKey))
+//	fmt.Println("Get ofile ",ofile)
+//	fmt.Println("enc keys:",core.BinkeyToString(sinfo.EncryptedKey),"randkey:",core.BinkeyToString(sinfo.RandKey))
 	if err!=nil{
 		fmt.Println("Get origin file name error",err)
 		return err
@@ -397,9 +397,9 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 	ofile=opath+"/"+ofile
 	orgkey:=make([]byte,16)
 
+	DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
+	var ret error
 	if sinfo.IsDir==0{
-		DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
-		fmt.Println("psd file",ipath,"key",core.BinkeyToString(orgkey))
 /*		cpasswd:=(*C.char)(unsafe.Pointer(&orgkey[0]))
 		cipath:=C.CString(ipath)
 		cofile:=C.CString(ofile)
@@ -407,11 +407,15 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 		defer C.free(unsafe.Pointer(cofile))
 		C.do_decodefile(cipath,cofile,cpasswd,60) // ShareInfoHead offset
 		*/
-		DoDecodeFileInC(ipath,ofile,orgkey,60)
+		ret=DoDecodeFileInC(ipath,ofile,orgkey,60)
 	}else{
 			// todo: it's a zipped dir
+		ret=DecodeCSDToDir(ipath,ofile,orgkey)
 	}
-	return nil
+	if ret==nil{
+		fmt.Println(ofile,"decoded ok")
+	}
+	return ret
 }
 
 func DoDecodeFileInC(ifile,ofile string, passwd []byte,offset int64)error{
@@ -439,7 +443,7 @@ func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)er
 		DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
 		ofile:=opath+"/"+pdata.FromObj
 		if pdata.IsDir==0{
-		fmt.Println("raw file",pdata.Uuid,"key",core.BinkeyToString(pdata.EncryptingKey))
+//		fmt.Println("raw file",pdata.Uuid,"key",core.BinkeyToString(pdata.EncryptingKey))
 /*		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptingKey[0]))
 		cipath:=C.CString(ipath)
 		cofile:=C.CString(ofile)
@@ -449,10 +453,6 @@ func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)er
 		*/
 		DoDecodeFileInC(ipath,ofile,pdata.EncryptingKey,0)
 		}else{
-			err:=os.MkdirAll("/tmp/base/cryfs",finfo.Mode())
-			if ofile!="/tmp/base/cryfs"{
-				fmt.Println("not same:",[]byte(ofile),[]byte("/tmp/base/cryfs"))
-			}
 			err=os.MkdirAll(ofile,finfo.Mode())
 			if err!=nil{
 				fmt.Println("mkdir error:",err)

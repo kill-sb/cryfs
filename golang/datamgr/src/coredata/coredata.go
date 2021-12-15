@@ -95,7 +95,7 @@ type ShareInfo struct{
 	FromType	int
 	FromUuid	string
 	ContentType int
-	IsDir	byte // get info from database by uuid
+	IsDir	byte
 	CrTime	string
 	FileUri	string // source local filename or remote url
 }
@@ -174,9 +174,14 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 		if !IsValidUuid(sinfo.FromUuid){
 			return nil,errors.New("Local encrypted file does not have a valid uuid filename")
 		}
-		sinfo.IsDir=GetIsDirFromUuid(sinfo.FromUuid)
+		if st.IsDir(){
+			sinfo.IsDir=1
+		}else{
+			sinfo.IsDir=0
+		}
 	}else if fromtype==CSDFILE{
 		// unknown file type: Uuid and IsDir will be filled according to source csd file outside
+		// seems nothing to do here
 	}
 	sinfo.FileUri=fromobj
 	sinfo.EncryptedKey=make([]byte,16) // calc outside later
@@ -232,13 +237,17 @@ func (sinfo *ShareInfo)CreateCSDFile(dstfile string)error{
 	defer fw.Close()
 	if sinfo.FromType==RAWDATA{
 		if sinfo.WriteFileHead(fw)==BINCONTENT{
-			fr,err:=os.Open(sinfo.FileUri)
-			if err!=nil{
-				fmt.Println("Open FileUri error:",err)
-				return err
+			if sinfo.IsDir==0{
+				fr,err:=os.Open(sinfo.FileUri)
+				if err!=nil{
+					fmt.Println("Open FileUri error:",err)
+					return err
+				}
+				defer fr.Close()
+				io.Copy(fw,fr)
+			}else{
+				ZipToFile(sinfo.FileUri,fw)
 			}
-			defer fr.Close()
-			io.Copy(fw,fr)
 		}else{
 			fw.Write([]byte(sinfo.FileUri))
 		}
