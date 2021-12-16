@@ -59,7 +59,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 	2. rename the file to ofile
 */
 	sinfo,err:=core.NewShareInfo(linfo,core.RAWDATA,ipath)
-	dinfo,err:=GetEncDataFromDisk(linfo,ipath)
+	dinfo,_,err:=GetEncDataFromDisk(linfo,ipath)
 	if err!=nil{
 		fmt.Println("GetEncDataFromDisk in shareDir error:",err)
 		return
@@ -108,11 +108,12 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 	}
 	if fromtype==core.RAWDATA{
 		// todo: judge Isdir
-		dinfo,err:=GetEncDataFromDisk(linfo,ipath)
+		dinfo,_,err:=GetEncDataFromDisk(linfo,ipath)
 		if(err!=nil){
 			fmt.Println("GetEncData error:",err)
 			return err
 		}
+		sinfo.OrgName=dinfo.OrgName
 		DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
 //		fmt.Println("encrypted key in csd:",core.BinkeyToString(sinfo.EncryptedKey))
 	}else{
@@ -145,6 +146,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		// access control check ok now
 		sinfo.FromUuid=ssinfo.Uuid
 		sinfo.IsDir=ssinfo.IsDir
+		sinfo.OrgName=ssinfo.OrgName
 		orgkey:=make([]byte,16)
 		DoDecodeInC(ssinfo.EncryptedKey,ssinfo.RandKey,orgkey,16)
 		DoEncodeInC(orgkey,sinfo.RandKey,sinfo.EncryptedKey,16)

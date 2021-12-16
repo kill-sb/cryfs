@@ -102,9 +102,9 @@ func doTraceAll(){
 		fmt.Println("use -in to set .csd file full pathname")
 		return
 	}
-//	head,err:=core.LoadShareInfoHead(inpath)
-//	var sinfo *core.ShareInfo
-//	list:=make ([]core.InfoTracer,0,50)
+	head,err:=core.loadshareinfohead(inpath)
+	var sinfo *core.shareinfo
+	list:=make ([]core.InfoTracer,0,50)
 	/*
 	if err==nil{
 		sinfo,err=dbop.loadshareinfo(head)
@@ -156,49 +156,49 @@ func doTrace(){
 		fmt.Println("use -in to set .csd file full pathname")
 		return
 	}
-	head,err:=core.LoadShareInfoHead(inpath)
-	var sinfo *core.ShareInfo
-	list:=make ([]*core.ShareInfo,0,50)
+	head,err:=core.loadshareinfohead(inpath)
+	var sinfo *core.shareinfo
+	list:=make ([]*core.shareinfo,0,50)
 	if err==nil{
-		sinfo,err=dbop.LoadShareInfo(head)
+		sinfo,err=dbop.loadshareinfo(head)
 		if err!=nil{
 			fmt.Println("load share info from head error",err)
 			return
 		}
-		for ;sinfo.FromType==core.CSDFILE;{
+		for ;sinfo.fromtype!=core.rawdata;{
 			list=append(list,sinfo)
-			sinfo,err=dbop.GetBriefShareInfo(sinfo.FromUuid)
+			sinfo,err=dbop.getbriefshareinfo(sinfo.fromuuid)
 		}
 
 	}else{
 		fmt.Println("parse csd file error:",err)
 	}
 	list=append(list,sinfo)
-	orgdata,err:=dbop.GetEncDataInfo(sinfo.FromUuid)
+	orgdata,err:=dbop.getencdatainfo(sinfo.fromuuid)
 	if err!=nil{
 		fmt.Println("load data from db error:",err)
 		return
 	}
-	dtuser,err:=dbop.GetUserName(orgdata.OwnerId)
+	dtuser,err:=dbop.getusername(orgdata.ownerid)
 	if err!=nil{
-		fmt.Println("unknown user id :",orgdata.OwnerId)
+		fmt.Println("unknown user id :",orgdata.ownerid)
 		return
 	}
 
 	fmt.Println("--------------------orginal data info-----------------------------")
-	fmt.Println("original file:",orgdata.OrgName,",  owner:",dtuser,", file uuid :",orgdata.Uuid)
+	fmt.Println("original file:",orgdata.orgname,",  owner:",dtuser,", file uuid :",orgdata.uuid)
 	fmt.Println("\n---------------------file spread info------------------------------")
 	var space=4;
 	for i:=len(list)-1;i>=0;i--{
 		for j:=0;j<space;j++{
 			fmt.Print(" ")
 		}
-		user,err:=dbop.GetUserName(list[i].OwnerId)
+		user,err:=dbop.getusername(list[i].ownerid)
 		if err!=nil{
-			fmt.Println("unknown user id :",list[i].OwnerId)
+			fmt.println("unknown user id :",list[i].ownerid)
 			return
 		}
-		fmt.Println(user,"-->",list[i].Receivers,"at ",list[i].CrTime,",permission",list[i].Perm,",","uuid:",list[i].Uuid)
+		fmt.Println(user,"-->",list[i].receivers,"at ",list[i].crtime,",permission",list[i].perm,",","uuid:",list[i].uuid)
 		space+=4;
 	}
 }

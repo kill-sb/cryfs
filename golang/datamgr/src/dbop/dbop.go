@@ -52,7 +52,7 @@ func ParseVisitors(recvlist string) ([]string,[]int32,error){
 
 func SaveMeta(pdata *core.EncryptedData) error{
 	db:=GetDB()
-	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5) values ('%s','%s','%d','%s','%d','%s')",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5)
+	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5,orgname) values ('%s','%s','%d','%s','%d','%s','%s')",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5,pdata.OrgName)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert encrypted data info db error:", err)
 		return err
@@ -65,14 +65,14 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 
 	data:=new (core.EncryptedData)
 	data.Uuid=uuid
-	query:=fmt.Sprintf("select descr,fromtype,fromobj,ownerid,hashmd5,isdir from efilemeta where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select descr,fromtype,fromobj,ownerid,hashmd5,isdir,orgname from efilemeta where uuid='%s'",uuid)
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("select from efilemeta error:",err)
 		return nil,err
 	}
 	if res.Next(){
-		err=res.Scan(&data.Descr,&data.FromType,&data.FromObj,&data.OwnerId,&data.HashMd5,&data.IsDir)
+		err=res.Scan(&data.Descr,&data.FromType,&data.FromObj,&data.OwnerId,&data.HashMd5,&data.IsDir,&data.OrgName)
 		if err!=nil{
 			return nil,err
 		}
@@ -85,7 +85,7 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 
 func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,datauuid,perm,fromtype,crtime from sharetags where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,datauuid,perm,fromtype,crtim, orgname from sharetags where uuid='%s'",uuid)
 	res,err:=db.Query(query)
     if err!=nil{
         return nil,err
@@ -95,7 +95,7 @@ func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 		// info.FileUri will be filled outside
 		info.Uuid=uuid
 		var recv string
-        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime);err!=nil{
+        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
@@ -116,7 +116,7 @@ func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 func LoadShareInfo(head *core.ShareInfoHeader)(*core.ShareInfo,error){
 	db:=GetDB()
 	uuid:=string(head.Uuid[:])
-	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype, crtime from sharetags where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname from sharetags where uuid='%s'",uuid)
    res,err:=db.Query(query)
     if err!=nil{
         return nil,err
@@ -131,7 +131,7 @@ func LoadShareInfo(head *core.ShareInfoHeader)(*core.ShareInfo,error){
 		info.EncryptedKey=make([]byte,16)
 		copy(info.EncryptedKey,head.EncryptedKey[:])
 
-        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&randkey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime);err!=nil{
+        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&randkey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
@@ -150,7 +150,8 @@ func LoadShareInfo(head *core.ShareInfoHeader)(*core.ShareInfo,error){
 }
 
 func GetOrgFileName(sinfo *core.ShareInfo)(string,error){
-	from:=sinfo.FromUuid
+	return sinfo.OrgName,nil
+/*	from:=sinfo.FromUuid
 	db:=GetDB()
 	for target:=sinfo.FromType;target!=core.RAWDATA;{
 		// referenced from another csd
@@ -176,7 +177,7 @@ func GetOrgFileName(sinfo *core.ShareInfo)(string,error){
 		res.Scan(&from)
 		return from,nil
 	}
-	return "",errors.New("Can't find org filename")
+	return "",errors.New("Can't find org filename")*/
 }
 
 func WriteShareInfo(sinfo *core.ShareInfo) error{
@@ -196,7 +197,7 @@ func WriteShareInfo(sinfo *core.ShareInfo) error{
 	}
 	recvlist=strings.TrimSpace(recvlist)
 	keystr:=core.BinkeyToString(sinfo.RandKey)
-	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype,crtime) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d,'%s')",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime)
+	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d,'%s','%s')",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
 		return err

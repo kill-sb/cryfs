@@ -2,6 +2,7 @@ package main
 
 import(
 	"fmt"
+	"io"
 	"time"
 	"os"
 	"unsafe"
@@ -180,19 +181,19 @@ func GetRawKey(linfo *core.LoginInfo ,src []byte)([]byte, error){
     return nil,errors.New("Load key for decrypt localkey error")
 }*/
 
-func GetEncDataFromDisk(linfo *core.LoginInfo,fname string)(*core.EncryptedData,error){
+func GetEncDataFromDisk(linfo *core.LoginInfo,fname string)(*core.EncryptedData,*core.TagInFile,error){
     tag,err:=core.LoadTagFromDisk(fname)
     if(err!=nil){
-        return nil,err
+        return nil,nil,err
     }
     data,err:=tag.GetDataInfo()
 	if(err!=nil){
 		fmt.Println("GetDataInfo error",err)
-		return nil,err
+		return nil,nil,err
 	}
     data.Path=fname
     DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,data.EncryptingKey,16)
-	return data,nil
+	return data,tag,nil
 }
 
 func GetFileMd5(fname string)(string,error){
@@ -216,6 +217,11 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 	for k,v:=range []byte(pdata.FromObj){
 		tag.FromObj[k]=v
 	}
+
+	for k,v:=range []byte(pdata.OrgName){
+		tag.OrgName[k]=v
+	}
+
 	tag.IsDir=pdata.IsDir
 	tag.Time=time.Now().Unix()
 	for k,v:=range []byte(savedkey){
@@ -289,6 +295,7 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	pdata.Descr=""
 	pdata.FromType=core.RAWDATA
 	pdata.FromObj=fname
+	pdata.OrgName=fname
 	pdata.OwnerId=linfo.Id
 	pdata.EncryptingKey=passwd
 	pdata.Path=opath
@@ -439,9 +446,9 @@ func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)er
 	pdata,_:=tag.GetDataInfo()
 	pdata.Path=ipath
 
-	if(pdata.FromType==core.RAWDATA){
+	if(pdata.FromType!=core.UNKNOWN ){
 		DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
-		ofile:=opath+"/"+pdata.FromObj
+		ofile:=opath+"/"+pdata.OrgName
 		if pdata.IsDir==0{
 //		fmt.Println("raw file",pdata.Uuid,"key",core.BinkeyToString(pdata.EncryptingKey))
 /*		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptingKey[0]))
@@ -459,12 +466,12 @@ func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)er
 			}
 			DecodeDir(ipath,ofile,pdata.EncryptingKey)
 		}
+
+		fmt.Println(ofile,"restored ok")
 	}else {
-		//if pdata.FromType==core.CSDFILE,should be same with above, FromType is used only for trace source, the file is still a raw encrypted file
+		//if pdata.FromType==core.CSDFILE or core.ENCDATA,should be same with above, FromType is used only for trace source, the file is still a raw encrypted file
 		// pdata.EncryptingKey need to be filled first
 //		rootdata:=LoadRootData(pdata)
-		fmt.Println(ipath,"is not valid raw encrypted data")
-		return errors.New("Invalid encrypted file")
 	}
 	return nil
 }
@@ -510,3 +517,78 @@ func doEncode(){
 	}
 }
 
+func ValidSepPath(ipath,opath string)(os.FileInfo,string,string,error){
+	finfo,err:=os.Stat(opath)
+	if err!=nil{
+		return nil,"","",err
+	}
+	dinfo,err:=os.Stat(ipath)
+	if err!=nil{
+		return nil,"","",err
+	}
+	basedir:=strings.TrimSuffix(core.StripAllSlash(ipath),dinfo.Name())
+	relstr:=strings.TrimPrefix(opath,ipath)
+	if relstr==opath{
+		return finfo,"","",errors.New(opath+" is not in "+ipath)
+	}
+	relstr=strings.TrimPrefix(relstr,"/")
+	fmt.Println("validation ret:",relstr,basedir)
+	return finfo,relstr,basedir,nil
+}
+
+func doSep(){
+	if inpath=="" || outpath==""{
+		fmt.Println("You should set inpath end outpath explicitly")
+		return
+	}
+	finfo,relname,basedir,err:=ValidSepPath(inpath,outpath)
+	if err!=nil{
+		fmt.Println("Invalid path or filename",err)
+		return
+	}
+	// copy dst file out using a new uuid filename, reuse random encrypted key, modify fromtype and fromobj, copy orgname
+	if loginuser==""{
+		fmt.Println("use parameter -user to set login user")
+		return
+	}
+	linfo,err:=Login(loginuser)
+	if err!=nil{
+		fmt.Println("login error:",err)
+		return
+	}
+	defer linfo.Logout()
+
+	dinfo,dtag,err:=GetEncDataFromDisk(linfo,inpath)
+	if err!=nil{
+		fmt.Println("Get EncDataFromDisk error in doSep error:",err)
+		return
+	}
+	dst:=new (core.EncryptedData)
+	dst.Uuid,_=core.GetUuid()
+	dst.Descr=relname+" from "+inpath
+	dst.FromType=core.ENCDATA
+	dst.FromObj=dinfo.Uuid
+	dst.OwnerId=dinfo.OwnerId
+	dst.HashMd5,_=GetFileMd5(outpath)
+	dst.EncryptingKey=dinfo.EncryptingKey
+	dst.Path=basedir
+	dst.IsDir=0
+	dst.OrgName=finfo.Name()
+
+	efile,err:=os.OpenFile(dst.Path+"/"+dst.Uuid,os.O_CREATE|os.O_RDWR,finfo.Mode())
+	if err!=nil{
+		fmt.Println("Create file error in doSep:",err)
+		return
+	}
+	defer efile.Close()
+	ifile,err:=os.Open(outpath)
+	if err!=nil{
+		fmt.Println("Open file error:",err)
+		return
+	}
+	defer ifile.Close()
+	io.Copy(efile,ifile)
+	SaveLocalFileTag(dst,dtag.EKey[:])
+    SendMetaToServer(dst)
+	fmt.Println(dst.Uuid,"seperated ok")
+}

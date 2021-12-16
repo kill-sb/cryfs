@@ -22,11 +22,13 @@ const (
 	TRACE
 	LIST
     MOUNT
+	SEPERATE
 )
 
 const (
     RAWDATA=iota
 	CSDFILE
+	ENCDATA // Only occured in 'FromType' of EncryptedData. 'FromType' of CSD FILE is always CSDEILE OR RAWDATA(although it is encoded data actually)
 	UNKNOWN
 )
 
@@ -57,7 +59,8 @@ type TagInFile struct{ // .tag
 	Time	int64
 	EKey	[16] byte //16
 	Descr	[100] byte // 100
-	Padding	[60] byte // 512-4--36-32-256-24-100=60
+	OrgName [254] byte
+//	Padding	[60] byte // 512-4--36-32-256-24-100=60
 }
 
 type EncryptedData struct{
@@ -70,6 +73,7 @@ type EncryptedData struct{
 	HashMd5 string
     EncryptingKey []byte
 	Path	string
+	OrgName string
 }
 
 type ShareInfoHeader struct{ // .csd , cmit shared data
@@ -98,6 +102,19 @@ type ShareInfo struct{
 	IsDir	byte
 	CrTime	string
 	FileUri	string // source local filename or remote url
+	OrgName string
+}
+
+type InfoTracer interface{
+	PrintBasicInfo()error
+}
+
+func (sinfo*ShareInfo)PrintBasicInfo() error{
+	return nil
+}
+
+func (sinfo *EncryptedData)PrintBasicInfo()error{
+	return nil
 }
 
 func GetCurTime()string{
@@ -147,7 +164,6 @@ func GetFileType(fname string)(int,error){
     return UNKNOWN,nil
 }
 
-
 func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local file, uuid named raw data or .csd format sharedfile */)(*ShareInfo,error){
 	sinfo:=new (ShareInfo)
 	// later register in db outside
@@ -179,7 +195,7 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 			sinfo.IsDir=0
 		}
 	}else if fromtype==CSDFILE{
-		// unknown file type: Uuid and IsDir will be filled according to source csd file outside
+		// unknown file type: Uuid, OrgName  and IsDir will be filled according to source csd file outside
 		// seems nothing to do here
 	}
 	sinfo.FileUri=fromobj
@@ -267,6 +283,7 @@ func (sinfo *ShareInfo)CreateCSDFile(dstfile string)error{
 	return nil
 }
 
+
 func DataFromTag(tag *TagInFile) *EncryptedData{
 
 	data:=new(EncryptedData)
@@ -282,6 +299,16 @@ func DataFromTag(tag *TagInFile) *EncryptedData{
 		}
 	}
 	data.FromObj=string(tag.FromObj[0:end])
+
+	end=254
+	for i,v:=range tag.OrgName[:]{
+		if v==0{
+			end=i
+			break
+		}
+	}
+	data.OrgName=string(tag.OrgName[0:end])
+
 	data.OwnerId=tag.OwnerId
 	data.HashMd5=string(tag.Md5Sum[:])
 	data.EncryptingKey=make([]byte,16)
@@ -303,9 +330,10 @@ func (tag *TagInFile) SaveTagToDisk(fname string)error{
 }
 
 func (tag *TagInFile) GetDataInfo()(*EncryptedData,error){
-	if(tag.FromType==RAWDATA){
+	if(tag.FromType==RAWDATA || tag.FromType==ENCDATA){
 		return DataFromTag(tag),nil
 	}else{
+		// CSDFILE
 		fmt.Println("data from tag will be finished soon")
 		return nil,nil
 	}

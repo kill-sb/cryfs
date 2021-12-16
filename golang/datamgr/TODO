@@ -1,4 +1,4 @@
-1. decrypt raw dir
-2. share/decode dir base csd
-3. mount/docker operation
-4. trace source from rawdata which is from csd
+1. seperate single file from diretory
+2. trace source from encdata which is from another encdata
+3. mount/docker operation(new data from csd/encdata)
+4. trace source from encdata which is from csd

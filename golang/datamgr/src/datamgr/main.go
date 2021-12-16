@@ -21,13 +21,14 @@ func LoadConfig(){
 }
 
 func GetFunction() int {
-	var bList,bEnc,bTrace,bShare,bMnt,bDec bool
+	var bList,bEnc,bTrace,bShare,bMnt,bDec,bSep bool
 	flag.BoolVar(&bEnc,"enc",false,"encrypt raw data")
 	flag.BoolVar(&bShare,"share",false,"share data to other users")
 	flag.BoolVar(&bMnt,"mnt",false,"mount encrypted data")
 	flag.BoolVar(&bDec,"dec",false,"decrypted local data(test only)")
 	flag.BoolVar(&bTrace,"trace",false,"trace source of data")
 	flag.BoolVar(&bList,"list",false,"list local encrypted data")
+	flag.BoolVar(&bSep,"sep",false,"seperate a file from encrypted dir")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
@@ -35,6 +36,7 @@ func GetFunction() int {
 	flag.Parse()
 	ret:=core.INVALID
 	count:=0
+
 	if(bList){
 		ret=core.LIST
 		count++
@@ -59,9 +61,14 @@ func GetFunction() int {
 		ret=core.MOUNT
 		count++
 	}
+	if bSep{
+		ret=core.SEPERATE
+		count++
+	}
 	if count!=1{
 		ret=core.INVALID
 	}
+
 	return ret
 }
 
@@ -81,6 +88,8 @@ func main(){
 		doTrace()
 	case core.LIST:
 		doList()
+	case core.SEPERATE:
+		doSep()
 	default:
 		fmt.Println("datamgr -enc|-dec|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] (use -h for more help)")
 	}

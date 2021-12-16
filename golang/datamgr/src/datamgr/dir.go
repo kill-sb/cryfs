@@ -26,6 +26,7 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
     pdata.Descr=""
     pdata.FromType=core.RAWDATA
     pdata.FromObj=fname
+    pdata.OrgName=fname
     pdata.OwnerId=linfo.Id
     pdata.EncryptingKey=passwd
     pdata.Path=opath
