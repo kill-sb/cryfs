@@ -23,7 +23,7 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
     }
     pdata:=new(core.EncryptedData)
     pdata.Uuid,_=core.GetUuid()
-    pdata.Descr=""
+    pdata.Descr="cmit encrypted dir"
     pdata.FromType=core.RAWDATA
     pdata.FromObj=fname
     pdata.OrgName=fname

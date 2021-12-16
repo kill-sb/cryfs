@@ -28,7 +28,7 @@ const (
 const (
     RAWDATA=iota
 	CSDFILE
-	ENCDATA // Only occured in 'FromType' of EncryptedData. 'FromType' of CSD FILE is always CSDEILE OR RAWDATA(although it is encoded data actually)
+//	ENCDATA // Only occured in 'FromType' of EncryptedData. 'FromType' of CSD FILE is always CSDEILE OR RAWDATA(although it is encoded data actually)
 	UNKNOWN
 )
 
@@ -330,7 +330,7 @@ func (tag *TagInFile) SaveTagToDisk(fname string)error{
 }
 
 func (tag *TagInFile) GetDataInfo()(*EncryptedData,error){
-	if(tag.FromType==RAWDATA || tag.FromType==ENCDATA){
+	if(tag.FromType==RAWDATA/* || tag.FromType==ENCDATA*/){
 		return DataFromTag(tag),nil
 	}else{
 		// CSDFILE

@@ -228,7 +228,8 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 		tag.EKey[k]=v
 	}
 
-	copy(tag.Descr[:],"cmit encrypted raw data")
+	copy(tag.Descr[:],[]byte(pdata.Descr))
+	//copy(tag.Descr[:],"cmit encrypted raw data")
 	tag.SaveTagToDisk(pdata.Path+"/"+pdata.Uuid+".tag")
 	return tag,nil
 }
@@ -292,7 +293,7 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	}
 	pdata:=new(core.EncryptedData)
 	pdata.Uuid,_=core.GetUuid()
-	pdata.Descr=""
+	pdata.Descr="cmit encrypted data"
 	pdata.FromType=core.RAWDATA
 	pdata.FromObj=fname
 	pdata.OrgName=fname
@@ -566,7 +567,7 @@ func doSep(){
 	dst:=new (core.EncryptedData)
 	dst.Uuid,_=core.GetUuid()
 	dst.Descr=relname+" from "+inpath
-	dst.FromType=core.ENCDATA
+	dst.FromType=dinfo.FromType
 	dst.FromObj=dinfo.Uuid
 	dst.OwnerId=dinfo.OwnerId
 	dst.HashMd5,_=GetFileMd5(outpath)
