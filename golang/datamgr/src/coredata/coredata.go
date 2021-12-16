@@ -120,7 +120,6 @@ func IsValidUuid(uuid string)bool{
 func RandPasswd()([]byte,error){
     buf:=make([]byte,16)
     if rdlen,err:=rand.Read(buf);rdlen==len(buf) && err==nil{
-        fmt.Println("randpasswd:",BinkeyToString(buf))
         return buf,nil
     }else {
         return nil,err

@@ -2,6 +2,7 @@
 #define FUSE_USE_VERSION 29
 #include <assert.h>
 #include <fuse.h>
+#include <termios.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <stdio.h>
@@ -654,15 +655,26 @@ static struct fuse_operations cmfs_oper = {
 
 void cmfs_init(struct fuse_args* args)
 {
-    char *pass;
-    int i;
+    char pass[AESBLOCK]={0};
+    int i,n;
+  	struct termios oldflags, newflags;
+    tcgetattr(fileno(stdin), &oldflags);
+    newflags = oldflags;
+    newflags.c_lflag &= ~ECHO;
+    newflags.c_lflag |= ECHONL;
+    tcsetattr(fileno(stdin), TCSANOW, &newflags); 
+
     memset(g_opts.keyinfo.crypt_key,0,AESBLOCK);
-    pass=getpass("Input passwd:");
-    for (i=0;i<AESBLOCK-1 && pass[i]!='\0';i++)
+	n=read(0,pass,AESBLOCK);
+	if(n<AESBLOCK && pass[n-1]=='\n')
+		pass[n-1]='\0';
+	tcsetattr(fileno(stdin), TCSANOW, &oldflags);
+
+    for (i=0;i<AESBLOCK;i++)
 	{ 	
 		g_opts.keyinfo.crypt_key[i]=pass[i];
 	}
-	memcpy(g_opts.keyinfo.iv,g_opts.keyinfo.crypt_key,AESBLOCK);
+//	memcpy(g_opts.keyinfo.iv,g_opts.keyinfo.crypt_key,AESBLOCK);
 }
 
 //

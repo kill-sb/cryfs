@@ -132,7 +132,7 @@ func doTrace(){
 
 	fmt.Println("--------------------Orginal Data Info-----------------------------")
 	fmt.Println("Original file:",orgdata.FromObj,",  Owner:",dtuser,", File Uuid :",orgdata.Uuid)
-	fmt.Println("\n---------------------File Spead Info------------------------------")
+	fmt.Println("\n---------------------File Spread Info------------------------------")
 	var space=4;
 	for i:=len(list)-1;i>=0;i--{
 		for j:=0;j<space;j++{

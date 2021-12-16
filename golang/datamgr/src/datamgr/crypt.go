@@ -274,15 +274,15 @@ func DoEncodeFileInC(infile,outfile string,passwd []byte )error{
 	return nil
 }
 
-func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) error{
+func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error){
 //	fmt.Println(ipath,opath,user)
 	passwd,err:=core.RandPasswd()
 	if err!=nil{
-		return err
+		return "",err
 	}
 	fname,err:=GetFileName(ipath)
 	if err!=nil{
-		return err
+		return "",err
 	}
 	pdata:=new(core.EncryptedData)
 	pdata.Uuid,_=core.GetUuid()
@@ -305,7 +305,7 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) error{
 	DoEncodeFileInC(ipath,ofile,passwd)
 	pdata.HashMd5,_=GetFileMd5(ofile)
 	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath)
-	return nil
+	return pdata.Uuid,nil
 }
 
 func doDecode(){
@@ -495,9 +495,17 @@ func doEncode(){
 		defer linfo.Logout()
 
 		if info.IsDir(){
-			EncodeDir(inpath,outpath,linfo)
+			if uuid,err:=EncodeDir(inpath,outpath,linfo); err==nil{
+				fmt.Println("Encode ok, uuid:",uuid)
+			}else{
+				fmt.Println("Encode error:",err)
+			}
 		}else{
-			EncodeFile(inpath,outpath,linfo)
+			if uuid,err:=EncodeFile(inpath,outpath,linfo); err==nil{
+				fmt.Println("Encode ok, uuid:",uuid)
+			}else{
+				fmt.Println("Encode error:",err)
+			}
 		}
 	}
 }

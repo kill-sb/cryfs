@@ -74,6 +74,7 @@ func main(){
 	case core.DISTRIBUTE:
 		doShare()
 	case core.MOUNT:
+		doMount()
 	case core.DECODE:
 		doDecode()
 	case core.TRACE:

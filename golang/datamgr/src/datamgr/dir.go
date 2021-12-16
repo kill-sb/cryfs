@@ -8,18 +8,18 @@ import(
 	core "coredata"
 )
 
-func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) error{
+func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , error){
     /* 
 	1. prepare for EncryptData
     2. mkdir a dst dir in opath ,walk src dir , make same directory structure, and encrypt every file 
     */
     passwd,err:=core.RandPasswd()
     if err!=nil{
-        return err
+        return "",err
     }
     fname,err:=GetFileName(ipath)
     if err!=nil{
-        return err
+        return "",err
     }
     pdata:=new(core.EncryptedData)
     pdata.Uuid,_=core.GetUuid()
@@ -56,7 +56,7 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) error{
 		}
 		return nil
 	})
-    return nil
+    return pdata.Uuid,nil
 }
 
 func DecodeDir(ipath,opath string , passwd []byte) error{
