@@ -2,6 +2,7 @@ package main
 
 import(
 	"fmt"
+	"strings"
 	"flag"
 	"os"
 	core "coredata"
@@ -75,6 +76,8 @@ func GetFunction() int {
 func main(){
 	LoadConfig()
 	fun:=GetFunction()
+	inpath=strings.TrimSuffix(inpath,"/")
+	outpath=strings.TrimSuffix(outpath,"/")
 	switch fun{
 	case core.ENCODE:
 		doEncode()

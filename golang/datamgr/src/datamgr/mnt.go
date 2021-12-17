@@ -6,11 +6,6 @@ package main
 #include <stdlib.h>
 #include <fcntl.h>
 
-int initmntopt()
-{
-//	unshare
-}
-
 int mount_cmfs(const char* src, const char* dst,const char* passwd, const char* opt){
 
     int fd[2];
@@ -114,41 +109,30 @@ func MountDir(ipath string, linfo *core.LoginInfo)error{
 	uuid,_:=core.GetUuid()
 	tmpdir:=os.TempDir()+"/"+uuid
 	err=os.MkdirAll(tmpdir,0755)
-	if err==nil{
-	fmt.Println(tmpdir,"mkdir ok")
-	}
 	defer os.Remove(tmpdir)
 	err=MountDirInC(ipath,tmpdir,passwd,"rw")
 	if err!=nil{
 		fmt.Println("mount dir in c error:",err)
 		return err
-	}else{
-		fmt.Println("Mount ok")
 	}
 	dmap:=make(map[string]MountOpt)
 	dmap[tmpdir]=MountOpt{"/mnt","rw"}
 	err=CreatePod("centos",dmap)
-	if err==nil{
-	fmt.Println("mkdir ok")
-	}
 	exec.Command("umount","/mnt").Run()
 	return nil
 }
 
 
 func CreatePod(imgname string,dirmap map[string]MountOpt) error{
-	ctcmd:=[]string{"run","-it","--rm"}
+	ctcmd:="docker run -it --rm "
 	for k,v:=range dirmap{
-		ctcmd=append(ctcmd,"-v",k+":"+v.dstpt+":"+v.access)
+		ctcmd=ctcmd+" -v "+k+":"+v.dstpt+":"+v.access
 	}
-	ctcmd=append(ctcmd,imgname,"/bin/bash")
-	fmt.Println(ctcmd)
-	err:=exec.Command("docker","run","-it","centos","/bin/bash").Run()
-	//err:=exec.Command("docker",ctcmd).Run()
-	if err!=nil{
-		fmt.Println("Create container error:",err)
-		return err
-	}
+	ctcmd=ctcmd+" "+imgname+" /bin/bash"
+
+	ccmd:=C.CString(ctcmd)
+	defer C.free(unsafe.Pointer(ccmd))
+	C.system(ccmd)
 	return nil
 }
 
