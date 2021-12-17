@@ -109,7 +109,6 @@ func MountDir(ipath string, linfo *core.LoginInfo)error{
 	uuid,_:=core.GetUuid()
 	tmpdir:=os.TempDir()+"/"+uuid
 	err=os.MkdirAll(tmpdir,0755)
-	defer os.Remove(tmpdir)
 	err=MountDirInC(ipath,tmpdir,passwd,"rw")
 	if err!=nil{
 		fmt.Println("mount dir in c error:",err)
@@ -118,7 +117,14 @@ func MountDir(ipath string, linfo *core.LoginInfo)error{
 	dmap:=make(map[string]MountOpt)
 	dmap[tmpdir]=MountOpt{"/mnt","rw"}
 	err=CreatePod("centos",dmap)
-	exec.Command("umount","/mnt").Run()
+	err=exec.Command("umount",tmpdir).Run()
+	if err!=nil{
+		fmt.Println("umount err",err)
+	}
+	err=os.Remove(tmpdir)
+	if err!=nil{
+		fmt.Println("remove error:",err)
+	}
 	return nil
 }
 
