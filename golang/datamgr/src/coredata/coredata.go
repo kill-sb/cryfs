@@ -340,6 +340,7 @@ func (tag *TagInFile) GetDataInfo()(*EncryptedData,error){
 }
 
 func LoadTagFromDisk(fname string /* uuid file name*/)(*TagInFile,error){
+	fname=strings.TrimSuffix(fname,"/")
 	if !strings.HasSuffix(fname,".tag") && !strings.HasSuffix(fname,".TAG"){
 		fname+=".tag"
 	}
