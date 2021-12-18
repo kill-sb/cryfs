@@ -288,6 +288,9 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			CreatePod("cmrw",mntmap)
 			RecordNewDataInfo(outsrc,linfo)
 		}else{
+			if outpath!=""{
+				fmt.Println("Warning: the data is not permitted to be reshared or output any process result, '-out",outpath+"'", "parameter ignored")
+			}
 			CreatePod("cmro",mntmap)
 		}
 
