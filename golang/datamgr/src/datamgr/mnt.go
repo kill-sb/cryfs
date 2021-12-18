@@ -30,7 +30,7 @@ import(
 	"unsafe"
 //	"strings"
 	"errors"
-//	"dbop"
+	"dbop"
 	core "coredata"
 )
 
@@ -70,6 +70,7 @@ func doMount(){
 	if info.IsDir(){
 		MountDir(inpath,linfo) // must be encrypted data, not shared file
 	}else{
+
 		MountFile(inpath,linfo) // may be a encrypted data or a csdfile(may also be a file or a dir)
 	}
 }
@@ -128,7 +129,6 @@ func MountDir(ipath string, linfo *core.LoginInfo)error{
 	return nil
 }
 
-
 func CreatePod(imgname string,dirmap map[string]MountOpt) error{
 	ctcmd:="docker run -it --rm "
 	for k,v:=range dirmap{
@@ -139,6 +139,64 @@ func CreatePod(imgname string,dirmap map[string]MountOpt) error{
 	ccmd:=C.CString(ctcmd)
 	defer C.free(unsafe.Pointer(ccmd))
 	C.system(ccmd)
+	return nil
+}
+
+func PrepareInDir(sinfo *core.ShareInfo)(string,string,error){
+	fmt.Println("Preparing container environment...")
+    uuid,_:=core.GetUuid()
+    tmpdir:=os.TempDir()+"/"+uuid
+	err:=os.MkdirAll(tmpdir,0755)
+	if err!=nil{
+		fmt.Println("mkdir error in PrepareDir:",err)
+		return tmpdir,"",err
+	}
+	if sinfo.IsDir!=0{
+	    st,_:=os.Stat(sinfo.FileUri) // we have read fileheader from it before, so Stat should return no error
+		size:=st.Size()-60  // the format of fileheader has been validated before, so the result should not be negtive
+		zfile,_:=os.Open(sinfo.FileUri)
+		csdrd:=NewCSDReader(zfile)
+		err:=core.UnzipFromFile(csdrd,size,tmpdir)
+		if err!=nil{
+			fmt.Println("Unzip from",sinfo.FileUri,"to",tmpdir,"error:",err)
+			return tmpdir,"",err
+		}
+		zfile.Close()
+	}else{
+		err=exec.Command("dd","if="+sinfo.FileUri,"of="+tmpdir+"/"+sinfo.OrgName,"bs=1","skip=60").Run()
+		if err!=nil{
+			fmt.Println("exec error:",err)
+		}
+	}
+	orgkey:=make([]byte,16)
+	DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
+	uuid,_=core.GetUuid()
+	plaindir:=os.TempDir()+"/"+uuid
+	err=os.MkdirAll(plaindir,0755)
+	if err!=nil{
+		fmt.Println("Mkdir ",plaindir,"error:",err)
+		return tmpdir,plaindir,err
+	}
+	err=MountDirInC(tmpdir,plaindir,orgkey,"ro")
+	if err!=nil{
+		fmt.Println("Mount cmfs in prepare indata error:",err)
+		return tmpdir,plaindir,err
+	}
+	return tmpdir,plaindir,nil
+}
+
+func PrepareOutDir(odir string,key []byte)(string,string,error){
+	uuidsrc,_:=core.GetUuid()
+	uuiddst,_:=core.GetUuid()
+	srcdir:=odir+"/"+uuidsrc
+	dstdir:=os.TempDir()+"/"+uuiddst
+	os.MkdirAll(srcdir,0755)
+	os.MkdirAll(dstdir,0755)
+	MountDirInC(srcdir,dstdir,key,"rw")
+	return srcdir,dstdir,nil
+}
+
+func RecordNewDataInfo(outsrc string,linfo *core.LoginInfo)error{
 	return nil
 }
 
@@ -155,9 +213,87 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 		2. start container
 		3. delete tmpdir(may keep it for next use later)
 		*/
+		head,err:=core.LoadShareInfoHead(ipath)
+		if err!=nil{
+			fmt.Println("Load share info head in MountFile error:",err)
+			return err
+		}
+		sinfo,err:=dbop.LoadShareInfo(head)
+		if err!=nil{
+			fmt.Println("Load share info from head error:",err)
+			return err
+		}
+		sinfo.FileUri=ipath
+		inlist:=false
+		for _,user:=range sinfo.Receivers{
+			if linfo.Name==user{
+				inlist=true
+				break
+			}
+		}
+		if !inlist{
+			fmt.Println(linfo.Name,"is not in shared user list")
+			return errors.New("Not shared user")
+		}
+
+		insrc,indst,err:=PrepareInDir(sinfo)
+		if insrc!=""{
+			defer func(){
+				if err:=os.RemoveAll(insrc);err!=nil{
+					fmt.Println("remove src dir error:",err)
+				}
+			}()
+		}
+		if indst!=""{
+			defer func(){
+				if err:=os.RemoveAll(indst);err!=nil{
+					fmt.Println("Remove dst dir error:",err)
+				}
+			}()
+		}
+		if err!=nil{
+			fmt.Println("Error in prepare indata:",err)
+			return err
+		}else{
+			defer func(){
+				exec.Command("umount",indst).Run()
+			}()
+		}
+		mntmap:=make(map[string] MountOpt)
+		mntmap[indst]=MountOpt{"/indata","ro"}
+		var outsrc,outdst string
+		if sinfo.Perm&1 !=0{
+			if outpath==""{
+				fmt.Println("use parameter -out to set output path")
+				return errors.New("missing output dir")
+			}
+		//	randpass:=[]byte("123456")
+		//	randpass=append(randpass,0,0,0,0,0,0,0,0,0,0)
+		//	fmt.Println("pass:",randpass)
+			randpass,_:=core.RandPasswd()
+			outsrc,outdst,err=PrepareOutDir(outpath,randpass)
+			// outsrc should exist and be recorded later
+			if outdst!=""{
+				defer os.Remove(outdst)
+			}
+			if err!=nil{
+				fmt.Println("Prepare outdir error:",err)
+				return err
+			}else{
+				defer func(){
+					exec.Command("umount",outdst).Run()
+				}()
+			}
+			mntmap[outdst]=MountOpt{"/outdata","rw"}
+			CreatePod("cmrw",mntmap)
+			RecordNewDataInfo(outsrc,linfo)
+		}else{
+			CreatePod("cmro",mntmap)
+		}
+
 	}else if ftype==core.RAWDATA{
 		/* mount a encrypted local datus
-		0. not a dir, so mkdir tmpdir and copy data after ShareInfoHeader into it
+		0. not a dir, so mkdir tmpdir and hard link data after ShareInfoHeader into it
 		1. checkperm
 			0 mount tmpdir to indata
 			1. mount tmpdir to indata and write new crypted tag and update db

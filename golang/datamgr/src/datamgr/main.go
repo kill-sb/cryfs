@@ -94,6 +94,6 @@ func main(){
 	case core.SEPERATE:
 		doSep()
 	default:
-		fmt.Println("ddf -enc|-dec|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] (use -h for more help)")
+		fmt.Println("ddfs -enc|-dec|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] (use -h for more help)")
 	}
 }
