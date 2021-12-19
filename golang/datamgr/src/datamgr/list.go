@@ -3,6 +3,7 @@ package main
 import(
 	"fmt"
 	"io/ioutil"
+	"errors"
 	"strings"
 	"dbop"
 	core "coredata"
@@ -67,8 +68,13 @@ func PrintEncDataInfo(data *core.EncryptedData){
 	if err==nil{
 		fmt.Printf("\tData Owner :%s(%d)\n",user,data.OwnerId)
 	}
-
-	fmt.Println("\tOrginal filename :",data.OrgName)
+	if data.FromType==core.RAWDATA{
+		fmt.Println("\tFrom Type: Plain Local File")
+		fmt.Println("\tOrginal filename :",data.OrgName)
+	}else{
+		fmt.Println("\tFrom Type: Shared Data")
+		fmt.Println("\tFrom Shared Data Infomation :\n\t\tUuid :"+data.FromObj+"\n\t\tFileName :"+strings.TrimSuffix(data.OrgName,".outdata"))
+	}
 	fmt.Println("\tDescription :",data.Descr)
 	if data.IsDir==1{
 		fmt.Println("\tIs Directory :yes")
@@ -96,59 +102,89 @@ func ListCSDs(csds[]string){
     }
 }
 
+func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error){
+	// RAW DATA
+	dinfo,err:=dbop.GetEncDataInfo(uuid)
+	if err!=nil{
+		fmt.Println("GetEncDataInfo error in traceRAWDATA:",err)
+		return nil,err
+	}
+	tracer=append(tracer,dinfo)
+	if dinfo.FromType==core.RAWDATA{
+		return tracer,nil
+	}else if dinfo.FromType==core.CSDFILE{
+		return traceCSDFile(tracer,dinfo.FromObj)
+	}else{
+		fmt.Println("Get unknown 'FromType' during tracing:",uuid,":",dinfo.FromType)
+		return nil,errors.New("Unknown FromType")
+	}
+}
+
+func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
+	sinfo,err:=dbop.GetBriefShareInfo(uuid)
+	if err!=nil{
+		fmt.Println("GetGriefShareInfo error in traceCSDFile:",err)
+		return nil,err
+	}
+	tracer=append(tracer,sinfo)
+	if sinfo.FromType==core.RAWDATA{
+		return traceRawData(tracer,sinfo.FromUuid)
+	}else if sinfo.FromType==core.CSDFILE{
+		return traceCSDFile(tracer,sinfo.FromUuid)
+	}else{
+		fmt.Println("Get unknown 'FromType' during tracing:",uuid,":",sinfo.FromType)
+		return nil,errors.New("Unknown FromType")
+	}
+}
 
 func doTraceAll(){
 	if inpath==""{
-		fmt.Println("use -in to set .csd file full pathname")
+		fmt.Println("use -in to set filename need to be traced")
 		return
 	}
-//	head,err:=core.LoadShareInfoHead(inpath)
-//	var sinfo *core.ShareInfo
-//	list:=make ([]core.InfoTracer,0,50)
-	/*
-	if err==nil{
-		sinfo,err=dbop.loadshareinfo(head)
-		if err!=nil{
-			fmt.println("load share info from head error",err)
+	ftype:=GetDataType(inpath)
+	var tracer =make([]core.InfoTracer,0,20)
+	switch ftype{
+	case core.RAWDATA:
+	    if tag,err:=core.LoadTagFromDisk(inpath);err!=nil{
+			fmt.Println("Load tag info error in traceAll:",err)
 			return
+		}else{
+			tracer,err=traceRawData(tracer,string(tag.Uuid[:]))
+			if err!=nil{
+				fmt.Println("trace Rawdata error:",err)
+				return
+			}
 		}
-		for ;sinfo.fromtype!=core.rawdata;{
-			list=append(list,sinfo)
-			sinfo,err=dbop.getbriefshareinfo(sinfo.fromuuid)
-		}
-
-	}else{
-		fmt.println("parse csd file error:",err)
-	}
-	list=append(list,sinfo)
-	orgdata,err:=dbop.getencdatainfo(sinfo.fromuuid)
-	if err!=nil{
-		fmt.println("load data from db error:",err)
-		return
-	}
-	dtuser,err:=dbop.getusername(orgdata.ownerid)
-	if err!=nil{
-		fmt.println("unknown user id :",orgdata.ownerid)
-		return
-	}
-
-	fmt.println("--------------------orginal data info-----------------------------")
-	fmt.println("original file:",orgdata.orgname,",  owner:",dtuser,", file uuid :",orgdata.uuid)
-	fmt.println("\n---------------------file spread info------------------------------")
-	var space=4;
-	for i:=len(list)-1;i>=0;i--{
-		for j:=0;j<space;j++{
-			fmt.print(" ")
-		}
-		user,err:=dbop.getusername(list[i].ownerid)
-		if err!=nil{
-			fmt.println("unknown user id :",list[i].ownerid)
+	case core.CSDFILE:
+		if head,err:=core.LoadShareInfoHead(inpath);err!=nil{
+			fmt.Println("Load share info head error in traceAll:",err)
 			return
+		}else{
+			tracer,err=traceCSDFile(tracer,string(head.Uuid[:]))
 		}
-		fmt.println(user,"-->",list[i].receivers,"at ",list[i].crtime,",permission",list[i].perm,",","uuid:",list[i].uuid)
-		space+=4;
+	default:
+		fmt.Println("Unknown data type.")
+		return
 	}
-*/
+	length:=len(tracer)
+	for i:=length-1;i>=0;i--{
+		tab:=length-1-i
+		if err:=tracer[i].PrintTraceInfo(tab);err!=nil{
+			return
+		}else{
+			if i!=0{
+				for j:=0;j<=tab;j++{
+					fmt.Print("\t")
+				}
+				fmt.Println("|")
+				for j:=0;j<=tab;j++{
+					fmt.Print("\t")
+				}
+				fmt.Println("|")
+			}
+		}
+	}
 }
 
 func doTrace(){

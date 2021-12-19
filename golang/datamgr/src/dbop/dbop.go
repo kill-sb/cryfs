@@ -12,9 +12,13 @@ import (
 	core "coredata"
 )
 
+var useridcache map[int32]string
+var usernamecache map[string]int32
 var curdb *sql.DB
 
 func init() {
+	useridcache=make(map[int32]string)
+	usernamecache=make(map[string]int32)
 	ConnDB()
 }
 
@@ -65,14 +69,18 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 
 	data:=new (core.EncryptedData)
 	data.Uuid=uuid
-	query:=fmt.Sprintf("select descr,fromtype,fromobj,ownerid,hashmd5,isdir,orgname from efilemeta where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select descr,fromtype,fromobj,ownerid,hashmd5,isdir,orgname,crtime from efilemeta where uuid='%s'",uuid)
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("select from efilemeta error:",err)
 		return nil,err
 	}
 	if res.Next(){
-		err=res.Scan(&data.Descr,&data.FromType,&data.FromObj,&data.OwnerId,&data.HashMd5,&data.IsDir,&data.OrgName)
+		err=res.Scan(&data.Descr,&data.FromType,&data.FromObj,&data.OwnerId,&data.HashMd5,&data.IsDir,&data.OrgName,&data.CrTime)
+		if err!=nil{
+			return nil,err
+		}
+		data.OwnerName,err=GetUserName(data.OwnerId)
 		if err!=nil{
 			return nil,err
 		}
@@ -85,7 +93,7 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 
 func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,datauuid,perm,fromtype,crtim, orgname from sharetags where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,datauuid,perm,fromtype,crtime, orgname from sharetags where uuid='%s'",uuid)
 	res,err:=db.Query(query)
     if err!=nil{
         return nil,err
@@ -99,6 +107,10 @@ func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
+		info.OwnerName,err=GetUserName(info.OwnerId)
+		if err!=nil{
+			return nil,err
+		}
 		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
 		if err!=nil{
 			fmt.Println("Parse visitor from db error",err)
@@ -109,8 +121,6 @@ func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 	}else{
 		return nil,errors.New("No shared info found in server")
 	}
-
-
 }
 
 func LoadShareInfo(head *core.ShareInfoHeader)(*core.ShareInfo,error){
@@ -135,6 +145,11 @@ func LoadShareInfo(head *core.ShareInfoHeader)(*core.ShareInfo,error){
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
+		info.OwnerName,err=GetUserName(info.OwnerId)
+		if err!=nil{
+			return nil,err
+		}
+
 		info.RandKey=core.StringToBinkey(randkey)
 		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
 		if err!=nil{
@@ -207,10 +222,13 @@ func WriteShareInfo(sinfo *core.ShareInfo) error{
 }
 
 func GetUserName(uid int32)(string,error){
+	ret,ok:=useridcache[uid]
+	if ok{
+		return ret,nil
+	}
 	db:=GetDB()
 	query:=fmt.Sprintf("select name from users where id='%d'",uid)
 	res,err:=db.Query(query)
-	var ret string =""
 	if err!=nil{
 		return ret,err
 	}
@@ -219,15 +237,20 @@ func GetUserName(uid int32)(string,error){
 	}else{
 		res.Scan(&ret)
 	}
+	useridcache[uid]=ret
+	usernamecache[ret]=uid
 	return ret,nil
 
 }
 
 func IsValidUser(user string)(int32,error){
+	ret,ok:=usernamecache[user]
+	if ok{
+		return ret,nil
+	}
 	db:=GetDB()
 	query:=fmt.Sprintf("select id from users where name='%s'",user)
 	res,err:=db.Query(query)
-	var ret int32=-1
 	if err!=nil{
 		return ret,err
 	}
@@ -236,6 +259,8 @@ func IsValidUser(user string)(int32,error){
 	}else{
 		res.Scan(&ret)
 	}
+	usernamecache[user]=ret
+	useridcache[ret]=user
 	return ret,nil
 }
 

@@ -42,10 +42,8 @@ func doShare(){
 
 func GetDataType(ipath string /* .tag or .csd stand for local encrypted data or data shared from other user */) int{
 	if strings.HasSuffix(ipath,".csd") || strings.HasSuffix(ipath,".CSD"){
-		fmt.Println("type: CSDFILE")
 		return core.CSDFILE
 	}else if core.IsValidUuid(strings.TrimSuffix(ipath,".tag"))|| core.IsValidUuid(strings.TrimSuffix(ipath,".TAG")) {
-		fmt.Println("type: RAWDATA")
 		return core.RAWDATA
 	}else{
 		return core.UNKNOWN
@@ -93,6 +91,15 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 	fmt.Println(dst," created ok, you can share it to ", sinfo.Receivers)
 	return
 
+}
+
+func LoadShareInfoFromTag(ipath string)(*core.ShareInfo,error){
+	head,err:=core.LoadShareInfoHead(ipath)
+	if err!=nil{
+		fmt.Println("Load share info during reshare error:",err)
+		return nil, err
+	}
+	return dbop.LoadShareInfo(head)
 }
 
 func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
@@ -180,6 +187,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 }
 
 func LoadShareInfoConfig(sinfo* core.ShareInfo) error{
+	// load from config file, to be done
 	return nil
 }
 

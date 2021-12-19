@@ -193,11 +193,25 @@ func PrepareOutDir(odir string,key []byte)(string,string,error){
 	os.MkdirAll(srcdir,0755)
 	os.MkdirAll(dstdir,0755)
 	MountDirInC(srcdir,dstdir,key,"rw")
-	return srcdir,dstdir,nil
+	return uuidsrc,dstdir,nil
 }
 
-func RecordNewDataInfo(outsrc string,linfo *core.LoginInfo)error{
-	return nil
+func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInfo,sinfo *core.ShareInfo)error{
+    pdata:=new(core.EncryptedData)
+    pdata.Uuid=datauuid
+    pdata.Descr="cmit encrypted dir"
+    pdata.FromType=core.CSDFILE
+    pdata.FromObj=sinfo.Uuid
+	finfo,_:=os.Stat(sinfo.FileUri)
+    pdata.OrgName=finfo.Name()+".outdata"
+    pdata.OwnerId=linfo.Id
+    pdata.EncryptingKey=passwd
+    pdata.Path=opath
+    pdata.IsDir=1
+
+    pdata.HashMd5=""
+	err:=RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,sinfo.FileUri,opath)
+	return err
 }
 
 func MountFile(ipath string, linfo *core.LoginInfo)error {
@@ -261,18 +275,14 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 		}
 		mntmap:=make(map[string] MountOpt)
 		mntmap[indst]=MountOpt{"/indata","ro"}
-		var outsrc,outdst string
+		var outuuid,outdst string
 		if sinfo.Perm&1 !=0{
 			if outpath==""{
 				fmt.Println("use parameter -out to set output path")
 				return errors.New("missing output dir")
 			}
-		//	randpass:=[]byte("123456")
-		//	randpass=append(randpass,0,0,0,0,0,0,0,0,0,0)
-		//	fmt.Println("pass:",randpass)
 			randpass,_:=core.RandPasswd()
-			outsrc,outdst,err=PrepareOutDir(outpath,randpass)
-			// outsrc should exist and be recorded later
+			outuuid,outdst,err=PrepareOutDir(outpath,randpass)
 			if outdst!=""{
 				defer os.Remove(outdst)
 			}
@@ -286,7 +296,11 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			}
 			mntmap[outdst]=MountOpt{"/outdata","rw"}
 			CreatePod("cmrw",mntmap)
-			RecordNewDataInfo(outsrc,linfo)
+			err=RecordNewDataInfo(outpath,outuuid,randpass,linfo,sinfo)
+			if err!=nil{
+				fmt.Println("Record data metainfo error:",err)
+				return err
+			}
 		}else{
 			if outpath!=""{
 				fmt.Println("Warning: the data is not permitted to be reshared or output any process result, '-out",outpath+"'", "parameter ignored")

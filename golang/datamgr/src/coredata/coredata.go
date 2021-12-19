@@ -67,6 +67,7 @@ type EncryptedData struct{
     Uuid string
     Descr string
 	IsDir	byte
+	OwnerName string
     FromType int
     FromObj string
     OwnerId int32
@@ -74,6 +75,7 @@ type EncryptedData struct{
     EncryptingKey []byte
 	Path	string
 	OrgName string
+	CrTime	string
 }
 
 type ShareInfoHeader struct{ // .csd , cmit shared data
@@ -87,6 +89,7 @@ type ShareInfoHeader struct{ // .csd , cmit shared data
 type ShareInfo struct{
 	Uuid string
 	OwnerId int32
+	OwnerName string
 	Descr string
 	Perm	int32
 	Receivers []string
@@ -106,14 +109,59 @@ type ShareInfo struct{
 }
 
 type InfoTracer interface{
-	PrintBasicInfo()error
+	PrintTraceInfo(int)error
 }
 
-func (sinfo*ShareInfo)PrintBasicInfo() error{
+func (sinfo*ShareInfo)PrintTraceInfo(level int) error{
+	for i:=0;i<level;i++{
+		fmt.Print("\t")
+	}
+	fmt.Print("-->")
+
+	fmt.Print("Shared Data( Uuid :",sinfo.Uuid," )\t Details :")
+/*	for i:=0;i<level;i++{
+		fmt.Print("  ")
+	}
+	fmt.Print("      ")
+*/
+	fmt.Print("Owner :",sinfo.OwnerName+"(uid :",sinfo.OwnerId,")")
+	fmt.Print(", Send to :",sinfo.Receivers)
+	if sinfo.Perm==0{
+		fmt.Print(", Perm :ReadOnly")
+	}else{
+	fmt.Print(", Perm :Resharable")
+	}
+	if sinfo.FromType==RAWDATA{
+		fmt.Print(", From :Local Encrypted Data(UUID:"+sinfo.FromUuid+")")
+	}else{
+		fmt.Print(", From :User Shared Data(UUID:"+sinfo.FromUuid+")")
+	}
+	fmt.Println(", Create at :",sinfo.CrTime)
 	return nil
 }
 
-func (sinfo *EncryptedData)PrintBasicInfo()error{
+func (dinfo *EncryptedData)PrintTraceInfo(level int)error{
+	for i:=0;i<level;i++{
+		fmt.Print("\t")
+	}
+	fmt.Print("-->")
+
+	fmt.Print("Local Encrypted Data( UUID:",dinfo.Uuid," )")
+		//fmt.Print("Local Encrypted Data From User Share Data:",strings.TrimSuffix(dinfo.OrgName,".outdata"),"(UUID:"+dinfo.FromObj+")")
+	fmt.Print("\t Details :")
+/*	for i:=0;i<level;i++{
+		fmt.Print("  ")
+	}
+	fmt.Print("      ")
+*/
+	fmt.Print("Owner :",dinfo.OwnerName+"(uid :",dinfo.OwnerId,")")
+	if dinfo.FromType==RAWDATA{
+		fmt.Print(", From Local Plain Data:",dinfo.OrgName)
+	}else{
+		fmt.Print(", From User Share Data:",strings.TrimSuffix(dinfo.OrgName,".outdata"),"(UUID:"+dinfo.FromObj+")")
+	}
+
+	fmt.Println(", Create at :",dinfo.CrTime)
 	return nil
 }
 
@@ -334,8 +382,9 @@ func (tag *TagInFile) GetDataInfo()(*EncryptedData,error){
 		return DataFromTag(tag),nil
 	}else{
 		// CSDFILE
-		fmt.Println("data from tag will be finished soon")
-		return nil,nil
+	//	fmt.Println("data from tag will be finished soon")
+	//	return nil,nil
+		return DataFromTag(tag),nil
 	}
 }
 
