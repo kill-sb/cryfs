@@ -27,8 +27,9 @@ import(
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 	"unsafe"
-//	"strings"
+	"strings"
 	"errors"
 	"dbop"
 	core "coredata"
@@ -309,14 +310,10 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 		}
 
 	}else if ftype==core.RAWDATA{
-		/* mount a encrypted local datus
-		0. not a dir, so mkdir tmpdir and hard link data after ShareInfoHeader into it
-		1. checkperm
-			0 mount tmpdir to indata
-			1. mount tmpdir to indata and write new crypted tag and update db
-			2. startcontainer
-			3. delete tmpdir
-		*/
+		if err:=MountSingleEncFile(ipath,linfo);err!=nil{
+			fmt.Println("Mount single encoded file error:",err)
+			return err
+		}
 	}else{
 		fmt.Println("Unknow data format")
 		return errors.New("Unknown data format")
@@ -325,3 +322,79 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 	return nil
 }
 
+func PrepareSingleFileDir(ipath string,fname string)(string,string,error){
+	srcuuid,_:=core.GetUuid()
+	dstuuid,_:=core.GetUuid()
+	srcdir:=os.TempDir()+"/"+srcuuid
+	dstdir:=os.TempDir()+"/"+dstuuid
+	os.MkdirAll(srcdir,0755)
+	os.MkdirAll(dstdir,0755)
+	return srcdir,dstdir,os.Link(ipath,srcdir+"/"+fname)
+}
+
+func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
+	tag,err:=core.LoadTagFromDisk(ipath)
+	if err!=nil{
+		fmt.Println("LoadTagFromDisk error in MountDir:",err)
+		return err
+	}
+	dinfo,err:=tag.GetDataInfo()
+	if err!=nil{
+		fmt.Println("GetDataInfo in MountSingleEncFile error:",err)
+		return err
+	}
+
+/*	
+	process:
+	0. get enc passwd
+	1. mkdir tmpdir , mount encdir -> tmpdir with passwd
+	2. create pod with tmpdir->/mnt
+	3. waiting for pod exit and umount tmpdir,rm tmpdir
+*/
+	passwd:=make([]byte,16)
+	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,passwd,16)
+		/* mount a encrypted local datus
+		0. not a dir, so mkdir tmpdir and hard link data after ShareInfoHeader into it
+		1. checkperm
+			0 mount tmpdir to indata
+			1. mount tmpdir to indata and write new crypted tag and update db
+			2. startcontainer
+			3. delete tmpdir
+		*/
+	srcdir,dstdir,err:=PrepareSingleFileDir(ipath,dinfo.OrgName)
+	if srcdir!=""{
+		defer os.RemoveAll(srcdir)
+	}
+	if dstdir!=""{
+		defer os.Remove(dstdir)
+	}
+	if err!=nil{
+		fmt.Println("Prepare dir error:",err)
+		return err
+	}
+	err=MountDirInC(srcdir,dstdir,passwd,"rw")
+	if err!=nil{
+		fmt.Println("mount dir in c error:",err)
+		return err
+	}
+	dmap:=make(map[string]MountOpt)
+	dmap[dstdir]=MountOpt{"/mnt","rw"}
+	err=CreatePod("centos",dmap)
+	exec.Command("umount",dstdir).Run()
+	if err!=nil{
+		fmt.Println("Create pod error:",err)
+		return err
+	}
+	UpdateMetaInfo(ipath,tag,dinfo)
+	return nil
+}
+
+func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData)error{
+	dinfo.HashMd5,_=GetFileMd5(ipath)
+    for i,j:=range []byte(dinfo.HashMd5){
+        tag.Md5Sum[i]=j
+    }
+    tag.Time=time.Now().Unix()
+	tag.SaveTagToDisk(strings.TrimSuffix(ipath,".tag")+".tag")
+	return dbop.UpdateMeta(dinfo)
+}
