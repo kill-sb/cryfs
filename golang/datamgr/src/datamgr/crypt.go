@@ -568,7 +568,7 @@ func doSep(){
 	dst.Uuid,_=core.GetUuid()
 	dst.Descr=relname+" from "+inpath
 	dst.FromType=dinfo.FromType
-	dst.FromObj=dinfo.Uuid
+	dst.FromObj=dinfo.FromObj
 	dst.OwnerId=dinfo.OwnerId
 	dst.HashMd5,_=GetFileMd5(outpath)
 	dst.EncryptingKey=dinfo.EncryptingKey

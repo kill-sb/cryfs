@@ -156,9 +156,9 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int)error{
 */
 	fmt.Print("Owner :",dinfo.OwnerName+"(uid :",dinfo.OwnerId,")")
 	if dinfo.FromType==RAWDATA{
-		fmt.Print(", From Local Plain Data:",dinfo.OrgName)
+		fmt.Print(", From Local Plain Data :",dinfo.OrgName)
 	}else{
-		fmt.Print(", From User Share Data:",strings.TrimSuffix(dinfo.OrgName,".outdata"),"(UUID:"+dinfo.FromObj+")")
+		fmt.Print(", From User Share Data UUID :"+dinfo.FromObj+"(Orignal Filename :",strings.TrimSuffix(dinfo.OrgName,".outdata")+")")
 	}
 
 	fmt.Println(", Create at :",dinfo.CrTime)

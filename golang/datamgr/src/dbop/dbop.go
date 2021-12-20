@@ -104,6 +104,7 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,datauuid,perm,fromtype,crtime, orgname from sharetags where uuid='%s'",uuid)
+	fmt.Println(query)
 	res,err:=db.Query(query)
     if err!=nil{
         return nil,err

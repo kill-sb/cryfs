@@ -73,7 +73,25 @@ func GetFunction() int {
 	return ret
 }
 
+func CheckParent()bool{
+	ppid:=os.Getppid()
+	pidfile:=fmt.Sprintf("/proc/%d/exe",ppid)
+	str,err:=os.Readlink(pidfile)
+	if err!=nil{
+		fmt.Println("Readlink error")
+		return false
+	}
+	if strings.HasSuffix(str,"/dtdfs"){
+		return true
+	}
+	return false
+}
+
 func main(){
+	if !CheckParent(){
+		fmt.Println("use dtdfs instead")
+		return
+	}
 	LoadConfig()
 	fun:=GetFunction()
 	inpath=strings.TrimSuffix(inpath,"/")

@@ -290,17 +290,22 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			if err!=nil{
 				fmt.Println("Prepare outdir error:",err)
 				return err
-			}else{
+			}/*else{
 				defer func(){
 					exec.Command("umount",outdst).Run()
 				}()
-			}
+			}*/
 			mntmap[outdst]=MountOpt{"/outdata","rw"}
 			CreatePod("cmrw",mntmap)
-			err=RecordNewDataInfo(outpath,outuuid,randpass,linfo,sinfo)
-			if err!=nil{
-				fmt.Println("Record data metainfo error:",err)
-				return err
+			exec.Command("umount",outdst).Run()
+			if err=os.Remove(outpath+"/"+outuuid);err!=nil{ // if the directory is not empty ,it will fail, otherwize, we treat it as empty
+				err=RecordNewDataInfo(outpath,outuuid,randpass,linfo,sinfo)
+				if err!=nil{
+					fmt.Println("Record data metainfo error:",err)
+					return err
+				}
+			}else{
+				fmt.Println("outdata directory is empty, output data register ignored")
 			}
 		}else{
 			if outpath!=""{
@@ -318,7 +323,6 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 		fmt.Println("Unknow data format")
 		return errors.New("Unknown data format")
 	}
-
 	return nil
 }
 
@@ -398,3 +402,4 @@ func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData)e
 	tag.SaveTagToDisk(strings.TrimSuffix(ipath,".tag")+".tag")
 	return dbop.UpdateMeta(dinfo)
 }
+

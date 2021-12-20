@@ -1,13 +1,13 @@
 export GOPATH=$(PWD)
 
-all:datamgr ddfs
+all:datamgr dtdfs
 
 datamgr:src/datamgr/*.go src/dbop/*.go src/coredata/*.go
 datamgr:
 	go build -gcflags "-N" datamgr
 
-ddfs:src/ddfs/*.go
-	go build ddfs
+dtdfs:src/dtdfs/*.go
+	go build dtdfs
 clean:
-	rm -f datamgr ddfs
+	rm -f datamgr dtdfs
 

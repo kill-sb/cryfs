@@ -123,7 +123,7 @@ func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error)
 func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
 	sinfo,err:=dbop.GetBriefShareInfo(uuid)
 	if err!=nil{
-		fmt.Println("GetGriefShareInfo error in traceCSDFile:",err)
+		fmt.Println("GetBriefShareInfo error in traceCSDFile:",err)
 		return nil,err
 	}
 	tracer=append(tracer,sinfo)
