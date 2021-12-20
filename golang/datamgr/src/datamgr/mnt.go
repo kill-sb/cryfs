@@ -250,7 +250,19 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			fmt.Println(linfo.Name,"is not in shared user list")
 			return errors.New("Not shared user")
 		}
+		//todo: check expire here
 
+		strexp:=strings.Replace(sinfo.Expire," ","T",1)+"+08:00"
+		tmexp,err:=time.Parse(time.RFC3339,strexp)
+		if err!=nil{
+			fmt.Println("Parse expire time error:",err)
+			return err
+		}
+		tmnow:=time.Now()
+		if tmnow.After(tmexp){
+			fmt.Println("The shared data has expired at :",sinfo.Expire)
+			return errors.New("Data expired")
+		}
 		insrc,indst,err:=PrepareInDir(sinfo)
 		if insrc!=""{
 			defer func(){

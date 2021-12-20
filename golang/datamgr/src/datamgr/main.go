@@ -89,7 +89,7 @@ func CheckParent()bool{
 
 func main(){
 	if !CheckParent(){
-		fmt.Println("use dtdfs instead")
+		fmt.Println("'datamgr' is a inner module, use 'dtdfs' instead")
 		return
 	}
 	LoadConfig()
@@ -112,6 +112,6 @@ func main(){
 	case core.SEPERATE:
 		doSep()
 	default:
-		fmt.Println("ddfs -enc|-dec|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] (use -h for more help)")
+		fmt.Println("ddfs -enc|-dec|-list|-mnt|-sep|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] (use -h for more help)")
 	}
 }

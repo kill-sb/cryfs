@@ -206,6 +206,11 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 //	fmt.Scanf("%s",&sinfo.Descr)
 	fmt.Println("input permission(0 for readonly, 1 for reshare:")
 	fmt.Scanf("%d",&sinfo.Perm)
+	fmt.Println("expire time:")
+	fmt.Scanf("%s",&sinfo.Expire)
+	if sinfo.Expire==""{
+		sinfo.Expire="2999:12:31 0:00:00"
+	}
 	sinfo.LeftUse=-1
 	sinfo.MaxUse=-1;
 	//sinfo.Expire=  set it later
