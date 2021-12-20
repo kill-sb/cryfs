@@ -300,8 +300,8 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	}else{
 		perm="Resharable"
 	}
-	maxtime:="N/A"
-	lefttime:="N/A"
+	maxtime:="Unlimted"
+	lefttime:="Unlimited"
 	if sinfo.MaxUse!=-1{
 		maxtime=fmt.Sprintf("%d",sinfo.MaxUse)
 		lefttime=fmt.Sprintf("%d",sinfo.LeftUse)
