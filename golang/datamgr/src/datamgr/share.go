@@ -206,13 +206,14 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 //	fmt.Scanf("%s",&sinfo.Descr)
 	fmt.Println("input permission(0 for readonly, 1 for reshare):")
 	fmt.Scanf("%d",&sinfo.Perm)
-	fmt.Println("expire time:")
+	fmt.Println("expire time(Press 'Enter' for no expire time limit):")
 	fmt.Scanf("%s",&sinfo.Expire)
 	if sinfo.Expire==""{
 		sinfo.Expire="2999:12:31 0:00:00"
 	}
-	sinfo.LeftUse=-1
-	sinfo.MaxUse=-1;
+	fmt.Println("limit open times(-1 for no limit):")
+	fmt.Scanf("%d",&sinfo.MaxUse)
+	sinfo.LeftUse=sinfo.MaxUse
 	//sinfo.Expire=  set it later
 	return nil
 }

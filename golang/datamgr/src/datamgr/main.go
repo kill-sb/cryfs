@@ -14,6 +14,7 @@ var definpath , inpath string
 var defoutpath,outpath string
 var defuser, loginuser string
 var config string
+var keyword string
 
 func LoadConfig(){
 	definpath=os.Getenv("DATA_IN_PATH")
@@ -34,6 +35,7 @@ func GetFunction() int {
 	flag.StringVar(&outpath,"out",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
 	flag.StringVar(&config,"config","", "use config file to decribe share info")
+	flag.StringVar(&keyword,"search","", "used with -list, list data with certain keyword only")
 	flag.Parse()
 	ret:=core.INVALID
 	count:=0

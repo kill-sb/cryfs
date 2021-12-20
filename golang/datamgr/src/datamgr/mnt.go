@@ -250,8 +250,8 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			fmt.Println(linfo.Name,"is not in shared user list")
 			return errors.New("Not shared user")
 		}
-		//todo: check expire here
 
+		// check expire first
 		strexp:=strings.Replace(sinfo.Expire," ","T",1)+"+08:00"
 		tmexp,err:=time.Parse(time.RFC3339,strexp)
 		if err!=nil{
@@ -263,6 +263,13 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			fmt.Println("The shared data has expired at :",sinfo.Expire)
 			return errors.New("Data expired")
 		}
+
+		// check left time
+		if sinfo.LeftUse==0{
+			fmt.Printf("The max open times(%d) has been exhausted\n",sinfo.MaxUse)
+			return errors.New("open times exhausted")
+		}
+
 		insrc,indst,err:=PrepareInDir(sinfo)
 		if insrc!=""{
 			defer func(){
@@ -324,6 +331,9 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 				fmt.Println("Warning: the data is not permitted to be reshared or output any process result, '-out",outpath+"'", "parameter ignored")
 			}
 			CreatePod("cmro",mntmap)
+		}
+		if sinfo.MaxUse!=-1{
+			dbop.UpdateOpenTimes(sinfo)
 		}
 
 	}else if ftype==core.RAWDATA{

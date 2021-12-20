@@ -101,6 +101,22 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 	}
 }
 
+func UpdateOpenTimes(sinfo *core.ShareInfo)error{
+	db:=GetDB()
+	if sinfo.LeftUse<=0{
+		fmt.Printf("Impossible here, while MaxUse=%d and LeftUse=%d",sinfo.MaxUse,sinfo.LeftUse)
+		return errors.New("Invalid LeftTime")
+	}
+	sinfo.LeftUse--
+	query:=fmt.Sprintf("update sharetags set leftuse=%d where uuid='%s'",sinfo.LeftUse,sinfo.Uuid)
+	if _,err:=db.Exec(query);err!=nil{
+		fmt.Println("Update lefttime error:",err)
+		return err
+	}
+
+	return nil
+}
+
 func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,datauuid,perm,fromtype,crtime, orgname from sharetags where uuid='%s'",uuid)

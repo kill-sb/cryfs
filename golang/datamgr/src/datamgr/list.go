@@ -77,13 +77,16 @@ func doList(){
 }
 
 func ListTags(tags[]string){
-	for i,tag:=range tags{
+	i:=1
+	for _,tag:=range tags{
 		tinfo,err:=core.LoadTagFromDisk(tag)
 		if err==nil{
 			edata,err:=tinfo.GetDataInfo()
 			if err==nil{
-				fmt.Printf("\t%d\n",i+1)
-				PrintEncDataInfo(edata)
+		//		fmt.Printf("\t%d\n",i+1)
+				if PrintEncDataInfo(edata,i){
+					i++
+				}
 			}else{
 				fmt.Println(err)
 			}
@@ -93,38 +96,50 @@ func ListTags(tags[]string){
 	}
 }
 
-func PrintEncDataInfo(data *core.EncryptedData){
-	fmt.Println("\tData Uuid :",data.Uuid)
-	fmt.Println("\tFilename :",inpath+"/"+data.Uuid)
+func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
+	result:=fmt.Sprintf("\t%d\n\tData Uuid :%s\n",index,data.Uuid)
+	result+=fmt.Sprintf("\tFilename :%s\n",inpath+"/"+data.Uuid)
 	user,err:=dbop.GetUserName(data.OwnerId)
 	if err==nil{
-		fmt.Printf("\tData Owner :%s(%d)\n",user,data.OwnerId)
+		result+=fmt.Sprintf("\tData Owner :%s(%d)\n",user,data.OwnerId)
 	}
 	if data.FromType==core.RAWDATA{
-		fmt.Println("\tFrom Type: Plain Local File")
-		fmt.Println("\tOrginal filename :",data.OrgName)
+		result+=fmt.Sprintf("\tFrom Type: Plain Local File\n")
+		result+=fmt.Sprintf("\tOrginal filename :%s\n",data.OrgName)
 	}else{
-		fmt.Println("\tFrom Type: Shared Data")
-		fmt.Println("\tFrom Shared Data Infomation :\n\t\tUuid :"+data.FromObj+"\n\t\tFileName :"+strings.TrimSuffix(data.OrgName,".outdata"))
+		result+=fmt.Sprintf("\tFrom Type: Shared Data\n")
+		result+=fmt.Sprintf("\tFrom Shared Data Infomation :\n\t\tUuid :%s\n\t\tFileName:%s\n",data.FromObj,strings.TrimSuffix(data.OrgName,".outdata"))
 	}
-	fmt.Println("\tDescription :",data.Descr)
+	result+=fmt.Sprintf("\tDescription :%s\n",data.Descr)
 	if data.IsDir==1{
-		fmt.Println("\tIs Directory :yes")
+		result+=fmt.Sprintf("\tIs Directory :yes\n")
 	}else{
-		fmt.Println("\tIs Directory :no")
+		result+=fmt.Sprintln("\tIs Directory :no\n")
 	}
+	if keyword!=""{
+		if strings.Contains(result,keyword){
+			result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
+		}else{
+			return false
+		}
+	}
+	fmt.Print(result)
 	fmt.Println("---------------------------------------------------------------------")
+	return true
 }
 
 func ListCSDs(csds[]string){
-    for i,csd:=range csds{
+	i:=1
+    for _,csd:=range csds{
 		head,err:=core.LoadShareInfoHead(csd)
 		if err==nil{
 			sinfo,err:=dbop.LoadShareInfo(head)
             if err==nil{
 				sinfo.FileUri=csd
-				fmt.Printf("\t%d\n",i+1)
-                PrintShareDataInfo(sinfo)
+		//		fmt.Printf("\t%d\n",i+1)
+                if PrintShareDataInfo(sinfo,i){
+					i++
+				}
             }else{
 				fmt.Println(err)
 			}
@@ -271,30 +286,45 @@ func doTrace(){
 	}
 }
 
-func PrintShareDataInfo(sinfo *core.ShareInfo){
-	fmt.Println("\tShared tag Uuid :",sinfo.Uuid)
-	fmt.Println("\tFilename :",sinfo.FileUri)
+func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
+	result:=fmt.Sprintf("\t%d\n\tShared tag Uuid :%s\n",index,sinfo.Uuid)
+	result+=fmt.Sprintf("\tFilename :%s\n",sinfo.FileUri)
 	user,err:=dbop.GetUserName(sinfo.OwnerId)
 	if err==nil{
-		fmt.Printf("\tShared tag create user :%s(%d)\n",user,sinfo.OwnerId)
+		result+=fmt.Sprintf("\tShared tag create user :%s(%d)\n",user,sinfo.OwnerId)
 	}
-	fmt.Println("\tReceive users :",sinfo.Receivers)
+	result+=fmt.Sprintf("\tReceive users :%s\n",sinfo.Receivers)
 	var perm string
 	if sinfo.Perm==0{
 		perm="ReadOnly"
 	}else{
 		perm="Resharable"
 	}
-	fmt.Println("\tPermission :",perm)
+	maxtime:="N/A"
+	lefttime:="N/A"
+	if sinfo.MaxUse!=-1{
+		maxtime=fmt.Sprintf("%d",sinfo.MaxUse)
+		lefttime=fmt.Sprintf("%d",sinfo.LeftUse)
+	}
+	result+=fmt.Sprintf("\tPermissions :Data Access Mode(%s), Expire Date(%s), Max/Left Open Times(%s/%s)\n",perm,sinfo.Expire,maxtime,lefttime)
+
 	orgname,err:=dbop.GetOrgFileName(sinfo)
 	if err==nil{
-		fmt.Println("\tOriginal filename :",orgname)
+		result+=fmt.Sprintf("\tOriginal filename :%s\n",orgname)
 	}
 	if sinfo.IsDir==1{
-		fmt.Println("\tIs Directory :yes")
+		result+=fmt.Sprintf("\tIs Directory :yes\n")
 	}else{
-		fmt.Println("\tIs Directory :no")
+		result+=fmt.Sprintf("\tIs Directory :no\n")
 	}
-
+	if keyword!=""{
+		if strings.Contains(result,keyword){
+			result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
+		}else{
+			return false
+		}
+	}
+	fmt.Print(result)
 	fmt.Println("-----------------------------------------------------------------------")
+	return true
 }
