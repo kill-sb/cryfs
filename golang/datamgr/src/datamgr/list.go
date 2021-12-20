@@ -1,13 +1,42 @@
 package main
 
 import(
+	"sort"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"errors"
 	"strings"
 	"dbop"
 	core "coredata"
 )
+
+type FTimeSort struct{
+	data []string
+}
+
+func (s *FTimeSort)Len() int{
+	return len(s.data)
+}
+
+func (s *FTimeSort)Swap(i,j int){
+	tmp:=s.data[i]
+	s.data[i]=s.data[j]
+	s.data[j]=tmp
+}
+
+func (s *FTimeSort)Less(i,j int)bool{
+	finfoi,erri:=os.Stat(s.data[i])
+	finfoj,errj:=os.Stat(s.data[j])
+	if erri!=nil || errj!=nil {
+		return true
+	}
+	if finfoi.ModTime().Before(finfoj.ModTime()){
+		return true
+	}else{
+		return false
+	}
+}
 
 func doList(){
 /*	linfo,err:=Login(loginuser)
@@ -25,23 +54,26 @@ func doList(){
 		fmt.Println("Read dir error:",err)
 		return
 	}
-	tags:=make([]string,0,len(dir))
-	csds:=make([]string,0,len(dir))
+	var taglist,csdlist FTimeSort
+	taglist.data=make([]string,0,len(dir))
+	csdlist.data=make([]string,0,len(dir))
 	for _,entry:=range dir{
 		if !entry.IsDir(){
 			fname:=entry.Name()
 			if strings.HasSuffix(fname,".tag")|| strings.HasSuffix(fname,".TAG"){
-				tags=append(tags,inpath+"/"+fname)
+				taglist.data=append(taglist.data,inpath+"/"+fname)
 
 			}else if strings.HasSuffix(fname,".csd") || strings.HasSuffix(fname,".CSD"){
-				csds=append(csds,inpath+"/"+fname)
+				csdlist.data=append(csdlist.data,inpath+"/"+fname)
 			}
 		}
 	}
+	sort.Sort(&taglist)
+	sort.Sort(&csdlist)
 	fmt.Println("\n***********************Local Encrypted Data**************************\n")
-	ListTags(tags)
+	ListTags(taglist.data)
 	fmt.Println("\n***********************Shared Data From Users**************************\n")
-	ListCSDs(csds)
+	ListCSDs(csdlist.data)
 }
 
 func ListTags(tags[]string){
