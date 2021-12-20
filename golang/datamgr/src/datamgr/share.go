@@ -204,7 +204,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	}
 //	fmt.Println("input a brief description for the file to be shared:")
 //	fmt.Scanf("%s",&sinfo.Descr)
-	fmt.Println("input permission(0 for readonly, 1 for reshare:")
+	fmt.Println("input permission(0 for readonly, 1 for reshare):")
 	fmt.Scanf("%d",&sinfo.Perm)
 	fmt.Println("expire time:")
 	fmt.Scanf("%s",&sinfo.Expire)
