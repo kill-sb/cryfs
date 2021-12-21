@@ -35,7 +35,7 @@ func GetFunction() int {
 	flag.StringVar(&outpath,"out",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
 	flag.StringVar(&config,"config","", "use config file to decribe share info")
-	flag.StringVar(&keyword,"search","", "used with -list, list data with certain keyword only")
+	flag.StringVar(&keyword,"search","", "used with -list or -trace.(When used with -list,search data records contain the keyword only, and when used with -trace, highlight the keyword)")
 	flag.Parse()
 	ret:=core.INVALID
 	count:=0

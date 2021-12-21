@@ -109,59 +109,72 @@ type ShareInfo struct{
 }
 
 type InfoTracer interface{
-	PrintTraceInfo(int)error
+	PrintTraceInfo(int,string)error
 }
 
-func (sinfo*ShareInfo)PrintTraceInfo(level int) error{
+func (sinfo*ShareInfo)PrintTraceInfo(level int,keyword string) error{
 	for i:=0;i<level;i++{
 		fmt.Print("\t")
 	}
 	fmt.Print("-->")
 
-	fmt.Print("Shared Data( Uuid :",sinfo.Uuid," )\t Details :")
+	result:=fmt.Sprintf("Shared Data(UUID :%s)\tDetails :",sinfo.Uuid)
 /*	for i:=0;i<level;i++{
 		fmt.Print("  ")
 	}
 	fmt.Print("      ")
 */
-	fmt.Print("Owner :",sinfo.OwnerName+"(uid :",sinfo.OwnerId,")")
-	fmt.Print(", Send to :",sinfo.Receivers)
+	result+=fmt.Sprintf("Owner->%s(uid :%d)",sinfo.OwnerName,sinfo.OwnerId)
+	result+=fmt.Sprintf(", Send to->%s",sinfo.Receivers)
 	if sinfo.Perm==0{
-		fmt.Print(", Perm :ReadOnly")
+		result+=fmt.Sprintf(", Perm->ReadOnly")
 	}else{
-	fmt.Print(", Perm :Resharable")
+		result+=fmt.Sprintf(", Perm->Resharable")
 	}
 	if sinfo.FromType==RAWDATA{
-		fmt.Print(", From :Local Encrypted Data(UUID:"+sinfo.FromUuid+")")
+		result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
 	}else{
-		fmt.Print(", From :User Shared Data(UUID:"+sinfo.FromUuid+")")
+		result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
 	}
-	fmt.Println(", Create at :",sinfo.CrTime)
+	result+=fmt.Sprintf(", Create at->%s\n",sinfo.CrTime)
+
+    if keyword!=""{
+        result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
+    }
+	fmt.Print(result)
 	return nil
 }
 
-func (dinfo *EncryptedData)PrintTraceInfo(level int)error{
+func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 	for i:=0;i<level;i++{
 		fmt.Print("\t")
 	}
 	fmt.Print("-->")
-
-	fmt.Print("Local Encrypted Data( UUID:",dinfo.Uuid," )")
+	var result string
+	if dinfo.FromType==RAWDATA{
+		result=fmt.Sprintf("Local Encrypted Data(UUID: %s)\tDetails :",dinfo.Uuid)
+	}else if dinfo.FromType==CSDFILE{
+		result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)\tDetails :",dinfo.Uuid)
+	}
 		//fmt.Print("Local Encrypted Data From User Share Data:",strings.TrimSuffix(dinfo.OrgName,".outdata"),"(UUID:"+dinfo.FromObj+")")
-	fmt.Print("\t Details :")
 /*	for i:=0;i<level;i++{
 		fmt.Print("  ")
 	}
 	fmt.Print("      ")
 */
-	fmt.Print("Owner :",dinfo.OwnerName+"(uid :",dinfo.OwnerId,")")
+	result+=fmt.Sprintf("Owner->%s(uid:%d)",dinfo.OwnerName,dinfo.OwnerId)
 	if dinfo.FromType==RAWDATA{
-		fmt.Print(", From Local Plain Data :",dinfo.OrgName)
+		result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
 	}else{
-		fmt.Print(", From User Share Data UUID :"+dinfo.FromObj+"(Orignal Filename :",strings.TrimSuffix(dinfo.OrgName,".outdata")+")")
+		result+=fmt.Sprintf(", From User Share Data UUID->%s(Orginal Filename :%s)",dinfo.FromObj,strings.TrimSuffix(dinfo.OrgName,".outdata"))
 	}
 
-	fmt.Println(", Create at :",dinfo.CrTime)
+	result+=fmt.Sprintf(", Create at->%s\n",dinfo.CrTime)
+    if keyword!=""{
+		result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
+	}
+	fmt.Print(result)
+
 	return nil
 }
 

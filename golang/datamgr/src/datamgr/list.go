@@ -217,7 +217,7 @@ func doTraceAll(){
 	length:=len(tracer)
 	for i:=length-1;i>=0;i--{
 		tab:=length-1-i
-		if err:=tracer[i].PrintTraceInfo(tab);err!=nil{
+		if err:=tracer[i].PrintTraceInfo(tab,keyword);err!=nil{
 			return
 		}else{
 			if i!=0{
