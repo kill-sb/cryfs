@@ -26,6 +26,7 @@ import "C"
 import(
 	"fmt"
 	"os"
+	"io/ioutil"
 	"os/exec"
 	"time"
 	"unsafe"
@@ -197,8 +198,17 @@ func PrepareOutDir(odir string,key []byte)(string,string,error){
 	return uuidsrc,dstdir,nil
 }
 
+func SingleFileInDir(dirname string)(string, bool){
+	cont,err:=ioutil.ReadDir(dirname)
+	if err==nil && len(cont)==1{
+		return strings.TrimSuffix(dirname,"/")+"/"+cont[0].Name(),true
+	}
+	return "",false
+}
+
 func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInfo,sinfo *core.ShareInfo)error{
     pdata:=new(core.EncryptedData)
+
     pdata.Uuid=datauuid
     pdata.Descr="cmit encrypted dir"
     pdata.FromType=core.CSDFILE
@@ -211,6 +221,22 @@ func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInf
     pdata.IsDir=1
 
     pdata.HashMd5=""
+
+
+	if dataname,single:=SingleFileInDir(opath+"/"+datauuid);single{
+		newuuid,_:=core.GetUuid()
+		finfo,_=os.Stat(dataname)
+		pdata.Uuid=newuuid
+		pdata.OrgName=finfo.Name()
+		pdata.Descr="cmit encrypted data"
+		os.Link(dataname,opath+"/"+newuuid)
+		os.Remove(dataname)
+		if err:=os.Remove(opath+"/"+datauuid);err!=nil{
+			fmt.Println("Error in RecordNewDataInfo(dir not empty):",err)
+			return err
+		}
+		pdata.IsDir=0
+	}
 	err:=RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,sinfo.FileUri,opath)
 	return err
 }

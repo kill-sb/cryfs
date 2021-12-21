@@ -62,6 +62,11 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 		fmt.Println("GetEncDataFromDisk in shareDir error:",err)
 		return
 	}
+
+	if dinfo.OwnerId!=linfo.Id{
+		fmt.Println("The data does not belong to",linfo.Name)
+		return
+	}
 	DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
 
 	if config==""{
@@ -120,6 +125,10 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 			fmt.Println("GetEncData error:",err)
 			return err
 		}
+		if dinfo.OwnerId!=linfo.Id{
+			fmt.Println("The data does belong to",linfo.Name)
+			return errors.New("incorrect user")
+		}
 		sinfo.OrgName=dinfo.OrgName
 		DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
 //		fmt.Println("encrypted key in csd:",core.BinkeyToString(sinfo.EncryptedKey))
@@ -134,6 +143,10 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		if err!=nil{
 			fmt.Println("Load share info from head error:",err)
 			return err
+		}
+		if ssinfo.OwnerId!=linfo.Id{
+			fmt.Println("The data does belong to",linfo.Name)
+			return errors.New("incorrect user")
 		}
 		if ssinfo.Perm==0{
 			fmt.Println("The file is not permitted to share.")
