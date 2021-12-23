@@ -1,2 +1,2 @@
-1. combine cmro,cmrw,centos to a unique docker image
-2. if reprocess output is a single file, treat it as a enc file instead of a dir
+1. combine cmro,cmrw,cmit to a unique docker image
+2. optimze fs: read and write start/end with offset in a block instead of whole block
