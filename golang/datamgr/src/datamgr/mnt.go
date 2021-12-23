@@ -295,6 +295,10 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			fmt.Printf("The max open times(%d) has been exhausted\n",sinfo.MaxUse)
 			return errors.New("open times exhausted")
 		}
+		if sinfo.Perm&1 !=0 &&outpath==""{
+				fmt.Println("use parameter -out to set output path")
+				return errors.New("missing output dir")
+		}
 
 		insrc,indst,err:=PrepareInDir(sinfo)
 		if insrc!=""{
@@ -323,10 +327,6 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 		mntmap[indst]=MountOpt{"/indata","ro"}
 		var outuuid,outdst string
 		if sinfo.Perm&1 !=0{
-			if outpath==""{
-				fmt.Println("use parameter -out to set output path")
-				return errors.New("missing output dir")
-			}
 			randpass,_:=core.RandPasswd()
 			outuuid,outdst,err=PrepareOutDir(outpath,randpass)
 			if outdst!=""{

@@ -56,7 +56,7 @@ func ParseVisitors(recvlist string) ([]string,[]int32,error){
 
 func SaveMeta(pdata *core.EncryptedData) error{
 	db:=GetDB()
-	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5,orgname) values ('%s','%s','%d','%s','%d','%s','%s')",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5,pdata.OrgName)
+	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5,orgname,isdir) values ('%s','%s',%d,'%s',%d,'%s','%s',%d)",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5,pdata.OrgName,pdata.IsDir)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert encrypted data info db error:", err)
 		return err
