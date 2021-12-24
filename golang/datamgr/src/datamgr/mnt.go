@@ -119,7 +119,7 @@ func MountDir(ipath string, linfo *core.LoginInfo)error{
 	}
 	dmap:=make(map[string]MountOpt)
 	dmap[tmpdir]=MountOpt{"/mnt","rw"}
-	err=CreatePod("centos",dmap)
+	err=CreatePod("cmit",dmap)
 	err=exec.Command("umount",tmpdir).Run()
 	if err!=nil{
 		fmt.Println("umount err",err)
@@ -431,7 +431,7 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 	}
 	dmap:=make(map[string]MountOpt)
 	dmap[dstdir]=MountOpt{"/mnt","rw"}
-	err=CreatePod("centos",dmap)
+	err=CreatePod("cmit",dmap)
 	exec.Command("umount",dstdir).Run()
 	if err!=nil{
 		fmt.Println("Create pod error:",err)
