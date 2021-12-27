@@ -41,6 +41,20 @@ type MountOpt struct{
 	access string
 }
 
+func LocalTempDir(ipath string)string{
+	finfo,err:=os.Stat(ipath)
+	if err!=nil{
+		fmt.Println(ipath, "not exists")
+		return ipath
+	}
+	if finfo.IsDir(){
+		return strings.TrimSuffix(ipath,"/")+"/"
+	}
+	return strings.TrimSuffix(ipath,finfo.Name()) 
+	// return value must with a '/' in the end
+
+}
+
 func doMount(){
 	if inpath==""{
         fmt.Println("You should set inpath explicitly")
@@ -110,7 +124,8 @@ func MountDir(ipath string, linfo *core.LoginInfo)error{
 	passwd:=make([]byte,16)
 	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,passwd,16)
 	uuid,_:=core.GetUuid()
-	tmpdir:=os.TempDir()+"/"+uuid
+	tmpdir:=LocalTempDir(inpath)+"."+uuid
+	//tmpdir:=os.TempDir()+"/"+uuid
 	err=os.MkdirAll(tmpdir,0755)
 	err=MountDirInC(ipath,tmpdir,passwd,"rw")
 	if err!=nil{
@@ -147,7 +162,8 @@ func CreatePod(imgname string,dirmap map[string]MountOpt) error{
 func PrepareInDir(sinfo *core.ShareInfo)(string,string,error){
 	fmt.Println("Preparing container environment...")
     uuid,_:=core.GetUuid()
-    tmpdir:=os.TempDir()+"/"+uuid
+    tmpdir:=LocalTempDir(inpath)+"."+uuid
+    //tmpdir:=os.TempDir()+"/"+uuid
 	err:=os.MkdirAll(tmpdir,0755)
 	if err!=nil{
 		fmt.Println("mkdir error in PrepareDir:",err)
@@ -173,7 +189,8 @@ func PrepareInDir(sinfo *core.ShareInfo)(string,string,error){
 	orgkey:=make([]byte,16)
 	DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
 	uuid,_=core.GetUuid()
-	plaindir:=os.TempDir()+"/"+uuid
+	plaindir:=LocalTempDir(inpath)+"."+uuid
+	//plaindir:=os.TempDir()+"/"+uuid
 	err=os.MkdirAll(plaindir,0755)
 	if err!=nil{
 		fmt.Println("Mkdir ",plaindir,"error:",err)
@@ -191,7 +208,8 @@ func PrepareOutDir(odir string,key []byte)(string,string,error){
 	uuidsrc,_:=core.GetUuid()
 	uuiddst,_:=core.GetUuid()
 	srcdir:=odir+"/"+uuidsrc
-	dstdir:=os.TempDir()+"/"+uuiddst
+	dstdir:=LocalTempDir(inpath)+"."+uuiddst
+	//dstdir:=os.TempDir()+"/"+uuiddst
 	os.MkdirAll(srcdir,0755)
 	os.MkdirAll(dstdir,0755)
 	MountDirInC(srcdir,dstdir,key,"rw")
@@ -377,8 +395,11 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 func PrepareSingleFileDir(ipath string,fname string)(string,string,error){
 	srcuuid,_:=core.GetUuid()
 	dstuuid,_:=core.GetUuid()
-	srcdir:=os.TempDir()+"/"+srcuuid
-	dstdir:=os.TempDir()+"/"+dstuuid
+	tmpdir:=LocalTempDir(ipath)
+	srcdir:=tmpdir+"."+srcuuid
+	//srcdir:=os.TempDir()+"/"+srcuuid
+	dstdir:=tmpdir+"."+dstuuid
+//	dstdir:=os.TempDir()+"/"+dstuuid
 	os.MkdirAll(srcdir,0755)
 	os.MkdirAll(dstdir,0755)
 	return srcdir,dstdir,os.Link(ipath,srcdir+"/"+fname)
