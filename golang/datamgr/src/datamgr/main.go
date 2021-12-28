@@ -114,6 +114,6 @@ func main(){
 	case core.SEPERATE:
 		doSep()
 	default:
-		fmt.Println("ddfs -enc|-list|-mnt|-sep|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
+		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
 	}
 }
