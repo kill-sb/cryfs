@@ -445,6 +445,10 @@ func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)er
 	}
 
 	pdata,_:=tag.GetDataInfo()
+	if pdata.OwnerId!=linfo.Id{
+		fmt.Println("The data does not belong to",linfo.Name)
+		return errors.New("Invalid user")
+	}
 	pdata.Path=ipath
 
 	if(pdata.FromType!=core.UNKNOWN ){

@@ -114,6 +114,10 @@ func MountDir(ipath string, linfo *core.LoginInfo)error{
 		fmt.Println("LoadTagFromDisk error in MountDir:",err)
 		return err
 	}
+	if tag.OwnerId!=linfo.Id{
+		fmt.Println("The data does not belong to",linfo.Name)
+		return errors.New("Invalid user")
+	}
 /*	
 	process:
 	0. get enc passwd
@@ -415,6 +419,11 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 	if err!=nil{
 		fmt.Println("GetDataInfo in MountSingleEncFile error:",err)
 		return err
+	}
+
+	if dinfo.OwnerId!=linfo.Id{
+		fmt.Println("The data does not belong to",linfo.Name)
+		return errors.New("Invalid user")
 	}
 
 /*	
