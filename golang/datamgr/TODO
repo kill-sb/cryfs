@@ -1,2 +1,6 @@
 1. combine cmro,cmrw,cmit to a unique docker image
-2. optimze fs: read and write start/end with offset in a block instead of whole block
+2. add csd md5 check
+3. multi source mount
+4. trace after multi source mount
+5. outside tool dir import and log
+6. ----real login server archietecture----
