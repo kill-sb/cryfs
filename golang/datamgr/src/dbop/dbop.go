@@ -325,47 +325,5 @@ func DelSel(id int) bool {
 }
 
 
-func (info *MySelInfo) UpdateInfo() (bool, error) {
-	db := GetDB()
-	ret := false
-	query := fmt.Sprintf("update mysel set rb1=%d,rb2=%d,rb3=%d,rb4=%d,rb5=%d,rb6=%d,bb=%d,date='%s' where id=%d", info.RedBalls[0], info.RedBalls[1], info.RedBalls[2], info.RedBalls[3], info.RedBalls[4], info.RedBalls[5], info.BlueBall, info.Date, info.Id)
-
-	if res, err := db.Exec(query); err != nil {
-		return false, err
-	} else if rows, _ := res.RowsAffected(); rows > 0 {
-		ret = true
-	}
-	return ret, nil
-}
-
-func EnumAll(startyear int, limit int64, proc func(info *Info)) {
-    db := GetDB()
-    query := fmt.Sprintf("select count(*) as value from records")
-    var rows int64
-    if err := db.QueryRow(query).Scan(&rows); err != nil {
-        fmt.Println("Query rows error")
-        return
-    }
-    if rows < limit || limit < 0 {
-        limit = rows
-    }
-
-    query = fmt.Sprintf("select * from records where year>=%d limit %d,%d", startyear, rows-limit, limit)
-    if res, err := db.Query(query); err != nil {
-        fmt.Println("slect in db error")
-        return
-    } else {
-        info := new(Info)
-        var id int
-        for res.Next() {
-            if err := res.Scan(&info.Year, &info.Term, &info.RedBalls[0], &info.RedBalls[1], &info.RedBalls[2], &info.RedBalls[3], &info.RedBalls[4], &info.RedBalls[5], &info.BlueBall, &info.Date, &id); err == nil {
-                proc(info)
-            } else {
-                fmt.Println("Scan query data error", err)
-                break
-            }
-        }
-    }
-}
 
 */
