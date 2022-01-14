@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"net/http"
@@ -8,8 +8,11 @@ import (
 	*/
 )
 
+/*
+	
+*/
+
 func LoginFunc(w http.ResponseWriter, r *http.Request){
-	 
 }
 
 func GetUserFunc(w http.ResponseWriter, r *http.Request){

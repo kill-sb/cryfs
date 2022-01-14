@@ -12,6 +12,10 @@ func NewDataFunc(w http.ResponseWriter, r *http.Request){
 
 }
 
+func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
+}
+
+
 func ShareDataFunc(w http.ResponseWriter, r *http.Request){
 }
 

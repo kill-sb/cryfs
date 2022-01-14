@@ -10,8 +10,8 @@ import (
 
 
 const(
-	PASSWD=1,
-	CERT=1<<1,
+	PASSWD=1
+	CERT=1<<1
 	MOBILE=1<<2
 )
 
@@ -28,10 +28,10 @@ var g_config *ServerConfig
 
 func LoadSvrConfig() *ServerConfig{
 	g_config= new (ServerConfig)
-	g_config.Port=":8080",
-	g_config.CertPem="cert.pem",
-	g_config.KeyPem="key.pem",
-	g_config.Version="v1",
+	g_config.Port=":8080"
+	g_config.CertPem="cert.pem"
+	g_config.KeyPem="key.pem"
+	g_config.Version="v1"
 	g_config.LoginMethod=PASSWD
 
 	flag.StringVar(&configfile,"config","server.cfg","name of configure file for server setup")
@@ -54,7 +54,7 @@ func LoadSvrConfig() *ServerConfig{
 
 func SetupHandler(cfg *ServerConfig) error{
 //	http.HandleFunc("/", defhandler)
-	prefix="/api/"+cfg.Version"+"/
+	prefix:="/api/"+cfg.Version+"/"
 	http.HandleFunc(prefix+"login",LoginFunc) // POST
 	http.HandleFunc(prefix+"getuser",GetUserFunc) // GET
 	http.HandleFunc(prefix+"newdata",NewDataFunc) // POST
@@ -68,12 +68,12 @@ func SetupHandler(cfg *ServerConfig) error{
 
 func main(){
 	LoadSvrConfig()
-	err:=SetupHandler(cfg)
+	err:=SetupHandler(g_config)
 	if err!=nil{
 		fmt.Println("Setup handler error:",err)
 		return
 	}
-	err=http.ListenAndServeTLS(cfg.Port,cfg.CertPem,cfg.KeyPem,nil)
+	err=http.ListenAndServeTLS(g_config.Port,g_config.CertPem,g_config.KeyPem,nil)
 	if err!=nil{
 		fmt.Println("Listen error:",err)
 	}
