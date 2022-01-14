@@ -26,6 +26,8 @@ type ServerConfig struct{
 var configfile string
 var g_config *ServerConfig
 
+var fhandler http.Handler
+
 func LoadSvrConfig() *ServerConfig{
 	g_config= new (ServerConfig)
 	g_config.Port=":8080"
@@ -51,9 +53,15 @@ func LoadSvrConfig() *ServerConfig{
 	return g_config
 }
 
+func defhandler(w http.ResponseWriter, r *http.Request){
+	if r.Method=="GET"{
+		fhandler.ServeHTTP(w,r)
+	}
+}
 
 func SetupHandler(cfg *ServerConfig) error{
-//	http.HandleFunc("/", defhandler)
+	fhandler=http.FileServer(http.Dir("/root/linux-5.9.1"))
+	http.HandleFunc("/", defhandler)
 	prefix:="/api/"+cfg.Version+"/"
 	http.HandleFunc(prefix+"login",LoginFunc) // POST
 	http.HandleFunc(prefix+"getuser",GetUserFunc) // GET
