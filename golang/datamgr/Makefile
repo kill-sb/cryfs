@@ -12,5 +12,5 @@ dtdfs:src/dtdfs/*.go
 server:src/server/*.go
 	go build server
 clean:
-	rm -f datamgr dtdfs
+	rm -f datamgr dtdfs server
 
