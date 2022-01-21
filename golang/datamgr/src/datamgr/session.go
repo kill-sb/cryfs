@@ -2,9 +2,15 @@ package main
 
 import (
 	"fmt"
+	"bytes"
+//	"io/ioutil"
 	"unsafe"
+	"time"
 	"errors"
 	"crypto/sha256"
+	"crypto/tls"
+	"net/http"
+	"encoding/json"
 	"dbop"
 	core "coredata"
 )
@@ -30,6 +36,59 @@ int get_passwd(char *buf,int len)
 	return i;
 }*/
 import "C"
+
+type AuthInfo struct{
+    Name string `json:"name"`
+    Passwd string `json:"passwd"`
+    PriMask int32 `json:"primask"`
+}
+
+type TokenInfo struct{
+    Id int32 `json:"id"`
+    Token int64 `json:"token"`
+    Key string `json:"key"`
+    Status int32 `json:"retval"`
+    ErrInfo string `json:"errinfo"`
+}
+
+
+func doAuth()(*TokenInfo,error){
+    passwd:=make([]byte,16) // max 16 bytes password
+    cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
+    length:=C.get_passwd(cpasswd,16)
+    passwd=passwd[:length]
+	var ainfo AuthInfo
+	ainfo.Name=loginuser
+	ainfo.Passwd=string(passwd)
+	ainfo.PriMask=0
+	obj,_:=json.Marshal(&ainfo)
+	req,err:=http.NewRequest("POST","https://127.0.0.1:8080/api/v1/login",bytes.NewBuffer(obj))
+	if err!=nil{
+		fmt.Println("New request error:",err)
+		return nil,err
+	}
+    req.Header.Set("Content-Type","application/json")
+	tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:true}}
+	client:=&http.Client{Transport:tr, Timeout:time.Second*5}
+	resp,err:=client.Do(req)
+	if err!=nil{
+		fmt.Println("client do req error:",err)
+		return nil,err
+	}
+	defer resp.Body.Close()
+//	body,err:=ioutil.ReadAll(resp.Body)
+//	if err==nil{
+		token:=new (TokenInfo)
+		err= json.NewDecoder(resp.Body).Decode(token)
+		if err==nil{
+			fmt.Println(*token)
+			return token,nil
+		}else{
+			return nil,err
+		}
+//	}
+//	return nil,err
+}
 
 func do_login(user string, passwd []byte)(*core.LoginInfo,error){
 	if id,shasum,key,err:=dbop.LookupPasswdSHA(user);err!=nil{

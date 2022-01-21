@@ -23,6 +23,7 @@ const (
 	LIST
     MOUNT
 	SEPERATE
+	LOGIN
 )
 
 const (
