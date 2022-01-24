@@ -3,6 +3,7 @@ package main
 import (
 	_"dbop"
 	"net/http"
+	core "coredata"
 	"fmt"
 	"flag"
 	"os"
@@ -27,6 +28,7 @@ var configfile string
 var g_config *ServerConfig
 
 var fhandler http.Handler
+var tokenmap map[string] *core.LoginUserInfo
 
 func LoadSvrConfig() *ServerConfig{
 	g_config= new (ServerConfig)
@@ -81,6 +83,7 @@ func main(){
 		fmt.Println("Setup handler error:",err)
 		return
 	}
+	tokenmap=make(map[string]*core.LoginUserInfo)
 	err=http.ListenAndServeTLS(g_config.Port,g_config.CertPem,g_config.KeyPem,nil)
 	if err!=nil{
 		fmt.Println("Listen error:",err)

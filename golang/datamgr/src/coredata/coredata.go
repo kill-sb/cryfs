@@ -42,6 +42,7 @@ const (
 	BINCONTENT=iota
 	REMOTEURL
 )
+const EXPIRE_TIME=15
 
 type LoginInfo struct{
     Conn net.Conn
@@ -108,6 +109,39 @@ type ShareInfo struct{
 	FileUri	string // source local filename or remote url
 	OrgName string
 }
+
+type AuthInfo struct{
+    Name string `json:"name"`
+    Passwd string `json:"passwd"`
+    PriMask int32 `json:"primask"`
+}
+
+type TokenInfo struct{
+    Id int32 `json:"id"`
+    Token string `json:"token"`
+    Key string `json:"key"`
+    Status int32 `json:"retval"`
+    ErrInfo string `json:"errinfo"`
+}
+
+type LoginUserInfo struct{
+    Name string
+    Id int32
+    Keylocalkey []byte
+    PriMask int32
+    LogExpire time.Time
+/*  Email string
+    Descr string
+    RegTime time.Time
+    Mobile string
+    */
+
+}
+
+func (info* LoginUserInfo)UpdateToken(){
+    info.LogExpire=time.Now().Add(time.Minute*EXPIRE_TIME) // expire time 15 minite
+}
+
 
 type InfoTracer interface{
 	PrintTraceInfo(int,string)error
@@ -263,6 +297,20 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 	sinfo.FileUri=fromobj
 	sinfo.EncryptedKey=make([]byte,16) // calc outside later
 	return sinfo,nil
+}
+
+func UIntToBytes(n uint64) []byte {
+    data := uint64(n)
+    bytebuf := bytes.NewBuffer([]byte{})
+    binary.Write(bytebuf, binary.BigEndian, data)
+    return bytebuf.Bytes()
+}
+
+func BytesToUInt(bys []byte) uint64 {
+    bytebuff := bytes.NewBuffer(bys)
+    var data uint64
+    binary.Read(bytebuff, binary.BigEndian, &data)
+    return uint64(data)
 }
 
 func BinkeyToString(binkey []byte)string{

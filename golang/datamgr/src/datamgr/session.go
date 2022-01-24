@@ -36,7 +36,7 @@ int get_passwd(char *buf,int len)
 	return i;
 }*/
 import "C"
-
+/*
 type AuthInfo struct{
     Name string `json:"name"`
     Passwd string `json:"passwd"`
@@ -50,14 +50,14 @@ type TokenInfo struct{
     Status int32 `json:"retval"`
     ErrInfo string `json:"errinfo"`
 }
+*/
 
-
-func doAuth()(*TokenInfo,error){
+func doAuth()(*core.TokenInfo,error){
     passwd:=make([]byte,16) // max 16 bytes password
     cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
     length:=C.get_passwd(cpasswd,16)
     passwd=passwd[:length]
-	var ainfo AuthInfo
+	var ainfo core.AuthInfo
 	ainfo.Name=loginuser
 	ainfo.Passwd=string(passwd)
 	ainfo.PriMask=0
@@ -78,7 +78,7 @@ func doAuth()(*TokenInfo,error){
 	defer resp.Body.Close()
 //	body,err:=ioutil.ReadAll(resp.Body)
 //	if err==nil{
-		token:=new (TokenInfo)
+		token:=new (core.TokenInfo)
 		err= json.NewDecoder(resp.Body).Decode(token)
 		if err==nil{
 			fmt.Println(*token)
