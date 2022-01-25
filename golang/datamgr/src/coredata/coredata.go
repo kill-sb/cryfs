@@ -1,7 +1,7 @@
 package coredata
 
 import (
-	"net"
+//	"net"
 	"time"
 	"bytes"
 	"errors"
@@ -42,10 +42,9 @@ const (
 	BINCONTENT=iota
 	REMOTEURL
 )
-const EXPIRE_TIME=15
 
 type LoginInfo struct{
-    Conn net.Conn
+	Token string
     Name string
     Id int32
     Keylocalkey []byte
@@ -109,38 +108,20 @@ type ShareInfo struct{
 	FileUri	string // source local filename or remote url
 	OrgName string
 }
-
-type AuthInfo struct{
+/*
+type API_AuthInfo struct{
     Name string `json:"name"`
     Passwd string `json:"passwd"`
     PriMask int32 `json:"primask"`
 }
 
-type TokenInfo struct{
+type API_TokenInfo struct{
     Id int32 `json:"id"`
     Token string `json:"token"`
     Key string `json:"key"`
     Status int32 `json:"retval"`
     ErrInfo string `json:"errinfo"`
-}
-
-type LoginUserInfo struct{
-    Name string
-    Id int32
-    Keylocalkey []byte
-    PriMask int32
-    LogExpire time.Time
-/*  Email string
-    Descr string
-    RegTime time.Time
-    Mobile string
-    */
-
-}
-
-func (info* LoginUserInfo)UpdateToken(){
-    info.LogExpire=time.Now().Add(time.Minute*EXPIRE_TIME) // expire time 15 minite
-}
+}*/
 
 
 type InfoTracer interface{
@@ -299,8 +280,8 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 	return sinfo,nil
 }
 
-func UIntToBytes(n uint64) []byte {
-    data := uint64(n)
+func UIntToBytes(n int64) []byte {
+    data := int64(n)
     bytebuf := bytes.NewBuffer([]byte{})
     binary.Write(bytebuf, binary.BigEndian, data)
     return bytebuf.Bytes()

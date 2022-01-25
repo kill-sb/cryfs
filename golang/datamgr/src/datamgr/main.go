@@ -105,7 +105,7 @@ func main(){
 	outpath=strings.TrimSuffix(outpath,"/")
 	switch fun{
 	case core.LOGIN:
-		doAuth()
+		doAuth(loginuser)
 	case core.ENCODE:
 		doEncode()
 	case core.DISTRIBUTE:

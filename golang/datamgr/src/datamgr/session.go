@@ -7,11 +7,11 @@ import (
 	"unsafe"
 	"time"
 	"errors"
-	"crypto/sha256"
+//	"crypto/sha256"
 	"crypto/tls"
 	"net/http"
 	"encoding/json"
-	"dbop"
+	api "apiv1"
 	core "coredata"
 )
 
@@ -36,29 +36,14 @@ int get_passwd(char *buf,int len)
 	return i;
 }*/
 import "C"
-/*
-type AuthInfo struct{
-    Name string `json:"name"`
-    Passwd string `json:"passwd"`
-    PriMask int32 `json:"primask"`
-}
 
-type TokenInfo struct{
-    Id int32 `json:"id"`
-    Token int64 `json:"token"`
-    Key string `json:"key"`
-    Status int32 `json:"retval"`
-    ErrInfo string `json:"errinfo"`
-}
-*/
-
-func doAuth()(*core.TokenInfo,error){
+func doAuth(user string)(*api.TokenInfo,error){
     passwd:=make([]byte,16) // max 16 bytes password
     cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
     length:=C.get_passwd(cpasswd,16)
     passwd=passwd[:length]
-	var ainfo core.AuthInfo
-	ainfo.Name=loginuser
+	var ainfo api.AuthInfo
+	ainfo.Name=user
 	ainfo.Passwd=string(passwd)
 	ainfo.PriMask=0
 	obj,_:=json.Marshal(&ainfo)
@@ -78,7 +63,7 @@ func doAuth()(*core.TokenInfo,error){
 	defer resp.Body.Close()
 //	body,err:=ioutil.ReadAll(resp.Body)
 //	if err==nil{
-		token:=new (core.TokenInfo)
+		token:=new (api.TokenInfo)
 		err= json.NewDecoder(resp.Body).Decode(token)
 		if err==nil{
 			fmt.Println(*token)
@@ -89,7 +74,7 @@ func doAuth()(*core.TokenInfo,error){
 //	}
 //	return nil,err
 }
-
+/*
 func do_login(user string, passwd []byte)(*core.LoginInfo,error){
 	if id,shasum,key,err:=dbop.LookupPasswdSHA(user);err!=nil{
 		return nil,err
@@ -102,19 +87,12 @@ func do_login(user string, passwd []byte)(*core.LoginInfo,error){
 //		fmt.Printf("login info: sharet %s, sha in db: %s\n",shastr,shasum)
 		if	shastr==shasum{
 			linfo:=&core.LoginInfo{Name:user,Id:id}
-	/*		keylen:=len(key)/2
-			linfo.Keylocalkey=make([]byte,keylen)
-			for i:=0;i<keylen;i++{
-				onebit:=fmt.Sprintf("%c%c",key[i*2],key[i*2+1])
-				fmt.Sscanf(onebit,"%x",&linfo.Keylocalkey[i])
-			}*/
 			linfo.Keylocalkey=core.StringToBinkey(key)
 			return linfo,nil
 		}
 	}
 	return nil,errors.New("Auth error")
 }
-/*
 func (linfo* LoginInfo)GetRawKey(src []byte)([]byte, error){
 	if(linfo.Keylocalkey!=nil && len(linfo.Keylocalkey)!=0){
 		srclen:=len(src)
@@ -128,18 +106,38 @@ func (linfo* LoginInfo)GetRawKey(src []byte)([]byte, error){
 	return nil,errors.New("Load key for decrypt localkey error")
 }
 */
+
+func do_api_login(user string,passwd []byte)(*core.LoginInfo,error){
+
+	return nil,nil
+}
+
 func Login(user string)(*core.LoginInfo, error){
+	token,err:=doAuth(user)
+	if err!=nil{
+		return nil,err
+	}
+	if token.Status!=0{
+		return nil,errors.New(token.ErrInfo)
+	}
+	linfo:=new(core.LoginInfo)
+	linfo.Name=user
+	linfo.Id=token.Id
+	linfo.Token=token.Token
+	linfo.Keylocalkey=core.StringToBinkey(token.Key)
+	return linfo,nil
 //	linfo:=new (LoginInfo)
 //	linfo.Name=user
-	passwd:=make([]byte,16) // max 16 bytes password
+/*	passwd:=make([]byte,16) // max 16 bytes password
 	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
 	length:=C.get_passwd(cpasswd,16)
 	passwd=passwd[:length]
-	if linfo,err:=do_login(user,passwd);err!=nil{
+	//if linfo,err:=do_login(user,passwd);err!=nil{
+	if linfo,err:=do_api_login(user,passwd);err!=nil{
 		fmt.Println("Login error:",err)
 		return nil,err
 	}else{
 	//	linfo.Keylocalkey=string(passwd) // just for test, Keylocalkey is used to encrypt random key
 		return linfo,nil
-	}
+	}*/
 }
