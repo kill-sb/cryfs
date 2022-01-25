@@ -308,10 +308,7 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	}
 	result+=fmt.Sprintf("\tPermissions :Data Access Mode(%s), Expire Date(%s), Max/Left Open Times(%s/%s)\n",perm,sinfo.Expire,maxtime,lefttime)
 
-	orgname,err:=dbop.GetOrgFileName(sinfo)
-	if err==nil{
-		result+=fmt.Sprintf("\tOriginal filename :%s\n",orgname)
-	}
+	result+=fmt.Sprintf("\tOriginal filename :%s\n",sinfo.OrgName)
 	if sinfo.IsDir==1{
 		result+=fmt.Sprintf("\tIs Directory :yes\n")
 	}else{

@@ -69,6 +69,7 @@ func doAuth(user string)(*api.TokenInfo,error){
 			fmt.Println(*token)
 			return token,nil
 		}else{
+			fmt.Println("decode error:",err)
 			return nil,err
 		}
 //	}

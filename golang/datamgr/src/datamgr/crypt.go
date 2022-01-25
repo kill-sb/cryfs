@@ -395,13 +395,9 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 		fmt.Println(linfo.Name,"is not in shared user list")
 		return errors.New("Not shared user")
 	}
-	ofile,err:=dbop.GetOrgFileName(sinfo)
+	ofile:=sinfo.OrgName
 //	fmt.Println("Get ofile ",ofile)
 //	fmt.Println("enc keys:",core.BinkeyToString(sinfo.EncryptedKey),"randkey:",core.BinkeyToString(sinfo.RandKey))
-	if err!=nil{
-		fmt.Println("Get origin file name error",err)
-		return err
-	}
 	ofile=opath+"/"+ofile
 	orgkey:=make([]byte,16)
 

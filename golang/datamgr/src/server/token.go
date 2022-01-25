@@ -8,7 +8,6 @@ import (
 	//"dbop"
 	//"log"
 	core "coredata"
-	api "apiv1"
 /*	"os"
 	_"dbop"
 	*/
@@ -58,11 +57,11 @@ func (info* LoginUserInfo)UpdateToken(){
     info.LogExpire=time.Now().Add(time.Second*EXPIRE_TIME) // expire time 15 minite
 	info.Lock.Unlock()
 }
-
+/*
 func NewToken()*api.TokenInfo{
 	token:=&api.TokenInfo{Id:-1,Token:"",Key:"",Status:-1,ErrInfo:"Error Parameter"}
 	return token
-}
+}*/
 
 func GetLoginUserInfo(token string)(*LoginUserInfo,error){
 	tokenlock.RLock()

@@ -55,12 +55,13 @@ func GenUserInfo(ainfo* api.AuthInfo, tinfo *api.TokenInfo)*LoginUserInfo{
 
 func LoginFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
-		token:=NewToken()
+		token:=api.NewToken()
 		w.Header().Set("Content-Type","application/json")
 		var ainfo api.AuthInfo
 		err:= json.NewDecoder(r.Body).Decode(&ainfo)
 		if err!=nil{
 			fmt.Println("Decode json error:",r.Body,"-",err)
+			json.NewEncoder(w).Encode(token)
 			return
 		}
 		log.Println(ainfo)
@@ -68,6 +69,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 		// check user/passwd
 		id,shasum,key,err:=dbop.LookupPasswdSHA(ainfo.Name)
 		if err!=nil{
+			json.NewEncoder(w).Encode(token)
 			return
 		}
 		sharet:=sha256.Sum256([]byte(ainfo.Passwd))
@@ -80,14 +82,15 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 			token.Key=key
 			token.Token=makeToken(token.Id)
 			luinfo:=GenUserInfo(&ainfo,token)
-		//	tokenmap[token.Token]=luinfo
 			AddToken(token.Token,luinfo)
 		//	log.Println(*luinfo)
 			token.Status=0
 			token.ErrInfo=""
-			json.NewEncoder(w).Encode(token)
+		}else{
+			token.Status=1
+			token.ErrInfo="Invalid user/password"
 		}
-
+		json.NewEncoder(w).Encode(token)
 	}else{
 //		http.Redirect(w,r,"/",http.StatusFound)
 		http.NotFound(w,r)
