@@ -9,7 +9,7 @@ datamgr:
 dtdfs:src/dtdfs/*.go
 	go build dtdfs
 
-server:src/server/*.go
+server:src/server/*.go src/apiv1/*.go
 	go build server
 clean:
 	rm -f datamgr dtdfs server
