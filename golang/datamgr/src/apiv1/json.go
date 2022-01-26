@@ -32,6 +32,7 @@ func NewToken()*ITokenInfo{
 }
 
 type EncDataReq struct{
+	Token string `json:"token"`
 	Descr string `json:"descr"`
 	IsDir   byte `json:"isdir"`
 	FromType int `json:"fromtype"`

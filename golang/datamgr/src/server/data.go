@@ -11,14 +11,25 @@ import (
 
 func NewDataFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
-		encinfo:=api.NewDataAck()
+		encack:=api.NewDataAck()
 		w.Header().Set("Content-Type","application/json")
-		err:=json.NewDecoder(r.Body).Decode(encinfo)
+		var encreq api.EncDataReq
+		err:=json.NewDecoder(r.Body).Decode(&encreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
-			json.NewEncoder(w).Encode(encinfo)
+			json.NewEncoder(w).Encode(encack)
 			return
 		}
+		luinfo,err:=GetLoginUserInfo(encreq.Token)
+		if err!=nil{
+			encack.Code=1
+			encack.Msg=err.Error()
+			json.NewEncoder(w).Encode(encack)
+			return
+		}
+		// user info checked ok
+		// reference crypt.go:dbop.SaveMeta
+		log.Println(luinfo.Name)
 	}else{
 		http.NotFound(w,r)
 	}

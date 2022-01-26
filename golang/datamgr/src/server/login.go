@@ -85,7 +85,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 			AddToken(token.Data.Token,luinfo)
 		//	log.Println(*luinfo)
 			token.Code=0
-			token.Msg=""
+			token.Msg="OK"
 		}else{
 			token.Code=1
 			token.Msg="Invalid user/password"

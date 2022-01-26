@@ -66,7 +66,7 @@ func doAuth(user string)(*api.ITokenInfo,error){
 	token:=new (api.ITokenInfo)
 	err= json.NewDecoder(resp.Body).Decode(token)
 	if err==nil{
-		fmt.Println(*token)
+		fmt.Println(token,",data:",token.Data)
 		return token,nil
 	}else{
 		fmt.Println("decode error:",err)
