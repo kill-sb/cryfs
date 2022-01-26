@@ -1,0 +1,9 @@
+login:
+	curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	ret ok: {"code":0,"message":"","data":{"id":1,"token":"64f0a69a0f66e2faf993f354e9190340","key":"f447b20a7fcbf53a5d5be013ea0b15af"}}
+
+	curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	ret error: {"code":1,"message":"Invalid user/password","data":{"id":-1,"token":"nil","key":"nil"}}
+
+
+

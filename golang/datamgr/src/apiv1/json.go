@@ -1,5 +1,10 @@
 package apiv1
 
+type RetStat struct{
+	Code int `json:"code"`
+	Msg string `json:"message"`
+}
+
 type AuthInfo struct{
     Name string `json:"name"`
     Passwd string `json:"passwd"`
@@ -10,12 +15,19 @@ type TokenInfo struct{
     Id int32 `json:"id"`
     Token string `json:"token"`
     Key string `json:"key"`
-    Status int32 `json:"retval"`
-    ErrInfo string `json:"errinfo"`
 }
 
-func NewToken()*TokenInfo{
-    token:=&TokenInfo{Id:-1,Token:"nil",Key:"nil",Status:-1,ErrInfo:"Error Parameter"}
+type ITokenInfo struct{
+	RetStat
+	Data *TokenInfo `json:"data"`
+}
+
+func NewToken()*ITokenInfo{
+    data:=&TokenInfo{Id:-1,Token:"nil",Key:"nil"}
+	token:=new (ITokenInfo)
+	token.Code=-1
+	token.Msg="Error Parameter"
+	token.Data=data
     return token
 }
 
@@ -31,17 +43,20 @@ type EncDataReq struct{
 }
 
 type EncDataAck struct{
-	Status int32 `json:"status"`
-	ErrInfo string `json:"errinfo"`
 	Uuid string `json:"uuid"`
 	LocalKey string `json:"locakkey"`
 }
 
-func NewDataAck() *EncDataAck{
-	eda:=&EncDataAck{
-		Status:-1,
-		ErrInfo:"Invalid parameter",
-		Uuid:"nil",
-		LocalKey:"nil"	}
+type IEncDataAck struct{
+	RetStat
+	Data *EncDataAck `json:"data"`
+}
+
+func NewDataAck() *IEncDataAck{
+	data:=&EncDataAck{Uuid:"nil",LocalKey:"nil"	}
+	eda:=new (IEncDataAck)
+	eda.Code=-1
+	eda.Msg="Invalid parameter"
+	eda.Data=data
 	return eda
 }

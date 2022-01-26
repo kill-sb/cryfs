@@ -37,7 +37,7 @@ int get_passwd(char *buf,int len)
 }*/
 import "C"
 
-func doAuth(user string)(*api.TokenInfo,error){
+func doAuth(user string)(*api.ITokenInfo,error){
     passwd:=make([]byte,16) // max 16 bytes password
     cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
     length:=C.get_passwd(cpasswd,16)
@@ -63,17 +63,15 @@ func doAuth(user string)(*api.TokenInfo,error){
 	defer resp.Body.Close()
 //	body,err:=ioutil.ReadAll(resp.Body)
 //	if err==nil{
-		token:=new (api.TokenInfo)
-		err= json.NewDecoder(resp.Body).Decode(token)
-		if err==nil{
-			fmt.Println(*token)
-			return token,nil
-		}else{
-			fmt.Println("decode error:",err)
-			return nil,err
-		}
-//	}
-//	return nil,err
+	token:=new (api.ITokenInfo)
+	err= json.NewDecoder(resp.Body).Decode(token)
+	if err==nil{
+		fmt.Println(*token)
+		return token,nil
+	}else{
+		fmt.Println("decode error:",err)
+		return nil,err
+	}
 }
 /*
 func do_login(user string, passwd []byte)(*core.LoginInfo,error){
@@ -118,14 +116,14 @@ func Login(user string)(*core.LoginInfo, error){
 	if err!=nil{
 		return nil,err
 	}
-	if token.Status!=0{
-		return nil,errors.New(token.ErrInfo)
+	if token.Code!=0{
+		return nil,errors.New(token.Msg)
 	}
 	linfo:=new(core.LoginInfo)
 	linfo.Name=user
-	linfo.Id=token.Id
-	linfo.Token=token.Token
-	linfo.Keylocalkey=core.StringToBinkey(token.Key)
+	linfo.Id=token.Data.Id
+	linfo.Token=token.Data.Token
+	linfo.Keylocalkey=core.StringToBinkey(token.Data.Key)
 	return linfo,nil
 //	linfo:=new (LoginInfo)
 //	linfo.Name=user

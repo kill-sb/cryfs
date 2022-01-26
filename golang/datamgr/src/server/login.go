@@ -78,17 +78,17 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 			shastr=fmt.Sprintf("%s%02x",shastr,ch)
 		}
 		if shastr==shasum{// password check ok
-			token.Id=id
-			token.Key=key
-			token.Token=makeToken(token.Id)
-			luinfo:=GenUserInfo(&ainfo,token)
-			AddToken(token.Token,luinfo)
+			token.Data.Id=id
+			token.Data.Key=key
+			token.Data.Token=makeToken(token.Data.Id)
+			luinfo:=GenUserInfo(&ainfo,token.Data)
+			AddToken(token.Data.Token,luinfo)
 		//	log.Println(*luinfo)
-			token.Status=0
-			token.ErrInfo=""
+			token.Code=0
+			token.Msg=""
 		}else{
-			token.Status=1
-			token.ErrInfo="Invalid user/password"
+			token.Code=1
+			token.Msg="Invalid user/password"
 		}
 		json.NewEncoder(w).Encode(token)
 	}else{

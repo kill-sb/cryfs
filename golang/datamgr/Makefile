@@ -2,7 +2,7 @@ export GOPATH=$(PWD)
 
 all:datamgr dtdfs server
 
-datamgr:src/datamgr/*.go src/dbop/*.go src/coredata/*.go
+datamgr:src/datamgr/*.go src/dbop/*.go src/coredata/*.go src/apiv1/*.go
 datamgr:
 	go build -gcflags "-N" datamgr
 
