@@ -8,8 +8,13 @@ import(
 	"unsafe"
 	"errors"
 	"os/exec"
+	"crypto/tls"
+	"encoding/json"
+	"net/http"
+	"bytes"
 	"strings"
 	"dbop"
+	api "apiv1"
 	core "coredata"
 )
 /*
@@ -234,8 +239,33 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 	return tag,nil
 }
 
-func SendMetaToServer(pdata *core.EncryptedData)error{
-	dbop.SaveMeta(pdata)
+func SendMetaToServer(pdata *core.EncryptedData, token string)error{
+//	dbop.SaveMeta(pdata)
+encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,EncKey:core.BinkeyToString(pdata.EncryptingKey),OrgName:pdata.OrgName}
+	obj,_:=json.Marshal(&encreq)
+    req,err:=http.NewRequest("POST",APIServer+"newdata",bytes.NewBuffer(obj))
+    if err!=nil{
+        fmt.Println("New request error:",err)
+        return err
+    }
+    req.Header.Set("Content-Type","application/json")
+    tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:true}}
+    client:=&http.Client{Transport:tr, Timeout:time.Second*5}
+    resp,err:=client.Do(req)
+    if err!=nil{
+        fmt.Println("client do req error:",err)
+        return err
+    }
+    defer resp.Body.Close()
+    ack:=new (api.IEncDataAck)
+    err= json.NewDecoder(resp.Body).Decode(ack)
+    if err==nil{
+//        fmt.Println(ack)
+        return nil
+    }else{
+        fmt.Println("decode error:",err)
+        return err
+    }
 	return nil
 }
 
@@ -253,15 +283,26 @@ func DoDecodeInC(src, passwd, dst []byte,length int){
 	C.decode(csrc,cpasswd,cdst,C.int(length))
 }
 
+func RecordMetaFromRaw_API(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string,token string)error{
+	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
+	// RecordLocal && Record Remote
+	savedkey:=make([]byte,128/8)
+	DoEncodeInC(passwd , keylocalkey ,savedkey,128/8)
+	SaveLocalFileTag(pdata,savedkey)
+	SendMetaToServer(pdata,token)
+	return nil
+}
+
 func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string)error{
 	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
 	// RecordLocal && Record Remote
 	savedkey:=make([]byte,128/8)
 	DoEncodeInC(passwd , keylocalkey ,savedkey,128/8)
 	SaveLocalFileTag(pdata,savedkey)
-	SendMetaToServer(pdata)
+	dbop.SaveMeta(pdata)
 	return nil
 }
+
 
 func GetFileName(ipath string)(string,error){
 	finfo,err:=os.Stat(ipath)
@@ -312,7 +353,7 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	*/
 	DoEncodeFileInC(ipath,ofile,passwd)
 	pdata.HashMd5,_=GetFileMd5(ofile)
-	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath)
+	RecordMetaFromRaw_API(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
 	return pdata.Uuid,nil
 }
 
@@ -590,6 +631,9 @@ func doSep(){
 	defer ifile.Close()
 	io.Copy(efile,ifile)
 	SaveLocalFileTag(dst,dtag.EKey[:])
-    SendMetaToServer(dst)
+
+  //  SendMetaToServer(dst)
+	dbop.SaveMeta(dst)
+
 	fmt.Println(dst.Uuid,"seperated ok")
 }

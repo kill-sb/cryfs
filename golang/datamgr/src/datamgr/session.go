@@ -36,6 +36,7 @@ int get_passwd(char *buf,int len)
 	return i;
 }*/
 import "C"
+var APIServer string="https://127.0.0.1:8080/api/v1/"
 
 func doAuth(user string)(*api.ITokenInfo,error){
     passwd:=make([]byte,16) // max 16 bytes password
@@ -47,7 +48,7 @@ func doAuth(user string)(*api.ITokenInfo,error){
 	ainfo.Passwd=string(passwd)
 	ainfo.PriMask=0
 	obj,_:=json.Marshal(&ainfo)
-	req,err:=http.NewRequest("POST","https://127.0.0.1:8080/api/v1/login",bytes.NewBuffer(obj))
+	req,err:=http.NewRequest("POST",APIServer+"login",bytes.NewBuffer(obj))
 	if err!=nil{
 		fmt.Println("New request error:",err)
 		return nil,err
@@ -66,7 +67,7 @@ func doAuth(user string)(*api.ITokenInfo,error){
 	token:=new (api.ITokenInfo)
 	err= json.NewDecoder(resp.Body).Decode(token)
 	if err==nil{
-		fmt.Println(token,",data:",token.Data)
+//		fmt.Println(token,",data:",token.Data)
 		return token,nil
 	}else{
 		fmt.Println("decode error:",err)

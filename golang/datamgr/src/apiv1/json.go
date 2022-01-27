@@ -33,6 +33,7 @@ func NewToken()*ITokenInfo{
 
 type EncDataReq struct{
 	Token string `json:"token"`
+	Uuid string `json:"uuid"`
 	Descr string `json:"descr"`
 	IsDir   byte `json:"isdir"`
 	FromType int `json:"fromtype"`
@@ -44,8 +45,8 @@ type EncDataReq struct{
 }
 
 type EncDataAck struct{
-	Uuid string `json:"uuid"`
-	LocalKey string `json:"locakkey"`
+//	Uuid string `json:"uuid"`
+//	LocalKey string `json:"locakkey"`
 }
 
 type IEncDataAck struct{
@@ -54,7 +55,7 @@ type IEncDataAck struct{
 }
 
 func NewDataAck() *IEncDataAck{
-	data:=&EncDataAck{Uuid:"nil",LocalKey:"nil"	}
+	data:=new (EncDataAck)
 	eda:=new (IEncDataAck)
 	eda.Code=-1
 	eda.Msg="Invalid parameter"
