@@ -8,10 +8,6 @@ import(
 	"unsafe"
 	"errors"
 	"os/exec"
-	"crypto/tls"
-	"encoding/json"
-	"net/http"
-	"bytes"
 	"strings"
 	"dbop"
 	api "apiv1"
@@ -241,7 +237,8 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 
 func SendMetaToServer(pdata *core.EncryptedData, token string)error{
 //	dbop.SaveMeta(pdata)
-encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,EncKey:core.BinkeyToString(pdata.EncryptingKey),OrgName:pdata.OrgName}
+	encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,EncKey:core.BinkeyToString(pdata.EncryptingKey),OrgName:pdata.OrgName}
+	/*
 	obj,_:=json.Marshal(&encreq)
     req,err:=http.NewRequest("POST",APIServer+"newdata",bytes.NewBuffer(obj))
     if err!=nil{
@@ -259,14 +256,14 @@ encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata
     defer resp.Body.Close()
     ack:=new (api.IEncDataAck)
     err= json.NewDecoder(resp.Body).Decode(ack)
-    if err==nil{
-//        fmt.Println(ack)
-        return nil
-    }else{
-        fmt.Println("decode error:",err)
-        return err
+	*/
+
+    ack:=new (api.IEncDataAck)
+	err:=CallHttpAPI(&encreq,ack,"newdata")
+    if err!=nil{
+        fmt.Println("call api error:",err)
     }
-	return nil
+	return err
 }
 
 func DoEncodeInC(src,passwd,dst []byte,length int){
@@ -292,7 +289,7 @@ func RecordMetaFromRaw_API(pdata *core.EncryptedData ,keylocalkey []byte, passwd
 	SendMetaToServer(pdata,token)
 	return nil
 }
-
+/*
 func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string)error{
 	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
 	// RecordLocal && Record Remote
@@ -302,7 +299,7 @@ func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []b
 	dbop.SaveMeta(pdata)
 	return nil
 }
-
+*/
 
 func GetFileName(ipath string)(string,error){
 	finfo,err:=os.Stat(ipath)

@@ -259,7 +259,7 @@ func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInf
 		}
 		pdata.IsDir=0
 	}
-	err:=RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,sinfo.FileUri,opath)
+	err:=RecordMetaFromRaw_API(pdata,linfo.Keylocalkey,passwd,sinfo.FileUri,opath,linfo.Token)
 	return err
 }
 

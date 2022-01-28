@@ -38,6 +38,28 @@ int get_passwd(char *buf,int len)
 import "C"
 var APIServer string="https://127.0.0.1:8080/api/v1/"
 
+func CallHttpAPI(param interface{},ret interface{},entry string)error{
+	obj,_:=json.Marshal(param)
+	fmt.Println("Sending:",string(obj))
+	req,err:=http.NewRequest("POST",APIServer+entry,bytes.NewBuffer(obj))
+	if err!=nil{
+		fmt.Println("New request error:",err)
+		return err
+	}
+    req.Header.Set("Content-Type","application/json")
+//	tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:false}}
+	tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:true}}
+	client:=&http.Client{Transport:tr, Timeout:time.Second*10}
+	resp,err:=client.Do(req)
+	if err!=nil{
+		fmt.Println("client do req error:",err)
+		return err
+	}
+	defer resp.Body.Close()
+	err= json.NewDecoder(resp.Body).Decode(ret)
+	return err
+}
+
 func doAuth(user string)(*api.ITokenInfo,error){
     passwd:=make([]byte,16) // max 16 bytes password
     cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
@@ -47,30 +69,13 @@ func doAuth(user string)(*api.ITokenInfo,error){
 	ainfo.Name=user
 	ainfo.Passwd=string(passwd)
 	ainfo.PriMask=0
-	obj,_:=json.Marshal(&ainfo)
-	req,err:=http.NewRequest("POST",APIServer+"login",bytes.NewBuffer(obj))
-	if err!=nil{
-		fmt.Println("New request error:",err)
-		return nil,err
-	}
-    req.Header.Set("Content-Type","application/json")
-	tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:true}}
-	client:=&http.Client{Transport:tr, Timeout:time.Second*5}
-	resp,err:=client.Do(req)
-	if err!=nil{
-		fmt.Println("client do req error:",err)
-		return nil,err
-	}
-	defer resp.Body.Close()
-//	body,err:=ioutil.ReadAll(resp.Body)
-//	if err==nil{
 	token:=new (api.ITokenInfo)
-	err= json.NewDecoder(resp.Body).Decode(token)
+	err:=CallHttpAPI(&ainfo,token,"login")
 	if err==nil{
-//		fmt.Println(token,",data:",token.Data)
+		fmt.Println("call api ok:",token,",data:",token.Data)
 		return token,nil
 	}else{
-		fmt.Println("decode error:",err)
+		fmt.Println("call api error:",err)
 		return nil,err
 	}
 }
@@ -106,11 +111,6 @@ func (linfo* LoginInfo)GetRawKey(src []byte)([]byte, error){
 	return nil,errors.New("Load key for decrypt localkey error")
 }
 */
-
-func do_api_login(user string,passwd []byte)(*core.LoginInfo,error){
-
-	return nil,nil
-}
 
 func Login(user string)(*core.LoginInfo, error){
 	token,err:=doAuth(user)

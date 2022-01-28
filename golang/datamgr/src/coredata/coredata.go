@@ -108,21 +108,6 @@ type ShareInfo struct{
 	FileUri	string // source local filename or remote url
 	OrgName string
 }
-/*
-type API_AuthInfo struct{
-    Name string `json:"name"`
-    Passwd string `json:"passwd"`
-    PriMask int32 `json:"primask"`
-}
-
-type API_TokenInfo struct{
-    Id int32 `json:"id"`
-    Token string `json:"token"`
-    Key string `json:"key"`
-    Status int32 `json:"retval"`
-    ErrInfo string `json:"errinfo"`
-}*/
-
 
 type InfoTracer interface{
 	PrintTraceInfo(int,string)error
