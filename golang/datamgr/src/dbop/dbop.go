@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 	"strings"
+	api "apiv1"
 	core "coredata"
 )
 
@@ -117,6 +118,40 @@ func UpdateOpenTimes(sinfo *core.ShareInfo)error{
 	return nil
 }
 
+func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
+	db:=GetDB()
+	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname from sharetags where uuid='%s'",uuid)
+   res,err:=db.Query(query)
+    if err!=nil{
+        return nil,err
+    }
+    if res.Next(){
+		info:=new (api.ShareInfoData)
+		// info.FileUri will be filled outside
+		var recv string
+
+        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&info.EncKey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
+			fmt.Println("query",query,"error:",err)
+			return nil,err
+		}
+		info.OwnerName,err=GetUserName(info.OwnerId)
+		if err!=nil{
+			return nil,err
+		}
+
+		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
+		if err!=nil{
+			fmt.Println("Parse visitor from db error",err)
+			return nil,err
+		}
+		return info,nil
+
+	}else{
+		return nil,errors.New("No shared info found in server")
+	}
+}
+
+/*
 func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,datauuid,perm,fromtype,crtime, orgname from sharetags where uuid='%s'",uuid)
@@ -188,7 +223,7 @@ func LoadShareInfo(head *core.ShareInfoHeader)(*core.ShareInfo,error){
 		return nil,errors.New("No shared info found in server")
 	}
 
-}
+}*/
 
 func GetOrgFileName(sinfo *core.ShareInfo)(string,error){
 	return sinfo.OrgName,nil

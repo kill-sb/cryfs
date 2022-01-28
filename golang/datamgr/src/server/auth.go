@@ -69,6 +69,7 @@ func SetupHandler(cfg *ServerConfig) error{
 	http.HandleFunc(prefix+"login",LoginFunc) // POST
 	http.HandleFunc(prefix+"getuser",GetUserFunc) // GET
 	http.HandleFunc(prefix+"newdata",NewDataFunc) // POST
+	http.HandleFunc(prefix+"getshareinfo",GetShareInfoFunc) // GET
 	http.HandleFunc(prefix+"sharedata",ShareDataFunc) // POST
 	http.HandleFunc(prefix+"getdatainfo",GetDataInfoFunc) // GET
 	http.HandleFunc(prefix+"traceback",TraceBackFunc) // GET

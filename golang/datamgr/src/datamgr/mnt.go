@@ -281,7 +281,8 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			fmt.Println("Load share info head in MountFile error:",err)
 			return err
 		}
-		sinfo,err:=dbop.LoadShareInfo(head)
+		//sinfo,err:=dbop.LoadShareInfo(head)
+		sinfo,err:=GetShareInfoFromHead(head)
 		if err!=nil{
 			fmt.Println("Load share info from head error:",err)
 			return err

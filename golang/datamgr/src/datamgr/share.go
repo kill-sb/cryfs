@@ -104,7 +104,8 @@ func LoadShareInfoFromTag(ipath string)(*core.ShareInfo,error){
 		fmt.Println("Load share info during reshare error:",err)
 		return nil, err
 	}
-	return dbop.LoadShareInfo(head)
+//	return dbop.LoadShareInfo(head)
+	return GetShareInfoFromHead(head)
 }
 
 func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
@@ -139,7 +140,8 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 			fmt.Println("Load share info during reshare error:",err)
 			return err
 		}
-		ssinfo,err:=dbop.LoadShareInfo(head)
+		//ssinfo,err:=dbop.LoadShareInfo(head)
+		ssinfo,err:=GetShareInfoFromHead(head)
 		if err!=nil{
 			fmt.Println("Load share info from head error:",err)
 			return err

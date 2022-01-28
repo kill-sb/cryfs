@@ -62,6 +62,41 @@ func NewDataFunc(w http.ResponseWriter, r *http.Request){
 func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
 }
 
+func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
+	//if r.Method=="GET"{
+	if r.Method=="POST"{
+		sifack:=api.NewShareInfoAck()
+		w.Header().Set("Content-Type","application/json")
+		var sifreq api.ShareInfoReq
+		err:=json.NewDecoder(r.Body).Decode(&sifreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(sifack)
+			return
+		}
+		/*
+		_,err=GetLoginUserInfo(sifreq.Token)
+        if err!=nil{
+            sifack.Code=1
+            sifack.Msg="You should login first"
+            json.NewEncoder(w).Encode(sifack)
+            return
+        }*/
+
+		retdata,err:=dbop.GetShareInfoData(sifreq.Uuid)
+		if err!=nil{
+			sifack.Code=2
+			sifack.Msg=err.Error()
+		}else{
+			sifack.Code=0
+			sifack.Data=retdata
+		}
+        json.NewEncoder(w).Encode(sifack)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+
 
 func ShareDataFunc(w http.ResponseWriter, r *http.Request){
 }

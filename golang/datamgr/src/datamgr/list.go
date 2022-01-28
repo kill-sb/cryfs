@@ -8,6 +8,7 @@ import(
 	"errors"
 	"strings"
 	"dbop"
+	api "apiv1"
 	core "coredata"
 )
 
@@ -133,7 +134,7 @@ func ListCSDs(csds[]string){
     for _,csd:=range csds{
 		head,err:=core.LoadShareInfoHead(csd)
 		if err==nil{
-			sinfo,err:=dbop.LoadShareInfo(head)
+			sinfo,err:=GetShareInfoFromHead(head)
             if err==nil{
 				sinfo.FileUri=csd
 		//		fmt.Printf("\t%d\n",i+1)
@@ -167,12 +168,68 @@ func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error)
 	}
 }
 
-func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
-	sinfo,err:=dbop.GetBriefShareInfo(uuid)
+func GetShareInfo_API(uuid string)(*api.IShareInfoAck,error){
+	req:=&api.ShareInfoReq{Token:"0",Uuid:uuid}
+	ack:=api.NewShareInfoAck()
+	err:=HttpAPIPost(req,ack,"getshareinfo")
 	if err!=nil{
-		fmt.Println("GetBriefShareInfo error in traceCSDFile:",err)
+		fmt.Println("call getshareinfo error:",err)
 		return nil,err
 	}
+	return ack,nil
+}
+
+func GetShareInfoFromHead(head* core.ShareInfoHeader)(*core.ShareInfo,error){
+	uuid:=string(head.Uuid[:])
+	enckey:=head.EncryptedKey[:]
+	apiack,err:=GetShareInfo_API(uuid)
+	if err!=nil{
+        fmt.Println("GetShareInfo_API error:",err)
+        return nil,err
+	}
+    if apiack.Code!=0{
+        return nil,errors.New(apiack.Msg)
+    }
+	sinfo:=FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
+	return sinfo,nil
+}
+
+func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*core.ShareInfo{
+	sinfo:=new (core.ShareInfo)
+	sinfo.Uuid=uuid
+	sinfo.OwnerId=apidata.OwnerId
+	sinfo.OwnerName=apidata.OwnerName
+	sinfo.Descr=apidata.Descr
+	sinfo.Perm=apidata.Perm
+	sinfo.Receivers=apidata.Receivers
+	sinfo.RcvrIds=apidata.RcvrIds
+	sinfo.Expire=apidata.Expire
+	sinfo.MaxUse=apidata.MaxUse
+	sinfo.LeftUse=apidata.LeftUse
+	sinfo.RandKey=core.StringToBinkey(apidata.EncKey)
+	sinfo.EncryptedKey=encryptedkey
+	sinfo.FromType=apidata.FromType
+	sinfo.FromUuid=apidata.FromUuid
+	sinfo.ContentType=ctype
+	sinfo.IsDir=isdir
+	sinfo.CrTime=apidata.CrTime
+	sinfo.FileUri=apidata.FileUri
+	sinfo.OrgName=apidata.OrgName
+	return sinfo
+}
+
+func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
+	//sinfo,err:=dbop.GetBriefShareInfo(uuid)
+	sifack,err:=GetShareInfo_API(uuid)
+	if err!=nil{
+		fmt.Println("GetShareInfo_API error in traceCSDFile:",err)
+		return nil,err
+	}
+	if sifack.Code!=0{
+//		fmt.Println("error return value--msg:",sinfo.Msg)
+		return nil,errors.New(sifack.Msg)
+	}
+	sinfo:=FillShareInfo(sifack.Data,uuid,0,0,nil)
 	tracer=append(tracer,sinfo)
 	if sinfo.FromType==core.RAWDATA{
 		return traceRawData(tracer,sinfo.FromUuid)
@@ -231,58 +288,6 @@ func doTraceAll(){
 				fmt.Println("|")
 			}
 		}
-	}
-}
-
-func doTrace(){
-	if inpath==""{
-		fmt.Println("use -in to set .csd file full pathname")
-		return
-	}
-	head,err:=core.LoadShareInfoHead(inpath)
-	var sinfo *core.ShareInfo
-	list:=make ([]*core.ShareInfo,0,50)
-	if err==nil{
-		sinfo,err=dbop.LoadShareInfo(head)
-		if err!=nil{
-			fmt.Println("load share info from head error",err)
-			return
-		}
-		for ;sinfo.FromType==core.CSDFILE;{
-			list=append(list,sinfo)
-			sinfo,err=dbop.GetBriefShareInfo(sinfo.FromUuid)
-		}
-
-	}else{
-		fmt.Println("parse csd file error:",err)
-	}
-	list=append(list,sinfo)
-	orgdata,err:=dbop.GetEncDataInfo(sinfo.FromUuid)
-	if err!=nil{
-		fmt.Println("load data from db error:",err)
-		return
-	}
-	dtuser,err:=dbop.GetUserName(orgdata.OwnerId)
-	if err!=nil{
-		fmt.Println("unknown user id :",orgdata.OwnerId)
-		return
-	}
-
-	fmt.Println("--------------------orginal data info-----------------------------")
-	fmt.Println("original file:",orgdata.OrgName,",  owner:",dtuser,", file uuid :",orgdata.Uuid)
-	fmt.Println("\n---------------------file spread info------------------------------")
-	var space=4;
-	for i:=len(list)-1;i>=0;i--{
-		for j:=0;j<space;j++{
-			fmt.Print(" ")
-		}
-		user,err:=dbop.GetUserName(list[i].OwnerId)
-		if err!=nil{
-			fmt.Println("unknown user id :",list[i].OwnerId)
-			return
-		}
-		fmt.Println(user,"-->",list[i].Receivers,"at ",list[i].CrTime,",permission",list[i].Perm,",","uuid:",list[i].Uuid)
-		space+=4;
 	}
 }
 

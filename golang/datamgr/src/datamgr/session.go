@@ -38,7 +38,7 @@ int get_passwd(char *buf,int len)
 import "C"
 var APIServer string="https://127.0.0.1:8080/api/v1/"
 
-func CallHttpAPI(param interface{},ret interface{},entry string)error{
+func HttpAPIPost(param interface{},ret interface{},entry string)error{
 	obj,_:=json.Marshal(param)
 	fmt.Println("Sending:",string(obj))
 	req,err:=http.NewRequest("POST",APIServer+entry,bytes.NewBuffer(obj))
@@ -70,7 +70,7 @@ func doAuth(user string)(*api.ITokenInfo,error){
 	ainfo.Passwd=string(passwd)
 	ainfo.PriMask=0
 	token:=new (api.ITokenInfo)
-	err:=CallHttpAPI(&ainfo,token,"login")
+	err:=HttpAPIPost(&ainfo,token,"login")
 	if err==nil{
 		fmt.Println("call api ok:",token,",data:",token.Data)
 		return token,nil

@@ -259,7 +259,7 @@ func SendMetaToServer(pdata *core.EncryptedData, token string)error{
 	*/
 
     ack:=new (api.IEncDataAck)
-	err:=CallHttpAPI(&encreq,ack,"newdata")
+	err:=HttpAPIPost(&encreq,ack,"newdata")
     if err!=nil{
         fmt.Println("call api error:",err)
     }
@@ -416,9 +416,8 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 		return err
 	}
 	// now we have got a valid csd header, then load info from server
-	sinfo,err:=dbop.LoadShareInfo(head)
-	if(err!=nil){
-		fmt.Println("Load share info from head error:",err)
+	sinfo,err:=GetShareInfoFromHead(head)
+	if err!=nil{
 		return err
 	}
 	sinfo.FileUri=ipath

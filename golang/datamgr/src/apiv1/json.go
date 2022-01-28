@@ -62,3 +62,43 @@ func NewDataAck() *IEncDataAck{
 	eda.Data=data
 	return eda
 }
+
+type ShareInfoReq struct{
+	Token string `json:"token"`
+	Uuid string `json:"uuid"`
+}
+
+type ShareInfoData struct{
+	OwnerId int32 `json:"ownerid"`
+	OwnerName string `json:"ownername"`
+	Descr string `json:"descr"`
+	Perm    int32 `json:"perm"`
+	Receivers []string `json:"receivers"`
+	RcvrIds []int32 `json:"rcvrids"`
+	Expire  string `json:"expire"`
+	MaxUse  int32 `json:"maxuse"`
+	LeftUse int32 `json:"leftuse"`
+	EncKey    string `json:"enckey"`
+	FromType    int `json:"fromtype"`
+	FromUuid    string `json:"fromuuid"`
+	CrTime  string `json:"crtime"`
+	FileUri string `json:"fileuri"`
+	OrgName string `json:"orgname"`
+}
+
+type IShareInfoAck struct{
+	RetStat
+	Data *ShareInfoData `json:"data"`
+}
+
+func NewShareInfoAck()*IShareInfoAck{
+    data:=new (ShareInfoData)
+	data.RcvrIds=[]int32{-1}
+	data.Receivers=[]string{""}
+	ack:=new (IShareInfoAck)
+	ack.Msg="Error Parameter"
+	ack.Data=data
+    return ack
+}
+
+
