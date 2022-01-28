@@ -6,6 +6,7 @@ import(
 	"strings"
 	"errors"
 	"dbop"
+	api "apiv1"
 	core "coredata"
 )
 
@@ -227,5 +228,55 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	sinfo.LeftUse=sinfo.MaxUse
 	//sinfo.Expire=  set it later
 	return nil
+}
+
+func GetShareInfo_API(uuid string)(*api.IShareInfoAck,error){
+	req:=&api.ShareInfoReq{Token:"0",Uuid:uuid}
+	ack:=api.NewShareInfoAck()
+	err:=HttpAPIPost(req,ack,"getshareinfo")
+	if err!=nil{
+		fmt.Println("call getshareinfo error:",err)
+		return nil,err
+	}
+	return ack,nil
+}
+
+func GetShareInfoFromHead(head* core.ShareInfoHeader)(*core.ShareInfo,error){
+	uuid:=string(head.Uuid[:])
+	enckey:=head.EncryptedKey[:]
+	apiack,err:=GetShareInfo_API(uuid)
+	if err!=nil{
+        fmt.Println("GetShareInfo_API error:",err)
+        return nil,err
+	}
+    if apiack.Code!=0{
+        return nil,errors.New(apiack.Msg)
+    }
+	sinfo:=FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
+	return sinfo,nil
+}
+
+func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*core.ShareInfo{
+	sinfo:=new (core.ShareInfo)
+	sinfo.Uuid=uuid
+	sinfo.OwnerId=apidata.OwnerId
+	sinfo.OwnerName=apidata.OwnerName
+	sinfo.Descr=apidata.Descr
+	sinfo.Perm=apidata.Perm
+	sinfo.Receivers=apidata.Receivers
+	sinfo.RcvrIds=apidata.RcvrIds
+	sinfo.Expire=apidata.Expire
+	sinfo.MaxUse=apidata.MaxUse
+	sinfo.LeftUse=apidata.LeftUse
+	sinfo.RandKey=core.StringToBinkey(apidata.EncKey)
+	sinfo.EncryptedKey=encryptedkey
+	sinfo.FromType=apidata.FromType
+	sinfo.FromUuid=apidata.FromUuid
+	sinfo.ContentType=ctype
+	sinfo.IsDir=isdir
+	sinfo.CrTime=apidata.CrTime
+	sinfo.FileUri=apidata.FileUri
+	sinfo.OrgName=apidata.OrgName
+	return sinfo
 }
 
