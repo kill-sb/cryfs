@@ -8,6 +8,7 @@ import(
 	"errors"
 	"strings"
 	"dbop"
+	api "apiv1"
 	core "coredata"
 )
 
@@ -99,7 +100,7 @@ func ListTags(tags[]string){
 func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
 	result:=fmt.Sprintf("\t%d\n\tData Uuid :%s\n",index,data.Uuid)
 	result+=fmt.Sprintf("\tFilename :%s\n",inpath+"/"+data.Uuid)
-	user,err:=dbop.GetUserName(data.OwnerId)
+	user,err:=GetUserName(data.OwnerId)
 	if err==nil{
 		result+=fmt.Sprintf("\tData Owner :%s(%d)\n",user,data.OwnerId)
 	}
@@ -169,7 +170,6 @@ func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error)
 
 
 func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
-	//sinfo,err:=dbop.GetBriefShareInfo(uuid)
 	sifack,err:=GetShareInfo_API(uuid)
 	if err!=nil{
 		fmt.Println("GetShareInfo_API error in traceCSDFile:",err)
@@ -244,7 +244,7 @@ func doTraceAll(){
 func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	result:=fmt.Sprintf("\t%d\n\tShared tag Uuid :%s\n",index,sinfo.Uuid)
 	result+=fmt.Sprintf("\tFilename :%s\n",sinfo.FileUri)
-	user,err:=dbop.GetUserName(sinfo.OwnerId)
+	user,err:=GetUserName(sinfo.OwnerId)
 	if err==nil{
 		result+=fmt.Sprintf("\tShared tag create user :%s(%d)\n",user,sinfo.OwnerId)
 	}
@@ -279,4 +279,28 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	fmt.Print(result)
 	fmt.Println("-----------------------------------------------------------------------")
 	return true
+}
+
+func GetUserName(id int32)(string,error){
+	ids:=[]int32{id}
+	ud,err:=GetUserInfo_API(ids)
+	if err!=nil{
+		return "",err
+	}
+	return ud.Data[0].Name,nil
+}
+
+func GetUserInfo_API(ids []int32)(*api.IUserInfoAck,error){
+	req:=&api.GetUserReq{Token:"0",Id:ids}
+    ack:=api.NewUserInfoAck()
+    err:=HttpAPIPost(req,ack,"getuser")
+    if err!=nil{
+        fmt.Println("call info error:",err)
+        return nil,err
+    }
+	if ack.Code!=0{
+		fmt.Println("request error:",ack.Msg)
+		return nil,errors.New(ack.Msg)
+	}
+    return ack,nil
 }

@@ -94,8 +94,8 @@ type IShareInfoAck struct{
 
 func NewShareInfoAck()*IShareInfoAck{
     data:=new (ShareInfoData)
-	data.RcvrIds=[]int32{-1}
-	data.Receivers=[]string{""}
+	data.RcvrIds=make([]int32,0,20)
+	data.Receivers=make([]string,0,20)
 	ack:=new (IShareInfoAck)
 	ack.Msg="Error Parameter"
 	ack.Data=data
@@ -122,4 +122,34 @@ func NewShareAck() *IShareDataAck{
 	sda.Msg="Invalid parameter"
 	sda.Data=data
 	return sda
+}
+
+type UserInfoData struct{
+	Id int32 `json:"id"`
+	Descr string `json:"descr"`
+	Name string `json:"name"`
+	Mobile string `json:"mobile"`
+	Email string `json:"email"`
+}
+
+type GetUserReq struct{
+	Token string `json:"token"`
+	Id []int32 `json:"ids"`
+}
+
+type SearchUserReq struct{
+	Keyword string `json:"keyword"`
+}
+
+type IUserInfoAck struct{
+	RetStat
+	Data []UserInfoData `json:"data"`
+}
+
+func NewUserInfoAck() *IUserInfoAck{
+	ack:=new (IUserInfoAck)
+	ack.Code=-1
+	ack.Msg="Invalid parameter"
+	ack.Data=make([]UserInfoData,0,20)
+	return ack
 }

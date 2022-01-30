@@ -20,3 +20,7 @@ getshareinfo:
 sharedata:
 	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"c09ef2ba2be3aaf90553304fc3e6f9d8","Data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83123cf","ownerid":2,"ownername":"","descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999:12:31 0:00:00","maxuse":-1,"leftuse":-1,"enckey":"f473653760f74ce9108946711498d925","fromtype":1,"fromuuid":"773b4a93-aa9d-42a6-8b47-46bd89872832","crtime":"2022-01-30 09:21:42","fileuri":"/tmp/tmp/n1.csd","orgname":"TODO"}}' -k https://127.0.0.1:8080/api/v1/sharedata
 	return ok: {"code":0,"message":"OK"}
+
+getuser:
+	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2]}' -k https://127.0.0.1:8080/api/v1/getuser 
+	return ok: {"code":0,"message":"OK","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}

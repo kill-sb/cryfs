@@ -13,13 +13,15 @@ import (
 	core "coredata"
 )
 
-var useridcache map[int32]string
+//var useridcache map[int32]string
 var usernamecache map[string]int32
+var userinfocache map[int32] *api.UserInfoData
 var curdb *sql.DB
 
 func init() {
-	useridcache=make(map[int32]string)
-	usernamecache=make(map[string]int32)
+	//useridcache=make(map[int32]string)
+	userinfocache=make(map[int32] *api.UserInfoData)
+	usernamecache=make(map[string] int32)
 	ConnDB()
 }
 
@@ -91,10 +93,11 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 		if err!=nil{
 			return nil,err
 		}
-		data.OwnerName,err=GetUserName(data.OwnerId)
+		userinfo,err:=GetUserInfo(data.OwnerId)
 		if err!=nil{
 			return nil,err
 		}
+		data.OwnerName=userinfo.Name
 		return data,nil
 	}else{
 		fmt.Println("Can't find ",data.Uuid,"in db")
@@ -135,11 +138,12 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
-		info.OwnerName,err=GetUserName(info.OwnerId)
+		userdata,err:=GetUserInfo(info.OwnerId)
 		if err!=nil{
 			return nil,err
 		}
 
+		info.OwnerName=userdata.Name
 		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
 		if err!=nil{
 			fmt.Println("Parse visitor from db error",err)
@@ -151,110 +155,9 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 		return nil,errors.New("No shared info found in server")
 	}
 }
-
-/*
-func GetBriefShareInfo(uuid string)(*core.ShareInfo,error){
-	db:=GetDB()
-	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,datauuid,perm,fromtype,crtime, orgname from sharetags where uuid='%s'",uuid)
-	res,err:=db.Query(query)
-    if err!=nil{
-        return nil,err
-    }
-    if res.Next(){
-		info:=new (core.ShareInfo)
-		// info.FileUri will be filled outside
-		info.Uuid=uuid
-		var recv string
-        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
-			fmt.Println("query",query,"error:",err)
-			return nil,err
-		}
-		info.OwnerName,err=GetUserName(info.OwnerId)
-		if err!=nil{
-			return nil,err
-		}
-		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
-		if err!=nil{
-			fmt.Println("Parse visitor from db error",err)
-			return nil,err
-		}
-		return info,nil
-
-	}else{
-		return nil,errors.New("No shared info found in server")
-	}
-}
-
-func LoadShareInfo(head *core.ShareInfoHeader)(*core.ShareInfo,error){
-	db:=GetDB()
-	uuid:=string(head.Uuid[:])
-	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname from sharetags where uuid='%s'",uuid)
-   res,err:=db.Query(query)
-    if err!=nil{
-        return nil,err
-    }
-    if res.Next(){
-		info:=new (core.ShareInfo)
-		// info.FileUri will be filled outside
-		info.Uuid=uuid
-		info.IsDir=head.IsDir
-		info.ContentType=int(head.ContentType)
-		var recv,randkey string
-		info.EncryptedKey=make([]byte,16)
-		copy(info.EncryptedKey,head.EncryptedKey[:])
-
-        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&randkey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
-			fmt.Println("query",query,"error:",err)
-			return nil,err
-		}
-		info.OwnerName,err=GetUserName(info.OwnerId)
-		if err!=nil{
-			return nil,err
-		}
-
-		info.RandKey=core.StringToBinkey(randkey)
-		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
-		if err!=nil{
-			fmt.Println("Parse visitor from db error",err)
-			return nil,err
-		}
-		return info,nil
-
-	}else{
-		return nil,errors.New("No shared info found in server")
-	}
-
-}*/
 
 func GetOrgFileName(sinfo *core.ShareInfo)(string,error){
 	return sinfo.OrgName,nil
-/*	from:=sinfo.FromUuid
-	db:=GetDB()
-	for target:=sinfo.FromType;target!=core.RAWDATA;{
-		// referenced from another csd
-		query:=fmt.Sprintf("select datauuid,fromtype from sharetags where uuid='%s'",from)
-		res,err:=db.Query(query)
-		if err!=nil{
-			fmt.Println("GetOrgFileName query ",query,"error:",err)
-			return "",err
-		}
-		if !res.Next(){
-			fmt.Println("GetOrgFileName can't find uuid",from)
-			return "",err
-		}
-		res.Scan(&from,&target)
-	}
-	query:=fmt.Sprintf("select fromobj from efilemeta where uuid='%s'",from)
-	res,err:=db.Query(query)
-	if err!=nil{
-		fmt.Println("GetOrgFileName query", query,"error:",err)
-		return "",err
-	}
-	if res.Next(){
-		res.Scan(&from)
-		return from,nil
-	}
-	return "",errors.New("Can't find org filename")*/
 }
 
 func WriteShareInfo(sinfo *api.ShareInfoData) error{
@@ -282,34 +185,7 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 
 	return nil
 }
-
 /*
-func WriteShareInfo(sinfo *core.ShareInfo) error{
-	db:=GetDB()
-	recvlist:=""
-	query:=""
-	for i,user:=range sinfo.Receivers{
-		if recvlist!=""{
-			recvlist+=","
-		}
-		recvlist+=user
-		query=fmt.Sprintf("insert into shareusers (taguuid,userid) values ('%s',%d)",sinfo.Uuid,sinfo.RcvrIds[i])
-		if _,err:=db.Exec(query);err!=nil{
-			fmt.Println("Insert into shareusers error",err)
-			return err
-		}
-	}
-	recvlist=strings.TrimSpace(recvlist)
-	keystr:=core.BinkeyToString(sinfo.RandKey)
-	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d,'%s','%s')",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName)
-	if _, err := db.Exec(query); err != nil {
-		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
-		return err
-	}
-
-	return nil
-}
-*/
 func GetUserName(uid int32)(string,error){
 	ret,ok:=useridcache[uid]
 	if ok{
@@ -331,7 +207,7 @@ func GetUserName(uid int32)(string,error){
 	return ret,nil
 
 }
-
+*/
 func IsValidUser(user string)(int32,error){
 	ret,ok:=usernamecache[user]
 	if ok{
@@ -349,7 +225,28 @@ func IsValidUser(user string)(int32,error){
 		res.Scan(&ret)
 	}
 	usernamecache[user]=ret
-	useridcache[ret]=user
+	return ret,nil
+}
+
+func GetUserInfo(id int32)(*api.UserInfoData,error){
+	ret,ok:=userinfocache[id]
+	if ok{
+		return ret,nil
+	}
+	ret=new (api.UserInfoData)
+	ret.Id=id
+	db:=GetDB()
+	query:=fmt.Sprintf("select descr,name,mobile,email from users where id=%d",id)
+	res,err:=db.Query(query)
+	if err!=nil{
+		return ret,err
+	}
+	if !res.Next(){
+		return ret,errors.New("No such user ")
+	}else{
+		res.Scan(&ret.Descr,&ret.Name,&ret.Mobile,&ret.Email)
+	}
+	userinfocache[id]=ret
 	return ret,nil
 }
 

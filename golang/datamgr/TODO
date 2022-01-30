@@ -5,3 +5,12 @@
 5. outside tool dir import and log
 6. ----real login server archietecture----
 realize traceback 
+dbop remove: 
+1. dbop.GetUserName
+2. dbop.GetEncDataInfo
+3. dbop.UpdateOpenTimes
+4. dbop.UpdateMeta
+5. dbop.ParseVisitors
+
+logical problem:
+limit time should be readonly
