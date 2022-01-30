@@ -64,7 +64,8 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(token)
 			return
 		}
-		log.Println("login:",ainfo)
+		log.Print("")
+//		log.Println("login:",ainfo)
 //		token.GetUserInfo(&ainfo)
 		// check user/passwd
 		id,shasum,key,err:=dbop.LookupPasswdSHA(ainfo.Name)

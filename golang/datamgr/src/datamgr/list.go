@@ -179,7 +179,7 @@ func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error
 //		fmt.Println("error return value--msg:",sinfo.Msg)
 		return nil,errors.New(sifack.Msg)
 	}
-	sinfo:=FillShareInfo(sifack.Data,uuid,0,0,nil)
+	sinfo:=core.FillShareInfo(sifack.Data,uuid,0,0,nil)
 	tracer=append(tracer,sinfo)
 	if sinfo.FromType==core.RAWDATA{
 		return traceRawData(tracer,sinfo.FromUuid)

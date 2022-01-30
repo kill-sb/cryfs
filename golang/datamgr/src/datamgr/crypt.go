@@ -9,7 +9,6 @@ import(
 	"errors"
 	"os/exec"
 	"strings"
-	"dbop"
 	api "apiv1"
 	core "coredata"
 )
@@ -236,7 +235,6 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 }
 
 func SendMetaToServer(pdata *core.EncryptedData, token string)error{
-//	dbop.SaveMeta(pdata)
 	encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,EncKey:core.BinkeyToString(pdata.EncryptingKey),OrgName:pdata.OrgName}
 	/*
 	obj,_:=json.Marshal(&encreq)
@@ -289,17 +287,6 @@ func RecordMetaFromRaw_API(pdata *core.EncryptedData ,keylocalkey []byte, passwd
 	SendMetaToServer(pdata,token)
 	return nil
 }
-/*
-func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string)error{
-	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
-	// RecordLocal && Record Remote
-	savedkey:=make([]byte,128/8)
-	DoEncodeInC(passwd , keylocalkey ,savedkey,128/8)
-	SaveLocalFileTag(pdata,savedkey)
-	dbop.SaveMeta(pdata)
-	return nil
-}
-*/
 
 func GetFileName(ipath string)(string,error){
 	finfo,err:=os.Stat(ipath)
@@ -628,8 +615,7 @@ func doSep(){
 	io.Copy(efile,ifile)
 	SaveLocalFileTag(dst,dtag.EKey[:])
 
-  //  SendMetaToServer(dst)
-	dbop.SaveMeta(dst)
+    SendMetaToServer(dst,linfo.Token)
 
 	fmt.Println(dst.Uuid,"seperated ok")
 }

@@ -79,38 +79,6 @@ func doAuth(user string)(*api.ITokenInfo,error){
 		return nil,err
 	}
 }
-/*
-func do_login(user string, passwd []byte)(*core.LoginInfo,error){
-	if id,shasum,key,err:=dbop.LookupPasswdSHA(user);err!=nil{
-		return nil,err
-	}else{
-		sharet:=sha256.Sum256(passwd)
-		shastr:=""
-		for _,ch:=range sharet{
-			shastr=fmt.Sprintf("%s%02x",shastr,ch)
-		}
-//		fmt.Printf("login info: sharet %s, sha in db: %s\n",shastr,shasum)
-		if	shastr==shasum{
-			linfo:=&core.LoginInfo{Name:user,Id:id}
-			linfo.Keylocalkey=core.StringToBinkey(key)
-			return linfo,nil
-		}
-	}
-	return nil,errors.New("Auth error")
-}
-func (linfo* LoginInfo)GetRawKey(src []byte)([]byte, error){
-	if(linfo.Keylocalkey!=nil && len(linfo.Keylocalkey)!=0){
-		srclen:=len(src)
-		dst:=make([]byte,srclen)
-		csrc:=(*C.char)(unsafe.Pointer(&src[0]))
-		cdst:=(*C.char)(unsafe.Pointer(&dst[0]))
-		cpasswd:=(*C.char)(unsafe.Pointer(&linfo.Keylocalkey[0]))
-		C.decode(csrc,cpasswd,cdst,srclen)
-		return dst,nil
-	}
-	return nil,errors.New("Load key for decrypt localkey error")
-}
-*/
 
 func Login(user string)(*core.LoginInfo, error){
 	token,err:=doAuth(user)

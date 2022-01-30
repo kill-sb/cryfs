@@ -80,7 +80,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 		LoadShareInfoConfig(sinfo)
 	}
 	sinfo.CrTime=core.GetCurTime()
-	err=dbop.WriteShareInfo(sinfo)
+	err=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
 		fmt.Println(err)
 		return
@@ -180,7 +180,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		LoadShareInfoConfig(sinfo)
 	}
 	sinfo.CrTime=core.GetCurTime()
-	err=dbop.WriteShareInfo(sinfo)
+	err=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
 		fmt.Println(err)
 		return err
@@ -252,31 +252,50 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader)(*core.ShareInfo,error){
     if apiack.Code!=0{
         return nil,errors.New(apiack.Msg)
     }
-	sinfo:=FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
+	sinfo:=core.FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
 	return sinfo,nil
 }
 
-func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*core.ShareInfo{
-	sinfo:=new (core.ShareInfo)
-	sinfo.Uuid=uuid
-	sinfo.OwnerId=apidata.OwnerId
-	sinfo.OwnerName=apidata.OwnerName
-	sinfo.Descr=apidata.Descr
-	sinfo.Perm=apidata.Perm
-	sinfo.Receivers=apidata.Receivers
-	sinfo.RcvrIds=apidata.RcvrIds
-	sinfo.Expire=apidata.Expire
-	sinfo.MaxUse=apidata.MaxUse
-	sinfo.LeftUse=apidata.LeftUse
-	sinfo.RandKey=core.StringToBinkey(apidata.EncKey)
-	sinfo.EncryptedKey=encryptedkey
-	sinfo.FromType=apidata.FromType
-	sinfo.FromUuid=apidata.FromUuid
-	sinfo.ContentType=ctype
-	sinfo.IsDir=isdir
-	sinfo.CrTime=apidata.CrTime
-	sinfo.FileUri=apidata.FileUri
-	sinfo.OrgName=apidata.OrgName
-	return sinfo
+func WriteShareInfo(token string, sinfo* core.ShareInfo)error{
+	ack,err:=ShareData_API(token,sinfo)
+	if err!=nil{
+		return err
+	}
+	if ack!=nil && ack.Code!=0{
+		return errors.New(ack.Msg)
+	}
+	return nil
 }
 
+func ShareData_API(token string,sinfo *core.ShareInfo)(*api.IShareDataAck,error){
+	data:=FillShareReqData(sinfo)
+	req:=&api.ShareDataReq{Token:token,Data:data}
+	ack:=api.NewShareAck()
+	err:=HttpAPIPost(req,ack,"sharedata")
+	if err!=nil{
+		fmt.Println("call getshareinfo error:",err)
+		return nil,err
+	}
+	return ack,nil
+}
+
+func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
+	asi:=new (api.ShareInfoData)
+	asi.Uuid=sinfo.Uuid
+    asi.OwnerId=sinfo.OwnerId
+    asi.OwnerName=sinfo.OwnerName
+    asi.Descr=sinfo.Descr
+    asi.Perm=sinfo.Perm
+    asi.Receivers=sinfo.Receivers
+    asi.RcvrIds=sinfo.RcvrIds
+    asi.Expire=sinfo.Expire
+    asi.MaxUse=sinfo.MaxUse
+    asi.LeftUse=sinfo.LeftUse
+    asi.EncKey=core.BinkeyToString(sinfo.EncryptedKey)
+    asi.FromType=sinfo.FromType
+    asi.FromUuid=sinfo.FromUuid
+    asi.CrTime=sinfo.CrTime
+    asi.FileUri=sinfo.FileUri
+    asi.OrgName=sinfo.OrgName
+	return asi
+}

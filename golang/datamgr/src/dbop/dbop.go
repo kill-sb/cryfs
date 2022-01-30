@@ -130,6 +130,7 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 		// info.FileUri will be filled outside
 		var recv string
 
+		info.Uuid=uuid
         if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&info.EncKey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
 			fmt.Println("query",query,"error:",err)
 			return nil,err
@@ -256,6 +257,33 @@ func GetOrgFileName(sinfo *core.ShareInfo)(string,error){
 	return "",errors.New("Can't find org filename")*/
 }
 
+func WriteShareInfo(sinfo *api.ShareInfoData) error{
+	db:=GetDB()
+	recvlist:=""
+	query:=""
+	for i,user:=range sinfo.Receivers{
+		if recvlist!=""{
+			recvlist+=","
+		}
+		recvlist+=user
+		query=fmt.Sprintf("insert into shareusers (taguuid,userid) values ('%s',%d)",sinfo.Uuid,sinfo.RcvrIds[i])
+		if _,err:=db.Exec(query);err!=nil{
+			fmt.Println("Insert into shareusers error",err)
+			return err
+		}
+	}
+	recvlist=strings.TrimSpace(recvlist)
+	keystr:=sinfo.EncKey
+	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname) values ('%s',%d,'%s','%s',%d,%d,'%s','%s',%d,%d,'%s','%s')",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,sinfo.LeftUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName)
+	if _, err := db.Exec(query); err != nil {
+		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
+		return err
+	}
+
+	return nil
+}
+
+/*
 func WriteShareInfo(sinfo *core.ShareInfo) error{
 	db:=GetDB()
 	recvlist:=""
@@ -281,7 +309,7 @@ func WriteShareInfo(sinfo *core.ShareInfo) error{
 
 	return nil
 }
-
+*/
 func GetUserName(uid int32)(string,error){
 	ret,ok:=useridcache[uid]
 	if ok{

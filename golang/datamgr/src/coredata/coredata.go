@@ -12,6 +12,7 @@ import (
 	"strings"
 	"fmt"
 	"os"
+	api "apiv1"
 )
 
 const (
@@ -460,3 +461,26 @@ func (info *LoginInfo) Logout() error{
     return  nil
 }
 
+func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*ShareInfo{
+    sinfo:=new (ShareInfo)
+    sinfo.Uuid=uuid
+    sinfo.OwnerId=apidata.OwnerId
+    sinfo.OwnerName=apidata.OwnerName
+    sinfo.Descr=apidata.Descr
+    sinfo.Perm=apidata.Perm
+    sinfo.Receivers=apidata.Receivers
+    sinfo.RcvrIds=apidata.RcvrIds
+    sinfo.Expire=apidata.Expire
+    sinfo.MaxUse=apidata.MaxUse
+    sinfo.LeftUse=apidata.LeftUse
+    sinfo.RandKey=StringToBinkey(apidata.EncKey)
+    sinfo.EncryptedKey=encryptedkey
+    sinfo.FromType=apidata.FromType
+    sinfo.FromUuid=apidata.FromUuid
+    sinfo.ContentType=ctype
+    sinfo.IsDir=isdir
+    sinfo.CrTime=apidata.CrTime
+    sinfo.FileUri=apidata.FileUri
+    sinfo.OrgName=apidata.OrgName
+    return sinfo
+}

@@ -69,6 +69,7 @@ type ShareInfoReq struct{
 }
 
 type ShareInfoData struct{
+	Uuid string `json:"uuid"`
 	OwnerId int32 `json:"ownerid"`
 	OwnerName string `json:"ownername"`
 	Descr string `json:"descr"`
@@ -101,4 +102,24 @@ func NewShareInfoAck()*IShareInfoAck{
     return ack
 }
 
+type ShareDataReq struct{
+	Token string `json:"token"`
+	Data *ShareInfoData `json:"Data"`
+}
 
+type ShareDataAck struct{
+}
+
+type IShareDataAck struct{
+	RetStat
+	Data *ShareDataAck `json:"data"`
+}
+
+func NewShareAck() *IShareDataAck{
+	data:=new (ShareDataAck)
+	sda:=new (IShareDataAck)
+	sda.Code=-1
+	sda.Msg="Invalid parameter"
+	sda.Data=data
+	return sda
+}
