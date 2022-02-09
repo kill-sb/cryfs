@@ -5,7 +5,6 @@ import(
 	"os"
 	"strings"
 	"errors"
-	"dbop"
 	api "apiv1"
 	core "coredata"
 )
@@ -201,13 +200,31 @@ func LoadShareInfoConfig(sinfo* core.ShareInfo) error{
 	return nil
 }
 
+
+func GetVisitors(recvlist string) ([]string,[]int32,error){
+    strret:=strings.Split(recvlist,",")
+	uinfo,err:=FindUserName_API(strret)
+	if err!=nil{
+		return nil,nil,err
+	}
+	intret:=make([]int32,0,len(strret))
+	for  _,v:=range uinfo.Data{
+		if v.Id!=-1{
+			intret=append(intret,v.Id)
+		}else{
+			return nil,nil,errors.New(fmt.Sprintf("Name:%s not found",v.Name))
+		}
+	}
+    return strret,intret,nil
+}
+
 func InputShareInfo(sinfo *core.ShareInfo) error{
 	// fill: descr,perm,expire,maxuse/leftuse
 	var recvlist string
 	fmt.Println("\nInput receivers(seperate with ','):")
 	fmt.Scanf("%s",&recvlist)
 	var err error
-	sinfo.Receivers,sinfo.RcvrIds,err=dbop.ParseVisitors(recvlist)
+	sinfo.Receivers,sinfo.RcvrIds,err=GetVisitors(recvlist)
 	if err!=nil{
 		fmt.Println("Get receivers error:",err)
 		return err

@@ -14,14 +14,14 @@ import (
 )
 
 //var useridcache map[int32]string
-var usernamecache map[string]int32
+var usernamecache map[string] *api.UserInfoData
 var userinfocache map[int32] *api.UserInfoData
 var curdb *sql.DB
 
 func init() {
 	//useridcache=make(map[int32]string)
 	userinfocache=make(map[int32] *api.UserInfoData)
-	usernamecache=make(map[string] int32)
+	usernamecache=make(map[string] *api.UserInfoData)
 	ConnDB()
 }
 
@@ -209,10 +209,7 @@ func GetUserName(uid int32)(string,error){
 }
 */
 func IsValidUser(user string)(int32,error){
-	ret,ok:=usernamecache[user]
-	if ok{
-		return ret,nil
-	}
+	var ret int32 =-1
 	db:=GetDB()
 	query:=fmt.Sprintf("select id from users where name='%s'",user)
 	res,err:=db.Query(query)
@@ -224,7 +221,31 @@ func IsValidUser(user string)(int32,error){
 	}else{
 		res.Scan(&ret)
 	}
-	usernamecache[user]=ret
+	return ret,nil
+}
+
+func GetUserInfoByName(name string)(*api.UserInfoData,error){
+	ret,ok:=usernamecache[name]
+	if ok{
+		return ret,nil
+	}
+	ret=new (api.UserInfoData)
+	ret.Name=name
+	db:=GetDB()
+	query:=fmt.Sprintf("select descr,id,mobile,email from users where name='%s'",name)
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("Query error:",err)
+		return ret,err
+	}
+	if !res.Next(){
+		ret.Id=-1
+		fmt.Println("error",err)
+		return ret,nil
+	}else{
+		res.Scan(&ret.Descr,&ret.Id,&ret.Mobile,&ret.Email)
+	}
+	usernamecache[name]=ret
 	return ret,nil
 }
 

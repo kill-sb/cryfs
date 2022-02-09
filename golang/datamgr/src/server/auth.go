@@ -68,6 +68,7 @@ func SetupHandler(cfg *ServerConfig) error{
 	prefix:="/api/"+cfg.Version+"/"
 	http.HandleFunc(prefix+"login",LoginFunc) // POST
 	http.HandleFunc(prefix+"getuser",GetUserFunc) // GET
+	http.HandleFunc(prefix+"findusername",FindUserNameFunc) // GET
 	http.HandleFunc(prefix+"newdata",NewDataFunc) // POST
 	http.HandleFunc(prefix+"getshareinfo",GetShareInfoFunc) // GET
 	http.HandleFunc(prefix+"sharedata",ShareDataFunc) // POST

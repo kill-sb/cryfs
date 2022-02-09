@@ -133,5 +133,43 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 	}else{
 		http.NotFound(w,r)
 	}
+}
+
+func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		usrack:=api.NewUserInfoAck()
+		w.Header().Set("Content-Type","application/json")
+		var usrreq api.FindUserNameReq
+		err:=json.NewDecoder(r.Body).Decode(&usrreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(usrack)
+			return
+		}
+		/*
+		_,err=GetLoginUserInfo(sifreq.Token)
+        if err!=nil{
+            sifack.Code=1
+            sifack.Msg="You should login first"
+            json.NewEncoder(w).Encode(sifack)
+            return
+        }*/
+		usrack.Code=0
+		usrack.Msg="OK"
+		for _,v:=range usrreq.Name{
+			usr,err:=dbop.GetUserInfoByName(v)
+			if err!=nil{
+				usrack.Code=3
+				usrack.Msg=fmt.Sprintf("search user %s error: %s",v,err.Error())
+				break
+			}else{
+				log.Println(usr.Name,usr.Id)
+				usrack.Data=append(usrack.Data,*usr)
+			}
+		}
+		json.NewEncoder(w).Encode(usrack)
+	}else{
+		http.NotFound(w,r)
+	}
 
 }

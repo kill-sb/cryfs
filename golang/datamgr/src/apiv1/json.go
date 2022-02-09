@@ -139,7 +139,7 @@ type GetUserReq struct{
 
 type SearchUserReq struct{
 	Keyword string `json:"keyword"`
-}
+} // for context search
 
 type IUserInfoAck struct{
 	RetStat
@@ -152,4 +152,9 @@ func NewUserInfoAck() *IUserInfoAck{
 	ack.Msg="Invalid parameter"
 	ack.Data=make([]UserInfoData,0,20)
 	return ack
+}
+
+type FindUserNameReq struct{
+	Token string `json:"token"`
+	Name []string `json:"names"`
 }

@@ -295,7 +295,7 @@ func GetUserInfo_API(ids []int32)(*api.IUserInfoAck,error){
     ack:=api.NewUserInfoAck()
     err:=HttpAPIPost(req,ack,"getuser")
     if err!=nil{
-        fmt.Println("call info error:",err)
+        fmt.Println("call api info error:",err)
         return nil,err
     }
 	if ack.Code!=0{
@@ -303,4 +303,23 @@ func GetUserInfo_API(ids []int32)(*api.IUserInfoAck,error){
 		return nil,errors.New(ack.Msg)
 	}
     return ack,nil
+}
+
+func FindUserName_API(names []string)(*api.IUserInfoAck,error){
+	req:=&api.FindUserNameReq{Token:"0",Name:names}
+	ack:=api.NewUserInfoAck()
+	err:=HttpAPIPost(req,ack,"findusername")
+	if err!=nil{
+		fmt.Println("call api info error:",err)
+		return nil,err
+	}
+	if ack.Code!=0{
+		fmt.Println("request error:",ack.Msg)
+		return nil,errors.New(ack.Msg)
+	}
+	fmt.Println("listing result:")
+	for _,v:=range ack.Data{
+		fmt.Println(v.Id,v.Name)
+	}
+	return ack,nil
 }
