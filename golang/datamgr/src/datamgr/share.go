@@ -306,7 +306,7 @@ func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
     asi.Expire=sinfo.Expire
     asi.MaxUse=sinfo.MaxUse
     asi.LeftUse=sinfo.LeftUse
-    asi.EncKey=core.BinkeyToString(sinfo.EncryptedKey)
+    asi.EncKey=core.BinkeyToString(sinfo.RandKey)
     asi.FromType=sinfo.FromType
     asi.FromUuid=sinfo.FromUuid
     asi.CrTime=sinfo.CrTime
