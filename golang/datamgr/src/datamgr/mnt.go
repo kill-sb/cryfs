@@ -33,6 +33,7 @@ import(
 	"strings"
 	"errors"
 	"dbop"
+	api "apiv1"
 	core "coredata"
 )
 
@@ -467,17 +468,34 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 		fmt.Println("Create pod error:",err)
 		return err
 	}
-	UpdateMetaInfo(ipath,tag,dinfo)
-	return nil
+	err=UpdateMetaInfo(ipath,tag,dinfo,linfo)
+	if err!=nil{
+		fmt.Println("UpdateMetaInfo error:",err)
+//		return err
+	}
+	return err
 }
 
-func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData)error{
+func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, linfo *core.LoginInfo)error{
 	dinfo.HashMd5,_=GetFileMd5(ipath)
     for i,j:=range []byte(dinfo.HashMd5){
         tag.Md5Sum[i]=j
     }
     tag.Time=time.Now().Unix()
 	tag.SaveTagToDisk(strings.TrimSuffix(ipath,".tag")+".tag")
-	return dbop.UpdateMeta(dinfo)
+	return UpdateDataInfo_API(dinfo,linfo)
+	//return dbop.UpdateMeta(dinfo)
 }
 
+func UpdateDataInfo_API(dinfo *core.EncryptedData,linfo *core.LoginInfo) error{
+	upreq:=api.UpdateDataInfoReq{Token:linfo.Token,Uuid:dinfo.Uuid,Hash256:dinfo.HashMd5}
+	ack:=new (api.IUpdateDataAck)
+	err:=HttpAPIPost(&upreq,ack,"updatedata")
+	if err!=nil{
+		return err
+	}
+	if ack.Code!=0{
+		return errors.New(ack.Msg)
+	}
+	return nil
+}

@@ -33,3 +33,10 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d"}' -k https://127.0.0.1:8080/api/v1/getdatainfo
 	return ok: {"code":0,"message":"OK","data":{"uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","descr":"","fromtype":0,"fromobj":"Makefile","ownerid":1,"sha256":"","isdir":0,"orgname":"Makefile","crtime":"2022-02-10 15:05:23"}}
 
+8. updatedata:
+	login first (curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	login return ({"code":0,"message":"OK","data":{"id":1,"token":"2ea0428c6254a6b4e568fbfa0360980b","key":"4a62cf6ee3f8d889e65af1cc271f20fa"}})
+
+	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"2ea0428c6254a6b4e568fbfa0360980b","uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","sha256":"xxx"}'  -k https://127.0.0.1:8080/api/v1/updatedata
+	return ok: {"code":0,"message":"OK"}
+

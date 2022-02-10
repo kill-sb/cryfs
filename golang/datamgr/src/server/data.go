@@ -172,3 +172,50 @@ func ShareDataFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+func UpdateDataFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		udack:=api.NewUpdateDataAck()
+		w.Header().Set("Content-Type","application/json")
+		var udreq api.UpdateDataInfoReq
+		err:=json.NewDecoder(r.Body).Decode(&udreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(udack)
+			return
+		}
+		luinfo,err:=GetLoginUserInfo(udreq.Token)
+		if err!=nil{
+			udack.Code=1
+			udack.Msg=err.Error()
+			json.NewEncoder(w).Encode(udack)
+			return
+		}
+		dinfo,err:=dbop.GetEncDataInfo(udreq.Uuid)
+		if err!=nil{
+			udack.Code=2
+			udack.Msg=err.Error()
+			json.NewEncoder(w).Encode(udack)
+			return
+		}
+		if luinfo.Id!=dinfo.OwnerId{
+			udack.Code=2
+			udack.Msg="Invalid user"
+			json.NewEncoder(w).Encode(udack)
+			return
+		}
+
+		// user info checked ok
+		// reference crypt.go:dbop.SaveMeta
+		if err=dbop.UpdateMeta(&udreq);err!=nil{
+			udack.Code=1
+			udack.Msg=err.Error()
+		}else{
+			udack.Code=0
+			udack.Msg="OK"
+		}
+		json.NewEncoder(w).Encode(udack)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+

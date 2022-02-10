@@ -106,21 +106,21 @@ type ShareDataReq struct{
 	Token string `json:"token"`
 	Data *ShareInfoData `json:"Data"`
 }
-
+/*
 type ShareDataAck struct{
 }
-
+*/
 type IShareDataAck struct{
 	RetStat
-	Data *ShareDataAck `json:"data"`
+//	Data *ShareDataAck `json:"data"`
 }
 
 func NewShareAck() *IShareDataAck{
-	data:=new (ShareDataAck)
+//	data:=new (ShareDataAck)
 	sda:=new (IShareDataAck)
 	sda.Code=-1
 	sda.Msg="Invalid parameter"
-	sda.Data=data
+//	sda.Data=data
 	return sda
 }
 
@@ -162,6 +162,23 @@ type FindUserNameReq struct{
 type GetDataInfoReq struct{
 	Token string `json:"token"`
 	Uuid string `json:"uuid"`
+}
+
+type UpdateDataInfoReq struct{
+	Token string `json:"token"`
+	Uuid string `json:"uuid"`
+	Hash256	string `json:"sha256"`
+}
+
+type IUpdateDataAck struct{
+	RetStat
+}
+
+func NewUpdateDataAck()*IUpdateDataAck{
+	ack:=new (IUpdateDataAck)
+	ack.Code=-1
+	ack.Msg="Invalid parameter"
+	return ack
 }
 
 type EncDataInfo struct{

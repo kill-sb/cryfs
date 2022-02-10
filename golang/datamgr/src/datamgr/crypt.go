@@ -236,31 +236,14 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 
 func SendMetaToServer(pdata *core.EncryptedData, token string)error{
 	encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,EncKey:core.BinkeyToString(pdata.EncryptingKey),OrgName:pdata.OrgName}
-	/*
-	obj,_:=json.Marshal(&encreq)
-    req,err:=http.NewRequest("POST",APIServer+"newdata",bytes.NewBuffer(obj))
-    if err!=nil{
-        fmt.Println("New request error:",err)
-        return err
-    }
-    req.Header.Set("Content-Type","application/json")
-    tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:true}}
-    client:=&http.Client{Transport:tr, Timeout:time.Second*5}
-    resp,err:=client.Do(req)
-    if err!=nil{
-        fmt.Println("client do req error:",err)
-        return err
-    }
-    defer resp.Body.Close()
-    ack:=new (api.IEncDataAck)
-    err= json.NewDecoder(resp.Body).Decode(ack)
-	*/
-
     ack:=new (api.IEncDataAck)
 	err:=HttpAPIPost(&encreq,ack,"newdata")
     if err!=nil{
         fmt.Println("call api error:",err)
     }
+	if ack.Code!=0{
+		return errors.New(ack.Msg)
+	}
 	return err
 }
 

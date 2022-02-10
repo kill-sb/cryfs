@@ -67,6 +67,17 @@ func SaveMeta(pdata *core.EncryptedData) error{
 	return nil
 }
 
+func UpdateMeta(pdata *api.UpdateDataInfoReq) error{
+	db:=GetDB()
+	query:=fmt.Sprintf("update efilemeta set hashmd5='%s' where uuid='%s'",pdata.Hash256,pdata.Uuid)
+	if _, err := db.Exec(query); err != nil {
+		fmt.Println("Update encrypted data info db error:", err)
+		return err
+	}
+	return nil
+}
+
+/*
 func UpdateMeta(pdata *core.EncryptedData) error{
 	db:=GetDB()
 	query:=fmt.Sprintf("update efilemeta set hashmd5='%s' where uuid='%s'",pdata.HashMd5,pdata.Uuid)
@@ -76,7 +87,7 @@ func UpdateMeta(pdata *core.EncryptedData) error{
 	}
 	return nil
 }
-
+*/
 
 func GetEncDataInfo_tmp(uuid string)(*core.EncryptedData,error){
 	db:=GetDB()

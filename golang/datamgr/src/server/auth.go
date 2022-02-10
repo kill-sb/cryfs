@@ -74,6 +74,7 @@ func SetupHandler(cfg *ServerConfig) error{
 	http.HandleFunc(prefix+"sharedata",ShareDataFunc) // POST
 	http.HandleFunc(prefix+"getdatainfo",GetDataInfoFunc) // GET
 	http.HandleFunc(prefix+"traceback",TraceBackFunc) // GET
+	http.HandleFunc(prefix+"updatedata",UpdateDataFunc) // GET
 	http.HandleFunc(prefix+"traceforward",TraceForwardFunc) // GET
 
 	return nil
