@@ -158,3 +158,34 @@ type FindUserNameReq struct{
 	Token string `json:"token"`
 	Name []string `json:"names"`
 }
+
+type GetDataInfoReq struct{
+	Token string `json:"token"`
+	Uuid string `json:"uuid"`
+}
+
+type EncDataInfo struct{
+	Uuid string `json:"uuid"`
+	Descr string `json:"descr"`
+	FromType int	`json:"fromtype"`
+	FromObj	string	`json:"fromobj"`
+	OwnerId	int32	`json:"ownerid"`
+	Hash256	string	`json:"sha256"`
+	IsDir	byte	`json:"isdir"`
+	OrgName	string	`json:"orgname"`
+	CrTime string	`json:"crtime"`
+}
+
+type IDataInfoAck struct{
+	RetStat
+	Data *EncDataInfo	`json:"data"`
+}
+
+func NewDataInfoAck() *IDataInfoAck{
+	data:=new (EncDataInfo)
+	dia:=new (IDataInfoAck)
+	dia.Code=-1
+	dia.Msg="Invalid parameter"
+	dia.Data=data
+	return dia
+}

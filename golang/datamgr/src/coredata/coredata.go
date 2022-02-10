@@ -484,3 +484,17 @@ func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int,
     sinfo.OrgName=apidata.OrgName
     return sinfo
 }
+
+func FillEncDataInfo(adata *api.EncDataInfo)*EncryptedData{
+    sinfo:=new (EncryptedData)
+    sinfo.Uuid=adata.Uuid
+    sinfo.OwnerId=adata.OwnerId
+    sinfo.Descr=adata.Descr
+    sinfo.FromType=adata.FromType
+    sinfo.FromObj=adata.FromObj
+    sinfo.HashMd5=adata.Hash256
+    sinfo.IsDir=adata.IsDir
+    sinfo.CrTime=adata.CrTime
+    sinfo.OrgName=adata.OrgName
+    return sinfo
+}

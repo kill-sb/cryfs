@@ -77,7 +77,8 @@ func UpdateMeta(pdata *core.EncryptedData) error{
 	return nil
 }
 
-func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
+
+func GetEncDataInfo_tmp(uuid string)(*core.EncryptedData,error){
 	db:=GetDB()
 
 	data:=new (core.EncryptedData)
@@ -98,6 +99,30 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 			return nil,err
 		}
 		data.OwnerName=userinfo.Name
+		return data,nil
+	}else{
+		fmt.Println("Can't find ",data.Uuid,"in db")
+		return nil,errors.New("Cant find raw data in db")
+	}
+}
+
+
+func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
+	db:=GetDB()
+
+	data:=new (api.EncDataInfo)
+	data.Uuid=uuid
+	query:=fmt.Sprintf("select descr,fromtype,fromobj,ownerid,hashmd5,isdir,orgname,crtime from efilemeta where uuid='%s'",uuid)
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("select from efilemeta error:",err)
+		return nil,err
+	}
+	if res.Next(){
+		err=res.Scan(&data.Descr,&data.FromType,&data.FromObj,&data.OwnerId,&data.Hash256,&data.IsDir,&data.OrgName,&data.CrTime)
+		if err!=nil{
+			return nil,err
+		}
 		return data,nil
 	}else{
 		fmt.Println("Can't find ",data.Uuid,"in db")

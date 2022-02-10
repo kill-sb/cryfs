@@ -60,7 +60,40 @@ func NewDataFunc(w http.ResponseWriter, r *http.Request){
 }
 
 func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		ifack:=api.NewDataInfoAck()
+		w.Header().Set("Content-Type","application/json")
+		var difreq api.GetDataInfoReq
+		err:=json.NewDecoder(r.Body).Decode(&difreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(ifack)
+			return
+		}
+		/*
+		_,err=GetLoginUserInfo(sifreq.Token)
+        if err!=nil{
+            sifack.Code=1
+            sifack.Msg="You should login first"
+            json.NewEncoder(w).Encode(sifack)
+            return
+        }*/
+
+		retdata,err:=dbop.GetEncDataInfo(difreq.Uuid)
+		if err!=nil{
+			ifack.Code=2
+			ifack.Msg=err.Error()
+		}else{
+			ifack.Code=0
+			ifack.Msg="OK"
+			ifack.Data=retdata
+		}
+        json.NewEncoder(w).Encode(ifack)
+	}else{
+		http.NotFound(w,r)
+	}
 }
+
 
 func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 	//if r.Method=="GET"{

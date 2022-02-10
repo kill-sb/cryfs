@@ -7,7 +7,7 @@ import(
 	"os"
 	"errors"
 	"strings"
-	"dbop"
+//	"dbop"
 	api "apiv1"
 	core "coredata"
 )
@@ -150,9 +150,36 @@ func ListCSDs(csds[]string){
     }
 }
 
+func GetDataInfo_API(uuid string)(*api.IDataInfoAck,error){
+	req:=&api.GetDataInfoReq{Token:"0",Uuid:uuid}
+	ack:=api.NewDataInfoAck()
+	err:=HttpAPIPost(req,ack,"getdatainfo")
+	if err!=nil{
+		fmt.Println("call api info error:",err)
+		return nil,err
+	}
+	if ack.Code!=0{
+		fmt.Println("request error:",ack.Msg)
+		return nil,errors.New(ack.Msg)
+	}
+	return ack,nil
+}
+
+func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
+	ainfo,err:=GetDataInfo_API(uuid)
+	if err!=nil{
+		return nil,err
+	}
+	if ainfo.Code!=0{
+		return nil,errors.New(ainfo.Msg)
+	}
+	return core.FillEncDataInfo(ainfo.Data),nil
+}
+
 func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error){
 	// RAW DATA
-	dinfo,err:=dbop.GetEncDataInfo(uuid)
+	dinfo,err:=GetEncDataInfo(uuid)
+//	dinfo,err:=dbop.GetEncDataInfo_tmp(uuid)
 	if err!=nil{
 		fmt.Println("GetEncDataInfo error in traceRAWDATA:",err)
 		return nil,err
@@ -317,9 +344,10 @@ func FindUserName_API(names []string)(*api.IUserInfoAck,error){
 		fmt.Println("request error:",ack.Msg)
 		return nil,errors.New(ack.Msg)
 	}
+	/*
 	fmt.Println("listing result:")
 	for _,v:=range ack.Data{
 		fmt.Println(v.Id,v.Name)
-	}
+	}*/
 	return ack,nil
 }
