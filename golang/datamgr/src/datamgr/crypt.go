@@ -386,7 +386,7 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 		return err
 	}
 	// now we have got a valid csd header, then load info from server
-	sinfo,err:=GetShareInfoFromHead(head)
+	sinfo,err:=GetShareInfoFromHead(head,linfo)
 	if err!=nil{
 		return err
 	}

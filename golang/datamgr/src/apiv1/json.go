@@ -66,6 +66,7 @@ func NewDataAck() *IEncDataAck{
 type ShareInfoReq struct{
 	Token string `json:"token"`
 	Uuid string `json:"uuid"`
+	NeedKey byte	`json:"needkey"`
 }
 
 type ShareInfoData struct{

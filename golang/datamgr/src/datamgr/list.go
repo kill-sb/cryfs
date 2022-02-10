@@ -7,7 +7,6 @@ import(
 	"os"
 	"errors"
 	"strings"
-//	"dbop"
 	api "apiv1"
 	core "coredata"
 )
@@ -134,7 +133,7 @@ func ListCSDs(csds[]string){
     for _,csd:=range csds{
 		head,err:=core.LoadShareInfoHead(csd)
 		if err==nil{
-			sinfo,err:=GetShareInfoFromHead(head)
+			sinfo,err:=GetShareInfoFromHead(head,nil)
             if err==nil{
 				sinfo.FileUri=csd
 		//		fmt.Printf("\t%d\n",i+1)
@@ -197,9 +196,9 @@ func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error)
 
 
 func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
-	sifack,err:=GetShareInfo_API(uuid)
+	sifack,err:=GetShareInfo_Public_API(uuid)
 	if err!=nil{
-		fmt.Println("GetShareInfo_API error in traceCSDFile:",err)
+		fmt.Println("GetShareInfo_Public_API error in traceCSDFile:",err)
 		return nil,err
 	}
 	if sifack.Code!=0{

@@ -32,7 +32,6 @@ import(
 	"unsafe"
 	"strings"
 	"errors"
-	"dbop"
 	api "apiv1"
 	core "coredata"
 )
@@ -282,7 +281,7 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			fmt.Println("Load share info head in MountFile error:",err)
 			return err
 		}
-		sinfo,err:=GetShareInfoFromHead(head)
+		sinfo,err:=GetShareInfoFromHead(head,linfo)
 		if err!=nil{
 			fmt.Println("Load share info from head error:",err)
 			return err
@@ -314,10 +313,10 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 		}
 
 		// check left time
-		if sinfo.LeftUse==0{
+/*		if sinfo.LeftUse==0{
 			fmt.Printf("The max open times(%d) has been exhausted\n",sinfo.MaxUse)
 			return errors.New("open times exhausted")
-		}
+		}*/
 		if sinfo.Perm&1 !=0 &&outpath==""{
 				fmt.Println("use parameter -out to set output path")
 				return errors.New("missing output dir")
@@ -380,9 +379,6 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 				fmt.Println("Warning: the data is not permitted to be reshared or output any process result, '-out",outpath+"'", "parameter ignored")
 			}
 			CreatePod("cmro",mntmap)
-		}
-		if sinfo.MaxUse!=-1{
-			dbop.UpdateOpenTimes(sinfo)
 		}
 
 	}else if ftype==core.RAWDATA{

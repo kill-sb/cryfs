@@ -14,9 +14,15 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	return ok: {"code":0,"message":"OK","data":{}} 
 
 3. getshareinfo:
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3"}' -k https://127.0.0.1:8080/api/v1/getshareinfo
-	return ok: {"code":0,"message":"Error Parameter","data":{"ownerid":2,"ownername":"li4","descr":"","perm":1,"receivers":["zhang3","li4","wang2"],"rcvrids":[1,2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"ad5d314cf0496d46091f8a784f6270ab","fromtype":1,"fromuuid":"5d12b326-3a7a-4727-a7bb-a2cace3450db","crtime":"2022-01-28 15:40:43","fileuri":"","orgname":"TODO"}}
+	a) public(not return encrypted key)
+	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":0}' -k https://127.0.0.1:8080/api/v1/getshareinfo
+	return ok: {"code":0,"message":"OK","data":{"ownerid":2,"ownername":"li4","descr":"","perm":1,"receivers":["zhang3","li4","wang2"],"rcvrids":[1,2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"","fromtype":1,"fromuuid":"5d12b326-3a7a-4727-a7bb-a2cace3450db","crtime":"2022-01-28 15:40:43","fileuri":"","orgname":"TODO"}}
  
+	b) user(return encrypted key)
+    call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"c09ef2ba2be3aaf90553304fc3e6f9d8","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":1}' -k https://127.0.0.1:8080/api/v1/getshareinfo
+    return ok: {"code":0,"message":"OK","data":{"ownerid":2,"ownername":"li4","descr":"","perm":1,"receivers":["zhang3","li4","wang2"],"rcvrids":[1,2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"ad5d314cf0496d46091f8a784f6270ab","fromtype":1,"fromuuid":"5d12b326-3a7a-4727-a7bb-a2cace3450db","crtime":"2022-01-28 15:40:43","fileuri":"","orgname":"TODO"}}
+	return false: {"code":1,"message":"You should login first","data":{"uuid":"","ownerid":0,"ownername":"","descr":"","perm":0,"receivers":[],"rcvrids":[],"expire":"","maxuse":0,"leftuse":0,"enckey":"","fromtype":0,"fromuuid":"","crtime":"","fileuri":"","orgname":""}}
+
 4. sharedata:
 	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"c09ef2ba2be3aaf90553304fc3e6f9d8","Data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83123cf","ownerid":2,"ownername":"","descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999:12:31 0:00:00","maxuse":-1,"leftuse":-1,"enckey":"f473653760f74ce9108946711498d925","fromtype":1,"fromuuid":"773b4a93-aa9d-42a6-8b47-46bd89872832","crtime":"2022-01-30 09:21:42","fileuri":"/tmp/tmp/n1.csd","orgname":"TODO"}}' -k https://127.0.0.1:8080/api/v1/sharedata
 	return ok: {"code":0,"message":"OK"}

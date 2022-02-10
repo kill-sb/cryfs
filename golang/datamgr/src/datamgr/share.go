@@ -97,7 +97,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 	return
 
 }
-
+/*
 func LoadShareInfoFromTag(ipath string)(*core.ShareInfo,error){
 	head,err:=core.LoadShareInfoHead(ipath)
 	if err!=nil{
@@ -106,7 +106,7 @@ func LoadShareInfoFromTag(ipath string)(*core.ShareInfo,error){
 	}
 	return GetShareInfoFromHead(head)
 }
-
+*/
 func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 	fromtype:=GetDataType(ipath)
 	if fromtype==core.UNKNOWN{
@@ -139,7 +139,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 			fmt.Println("Load share info during reshare error:",err)
 			return err
 		}
-		ssinfo,err:=GetShareInfoFromHead(head)
+		ssinfo,err:=GetShareInfoFromHead(head,linfo)
 		if err!=nil{
 			fmt.Println("Load share info from head error:",err)
 			return err
@@ -245,8 +245,8 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	return nil
 }
 
-func GetShareInfo_API(uuid string)(*api.IShareInfoAck,error){
-	req:=&api.ShareInfoReq{Token:"0",Uuid:uuid}
+func GetShareInfo_Public_API(uuid string)(*api.IShareInfoAck,error){
+	req:=&api.ShareInfoReq{Token:"0",Uuid:uuid,NeedKey:0}
 	ack:=api.NewShareInfoAck()
 	err:=HttpAPIPost(req,ack,"getshareinfo")
 	if err!=nil{
@@ -256,10 +256,28 @@ func GetShareInfo_API(uuid string)(*api.IShareInfoAck,error){
 	return ack,nil
 }
 
-func GetShareInfoFromHead(head* core.ShareInfoHeader)(*core.ShareInfo,error){
+func GetShareInfo_User_API(token string, uuid string)(*api.IShareInfoAck,error){
+    req:=&api.ShareInfoReq{Token:token,Uuid:uuid,NeedKey:1}
+    ack:=api.NewShareInfoAck()
+    err:=HttpAPIPost(req,ack,"getshareinfo")
+    if err!=nil{
+        fmt.Println("call getshareinfo error:",err)
+        return nil,err
+    }
+    return ack,nil
+
+}
+
+func GetShareInfoFromHead(head* core.ShareInfoHeader,linfo* core.LoginInfo)(*core.ShareInfo,error){
 	uuid:=string(head.Uuid[:])
 	enckey:=head.EncryptedKey[:]
-	apiack,err:=GetShareInfo_API(uuid)
+	var err error
+	var apiack *api.IShareInfoAck
+	if linfo==nil{
+		apiack,err=GetShareInfo_Public_API(uuid)
+	}else{
+		apiack,err=GetShareInfo_User_API(linfo.Token,uuid)
+	}
 	if err!=nil{
         fmt.Println("GetShareInfo_API error:",err)
         return nil,err
