@@ -40,7 +40,7 @@ type EncDataReq struct{
 	FromObj string `json:"fromobj"`
 	OwnerId int32 `json:"ownerid"`
 	Hash256 string `json:"hash256"`
-	EncKey string `json:"enckey"`
+//	EncKey string `json:"enckey"`
 	OrgName string `json:"orgname"`
 }
 

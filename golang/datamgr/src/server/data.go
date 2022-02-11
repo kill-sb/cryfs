@@ -44,7 +44,7 @@ func NewDataFunc(w http.ResponseWriter, r *http.Request){
 	    pdata.FromObj=encreq.FromObj
 	    pdata.OrgName=encreq.OrgName
 	    pdata.OwnerId=encreq.OwnerId
-	    pdata.EncryptingKey=core.StringToBinkey(encreq.EncKey)
+	    pdata.EncryptingKey=nil //""core.StringToBinkey(encreq.EncKey)
 	    pdata.IsDir=encreq.IsDir
 		if err:=dbop.SaveMeta(pdata);err!=nil{
 			encack.Code=2

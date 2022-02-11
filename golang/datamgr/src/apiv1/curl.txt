@@ -10,7 +10,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 
 2. newdata:
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"d4bf07e70045397ed7d4b2cd8d10a155","uuid":"ef5e29c3-0b0b-4c49-a157-c81d836e7571","descr":"cmit encrypted data","isdir":0,"fromtype":0,"fromobj":"TODO","ownerid":1,"hash256":"5787ee7c39d78f3cfe0e9586dcaec011","enckey":"a5e53ccc741dbbe30881f0ecd8a450f6","orgname":"TODO"}' -k https://127.0.0.1:8080/api/v1/newdata
+	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"d4bf07e70045397ed7d4b2cd8d10a155","uuid":"ef5e29c3-0b0b-4c49-a157-c81d836e7571","descr":"cmit encrypted data","isdir":0,"fromtype":0,"fromobj":"TODO","ownerid":1,"hash256":"5787ee7c39d78f3cfe0e9586dcaec011","orgname":"TODO"}' -k https://127.0.0.1:8080/api/v1/newdata
 	return ok: {"code":0,"message":"OK","data":{}} 
 
 3. getshareinfo:

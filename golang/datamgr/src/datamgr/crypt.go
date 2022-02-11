@@ -235,7 +235,7 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 }
 
 func SendMetaToServer(pdata *core.EncryptedData, token string)error{
-	encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,EncKey:core.BinkeyToString(pdata.EncryptingKey),OrgName:pdata.OrgName}
+	encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,OrgName:pdata.OrgName}
     ack:=new (api.IEncDataAck)
 	err:=HttpAPIPost(&encreq,ack,"newdata")
     if err!=nil{
