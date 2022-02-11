@@ -87,7 +87,7 @@ func UpdateMeta(pdata *core.EncryptedData) error{
 	}
 	return nil
 }
-*/
+
 
 func GetEncDataInfo_tmp(uuid string)(*core.EncryptedData,error){
 	db:=GetDB()
@@ -116,7 +116,7 @@ func GetEncDataInfo_tmp(uuid string)(*core.EncryptedData,error){
 		return nil,errors.New("Cant find raw data in db")
 	}
 }
-
+*/
 
 func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
 	db:=GetDB()
