@@ -190,12 +190,13 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
-		userdata,err:=GetUserInfo(info.OwnerId)
+/*		userdata,err:=GetUserInfo(info.OwnerId)
 		if err!=nil{
 			return nil,err
 		}
 
 		info.OwnerName=userdata.Name
+		*/
 		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
 		if err!=nil{
 			fmt.Println("Parse visitor from db error",err)

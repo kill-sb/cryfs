@@ -72,7 +72,7 @@ type ShareInfoReq struct{
 type ShareInfoData struct{
 	Uuid string `json:"uuid"`
 	OwnerId int32 `json:"ownerid"`
-	OwnerName string `json:"ownername"`
+//	OwnerName string `json:"ownername"`
 	Descr string `json:"descr"`
 	Perm    int32 `json:"perm"`
 	Receivers []string `json:"receivers"`
@@ -84,7 +84,7 @@ type ShareInfoData struct{
 	FromType    int `json:"fromtype"`
 	FromUuid    string `json:"fromuuid"`
 	CrTime  string `json:"crtime"`
-	FileUri string `json:"fileuri"`
+//	FileUri string `json:"fileuri"`
 	OrgName string `json:"orgname"`
 }
 

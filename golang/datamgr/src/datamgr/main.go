@@ -16,6 +16,9 @@ var defuser, loginuser string
 var config string
 var keyword string
 
+var namemap map[string]int32
+var idmap map[int32]string
+
 func LoadConfig(){
 	definpath=os.Getenv("DATA_IN_PATH")
 	defoutpath=os.Getenv("HOME")+"/.cmitdata"
@@ -100,6 +103,8 @@ func main(){
 		return
 	}
 	LoadConfig()
+	namemap=make(map[string]int32)
+	idmap=make(map[int32]string)
 	fun:=GetFunction()
 	inpath=strings.TrimSuffix(inpath,"/")
 	outpath=strings.TrimSuffix(outpath,"/")

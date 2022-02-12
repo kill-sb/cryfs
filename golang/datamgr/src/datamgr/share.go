@@ -285,7 +285,7 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader,linfo* core.LoginInfo)(*cor
     if apiack.Code!=0{
         return nil,errors.New(apiack.Msg)
     }
-	sinfo:=core.FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
+	sinfo:=FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
 	return sinfo,nil
 }
 
@@ -312,11 +312,36 @@ func ShareData_API(token string,sinfo *core.ShareInfo)(*api.IShareDataAck,error)
 	return ack,nil
 }
 
+func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*core.ShareInfo{
+    sinfo:=new (core.ShareInfo)
+    sinfo.Uuid=uuid
+    sinfo.OwnerId=apidata.OwnerId
+    sinfo.OwnerName,_=GetUserName(apidata.OwnerId)
+    sinfo.Descr=apidata.Descr
+    sinfo.Perm=apidata.Perm
+    sinfo.Receivers=apidata.Receivers
+    sinfo.RcvrIds=apidata.RcvrIds
+    sinfo.Expire=apidata.Expire
+    sinfo.MaxUse=apidata.MaxUse
+    sinfo.LeftUse=apidata.LeftUse
+    sinfo.RandKey=core.StringToBinkey(apidata.EncKey)
+    sinfo.EncryptedKey=encryptedkey
+    sinfo.FromType=apidata.FromType
+    sinfo.FromUuid=apidata.FromUuid
+    sinfo.ContentType=ctype
+    sinfo.IsDir=isdir
+    sinfo.CrTime=apidata.CrTime
+ //   sinfo.FileUri=apidata.FileUri
+    sinfo.OrgName=apidata.OrgName
+    return sinfo
+}
+
+
 func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
 	asi:=new (api.ShareInfoData)
 	asi.Uuid=sinfo.Uuid
     asi.OwnerId=sinfo.OwnerId
-    asi.OwnerName=sinfo.OwnerName
+  //  asi.OwnerName=sinfo.OwnerName
     asi.Descr=sinfo.Descr
     asi.Perm=sinfo.Perm
     asi.Receivers=sinfo.Receivers
@@ -328,7 +353,7 @@ func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
     asi.FromType=sinfo.FromType
     asi.FromUuid=sinfo.FromUuid
     asi.CrTime=sinfo.CrTime
-    asi.FileUri=sinfo.FileUri
+   // asi.FileUri=sinfo.FileUri
     asi.OrgName=sinfo.OrgName
 	return asi
 }

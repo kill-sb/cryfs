@@ -164,6 +164,21 @@ func GetDataInfo_API(uuid string)(*api.IDataInfoAck,error){
 	return ack,nil
 }
 
+func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
+    info:=new (core.EncryptedData)
+    info.Uuid=adata.Uuid
+    info.OwnerId=adata.OwnerId
+    info.Descr=adata.Descr
+    info.FromType=adata.FromType
+    info.FromObj=adata.FromObj
+    info.HashMd5=adata.Hash256
+    info.IsDir=adata.IsDir
+    info.CrTime=adata.CrTime
+    info.OrgName=adata.OrgName
+	info.OwnerName,_=GetUserName(info.OwnerId)
+    return info
+}
+
 func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 	ainfo,err:=GetDataInfo_API(uuid)
 	if err!=nil{
@@ -172,13 +187,12 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 	if ainfo.Code!=0{
 		return nil,errors.New(ainfo.Msg)
 	}
-	return core.FillEncDataInfo(ainfo.Data),nil
+	return FillEncDataInfo(ainfo.Data),nil
 }
 
 func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error){
 	// RAW DATA
 	dinfo,err:=GetEncDataInfo(uuid)
-//	dinfo,err:=dbop.GetEncDataInfo_tmp(uuid)
 	if err!=nil{
 		fmt.Println("GetEncDataInfo error in traceRAWDATA:",err)
 		return nil,err
@@ -205,7 +219,7 @@ func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error
 //		fmt.Println("error return value--msg:",sinfo.Msg)
 		return nil,errors.New(sifack.Msg)
 	}
-	sinfo:=core.FillShareInfo(sifack.Data,uuid,0,0,nil)
+	sinfo:=FillShareInfo(sifack.Data,uuid,0,0,nil)
 	tracer=append(tracer,sinfo)
 	if sinfo.FromType==core.RAWDATA{
 		return traceRawData(tracer,sinfo.FromUuid)
@@ -307,13 +321,19 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	return true
 }
 
-func GetUserName(id int32)(string,error){
+func GetUserName(id int32)(ret string,err error){
+	if ret,ok:=idmap[id];ok{
+		return ret,nil
+	}
 	ids:=[]int32{id}
 	ud,err:=GetUserInfo_API(ids)
 	if err!=nil{
 		return "",err
 	}
-	return ud.Data[0].Name,nil
+	ret=ud.Data[0].Name
+	idmap[id]=ret
+	namemap[ret]=id
+	return ret,nil
 }
 
 func GetUserInfo_API(ids []int32)(*api.IUserInfoAck,error){

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"fmt"
 	"os"
-	api "apiv1"
+//	api "apiv1"
 )
 
 const (
@@ -120,12 +120,7 @@ func (sinfo*ShareInfo)PrintTraceInfo(level int,keyword string) error{
 	}
 	fmt.Print("-->")
 
-	result:=fmt.Sprintf("Shared Data(UUID :%s)\tDetails :",sinfo.Uuid)
-/*	for i:=0;i<level;i++{
-		fmt.Print("  ")
-	}
-	fmt.Print("      ")
-*/
+	result:=fmt.Sprintf("Shared Data(UUID :%s)  Details :",sinfo.Uuid)
 	result+=fmt.Sprintf("Owner->%s(uid :%d)",sinfo.OwnerName,sinfo.OwnerId)
 	result+=fmt.Sprintf(", Send to->%s",sinfo.Receivers)
 	if sinfo.Perm==0{
@@ -154,16 +149,10 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 	fmt.Print("-->")
 	var result string
 	if dinfo.FromType==RAWDATA{
-		result=fmt.Sprintf("Local Encrypted Data(UUID: %s)\tDetails :",dinfo.Uuid)
+		result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
 	}else if dinfo.FromType==CSDFILE{
-		result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)\tDetails :",dinfo.Uuid)
+		result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
 	}
-		//fmt.Print("Local Encrypted Data From User Share Data:",strings.TrimSuffix(dinfo.OrgName,".outdata"),"(UUID:"+dinfo.FromObj+")")
-/*	for i:=0;i<level;i++{
-		fmt.Print("  ")
-	}
-	fmt.Print("      ")
-*/
 	result+=fmt.Sprintf("Owner->%s(uid:%d)",dinfo.OwnerName,dinfo.OwnerId)
 	if dinfo.FromType==RAWDATA{
 		result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
@@ -461,11 +450,15 @@ func (info *LoginInfo) Logout() error{
     return  nil
 }
 
+func GetNameFromID(id int32)string{
+	return ""
+}
+/*
 func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*ShareInfo{
     sinfo:=new (ShareInfo)
     sinfo.Uuid=uuid
     sinfo.OwnerId=apidata.OwnerId
-    sinfo.OwnerName=apidata.OwnerName
+    sinfo.OwnerName=GetNameFromID(apidata.OwnerId)
     sinfo.Descr=apidata.Descr
     sinfo.Perm=apidata.Perm
     sinfo.Receivers=apidata.Receivers
@@ -480,7 +473,7 @@ func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int,
     sinfo.ContentType=ctype
     sinfo.IsDir=isdir
     sinfo.CrTime=apidata.CrTime
-    sinfo.FileUri=apidata.FileUri
+ //   sinfo.FileUri=apidata.FileUri
     sinfo.OrgName=apidata.OrgName
     return sinfo
 }
@@ -498,3 +491,4 @@ func FillEncDataInfo(adata *api.EncDataInfo)*EncryptedData{
     sinfo.OrgName=adata.OrgName
     return sinfo
 }
+*/
