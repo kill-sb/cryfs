@@ -2,47 +2,80 @@ export server cert
 cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 1. login:
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
-	return ok: {"code":0,"message":"","data":{"id":1,"token":"64f0a69a0f66e2faf993f354e9190340","key":"f447b20a7fcbf53a5d5be013ea0b15af"}}
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	return ok: 
+		{"code":0,"message":"","data":{"id":1,"token":"64f0a69a0f66e2faf993f354e9190340","key":"f447b20a7fcbf53a5d5be013ea0b15af"}}
 
-	curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123","primask":0}' -k https://127.0.0.1:8080/api/v1/login
-	return error: {"code":1,"message":"Invalid user/password","data":{"id":-1,"token":"nil","key":"nil"}}
+	call:
+		curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	return error: 
+		{"code":1,"message":"Invalid user/password","data":{"id":-1,"token":"nil","key":"nil"}}
 
 
 2. newdata:
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"d4bf07e70045397ed7d4b2cd8d10a155","uuid":"ef5e29c3-0b0b-4c49-a157-c81d836e7571","descr":"cmit encrypted data","isdir":0,"fromtype":0,"fromobj":"TODO","ownerid":1,"hash256":"5787ee7c39d78f3cfe0e9586dcaec011","orgname":"TODO"}' -k https://127.0.0.1:8080/api/v1/newdata
-	return ok: {"code":0,"message":"OK","data":{}} 
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"d4bf07e70045397ed7d4b2cd8d10a155","uuid":"ef5e29c3-0b0b-4c49-a157-c81d836e7571","descr":"cmit encrypted data","isdir":0,"fromtype":0,"fromobj":"TODO","ownerid":1,"hash256":"5787ee7c39d78f3cfe0e9586dcaec011","orgname":"TODO"}' -k https://127.0.0.1:8080/api/v1/newdata
+	return ok: 
+		{"code":0,"message":"OK","data":{}} 
 
 3. getshareinfo:
 	a) public(not return encrypted key)
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":0}' -k https://127.0.0.1:8080/api/v1/getshareinfo
-	return ok: {"code":0,"message":"OK","data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83125ff","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"","fromtype":0,"fromuuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","crtime":"2022-01-30 09:21:42","orgname":"TODO"}}  
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":0}' -k https://127.0.0.1:8080/api/v1/getshareinfo
+	return ok: 
+		{"code":0,"message":"OK","data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83125ff","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"","fromtype":0,"fromuuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","crtime":"2022-01-30 09:21:42","orgname":"TODO"}}  
  
 	b) user(return encrypted key)
-    call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"c09ef2ba2be3aaf90553304fc3e6f9d8","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":1}' -k https://127.0.0.1:8080/api/v1/getshareinfo
-    return ok: {"code":0,"message":"OK","data":{"ownerid":2,"descr":"","perm":1,"receivers":["zhang3","li4","wang2"],"rcvrids":[1,2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"ad5d314cf0496d46091f8a784f6270ab","fromtype":1,"fromuuid":"5d12b326-3a7a-4727-a7bb-a2cace3450db","crtime":"2022-01-28 15:40:43","orgname":"TODO"}}
-	return false: {"code":1,"message":"You should login first","data":{"uuid":"","ownerid":0,"descr":"","perm":0,"receivers":[],"rcvrids":[],"expire":"","maxuse":0,"leftuse":0,"enckey":"","fromtype":0,"fromuuid":"","crtime":"","orgname":""}}
+    call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"c09ef2ba2be3aaf90553304fc3e6f9d8","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":1}' -k https://127.0.0.1:8080/api/v1/getshareinfo
+    return ok: 
+		{"code":0,"message":"OK","data":{"ownerid":2,"descr":"","perm":1,"receivers":["zhang3","li4","wang2"],"rcvrids":[1,2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"ad5d314cf0496d46091f8a784f6270ab","fromtype":1,"fromuuid":"5d12b326-3a7a-4727-a7bb-a2cace3450db","crtime":"2022-01-28 15:40:43","orgname":"TODO"}}
+	return false: 
+		{"code":1,"message":"You should login first","data":{"uuid":"","ownerid":0,"descr":"","perm":0,"receivers":[],"rcvrids":[],"expire":"","maxuse":0,"leftuse":0,"enckey":"","fromtype":0,"fromuuid":"","crtime":"","orgname":""}}
 
 4. sharedata:
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"a316ed6ca59e49b02dd1a51f2561d14c","Data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83125ff","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999:12:31 0:00:00","maxuse":-1,"leftuse":-1,"enckey":"f473653760f74ce9108946711498d925","fromtype":0,"fromuuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","crtime":"2022-01-30 09:21:42","orgname":"TODO"}}' -k https://127.0.0.1:8080/api/v1/sharedata
-	return ok: {"code":0,"message":"OK"}
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"a316ed6ca59e49b02dd1a51f2561d14c","Data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83125ff","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999:12:31 0:00:00","maxuse":-1,"leftuse":-1,"enckey":"f473653760f74ce9108946711498d925","fromtype":0,"fromuuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","crtime":"2022-01-30 09:21:42","orgname":"TODO"}}' -k https://127.0.0.1:8080/api/v1/sharedata
+	return ok: 
+		{"code":0,"message":"OK"}
 
 5. getuser:
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2]}' -k https://127.0.0.1:8080/api/v1/getuser 
-	return ok: {"code":0,"message":"OK","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2]}' -k https://127.0.0.1:8080/api/v1/getuser 
+	return ok: 
+		{"code":0,"message":"OK","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}
 
 6. findusername:
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","names":["zhang3","li4"]}' -k https://127.0.0.1:8080/api/v1/findusername
-	return ok: {"code":0,"message":"OK","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","names":["zhang3","li4"]}' -k https://127.0.0.1:8080/api/v1/findusername
+	return ok: 
+		{"code":0,"message":"OK","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}
 
 7. getdatainfo:
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d"}' -k https://127.0.0.1:8080/api/v1/getdatainfo
-	return ok: {"code":0,"message":"OK","data":{"uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","descr":"","fromtype":0,"fromobj":"Makefile","ownerid":1,"sha256":"","isdir":0,"orgname":"Makefile","crtime":"2022-02-10 15:05:23"}}
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d"}' -k https://127.0.0.1:8080/api/v1/getdatainfo
+	return ok: 
+		{"code":0,"message":"OK","data":{"uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","descr":"","fromtype":0,"fromobj":"Makefile","ownerid":1,"sha256":"","isdir":0,"orgname":"Makefile","crtime":"2022-02-10 15:05:23"}}
 
 8. updatedata:
-	login first (curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
-	login return ({"code":0,"message":"OK","data":{"id":1,"token":"2ea0428c6254a6b4e568fbfa0360980b","key":"4a62cf6ee3f8d889e65af1cc271f20fa"}})
+	login first:
+		curl -H  "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	login return:
+		{"code":0,"message":"OK","data":{"id":1,"token":"2ea0428c6254a6b4e568fbfa0360980b","key":"4a62cf6ee3f8d889e65af1cc271f20fa"}}
 
-	call: curl -H  "Content-Type: application/json" -X POST -d '{"token":"2ea0428c6254a6b4e568fbfa0360980b","uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","sha256":"xxx"}'  -k https://127.0.0.1:8080/api/v1/updatedata
-	return ok: {"code":0,"message":"OK"}
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"2ea0428c6254a6b4e568fbfa0360980b","uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","sha256":"xxx"}'  -k https://127.0.0.1:8080/api/v1/updatedata
+	return ok: 
+		{"code":0,"message":"OK"}
 
+9. traceback
+	call(single): 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"a105682a-9a0c-4583-b0e9-0168e57b5bc6","type":1}]}' -k https://127.0.0.1:8080/api/v1/traceback
+	return ok:
+		{"code":0,"message":"OK","data":[[{"obj":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","type":0}]]}
+	
+	call(multiple):
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"a105682a-9a0c-4583-b0e9-0168e57b5bc6","type":1},{"obj":"c98c0741-577b-47e7-a610-881f80c11112","type":0},{"obj":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","type":0}]}' -k https://127.0.0.1:8080/api/v1/traceback
+	return ok:
+		{"code":0,"message":"OK","data":[[{"obj":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","type":0}],[{"obj":"a105682a-9a0c-4583-b0e9-0168e57b5bc6","type":1}],[{"obj":"Makefile","type":0}]]}

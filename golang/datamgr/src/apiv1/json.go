@@ -207,3 +207,29 @@ func NewDataInfoAck() *IDataInfoAck{
 	dia.Data=data
 	return dia
 }
+
+type DataObj struct{
+	Obj	string	`json:"obj"`
+	Type int `json:"type"`
+}
+
+type TraceBackReq struct{
+	Token string `json:"token"`
+	Data	[]DataObj `json:"data"`
+}
+
+type ITraceBackAck struct{
+	RetStat
+	Data [][]DataObj `json:"data"`
+}
+
+func NewTraceBackAck(nobj int)*ITraceBackAck{
+	data:=make([][]DataObj,0,nobj)
+	tfa:=new (ITraceBackAck)
+	tfa.Code=-1
+	tfa.Msg="Invalid parameter"
+	tfa.Data=data
+	return tfa
+
+}
+

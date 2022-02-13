@@ -88,34 +88,6 @@ func UpdateMeta(pdata *core.EncryptedData) error{
 	return nil
 }
 
-
-func GetEncDataInfo_tmp(uuid string)(*core.EncryptedData,error){
-	db:=GetDB()
-
-	data:=new (core.EncryptedData)
-	data.Uuid=uuid
-	query:=fmt.Sprintf("select descr,fromtype,fromobj,ownerid,hashmd5,isdir,orgname,crtime from efilemeta where uuid='%s'",uuid)
-	res,err:=db.Query(query)
-	if err!=nil{
-		fmt.Println("select from efilemeta error:",err)
-		return nil,err
-	}
-	if res.Next(){
-		err=res.Scan(&data.Descr,&data.FromType,&data.FromObj,&data.OwnerId,&data.HashMd5,&data.IsDir,&data.OrgName,&data.CrTime)
-		if err!=nil{
-			return nil,err
-		}
-		userinfo,err:=GetUserInfo(data.OwnerId)
-		if err!=nil{
-			return nil,err
-		}
-		data.OwnerName=userinfo.Name
-		return data,nil
-	}else{
-		fmt.Println("Can't find ",data.Uuid,"in db")
-		return nil,errors.New("Cant find raw data in db")
-	}
-}
 */
 
 func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
@@ -343,6 +315,36 @@ func LookupPasswdSHA(user string)(int32,string,string,error){
 	}
 	return -1,"","",errors.New("No such user")
 }
+
+func GetDataParent(obj *api.DataObj)([]api.DataObj,error){
+	db:=GetDB()
+	if obj.Type<0{
+		return nil,errors.New("wrong data type")
+	}
+	retobj:=make([]api.DataObj,1,10) // current only 1 parent, later will be multiple
+	var query string
+	if obj.Type==core.RAWDATA{
+		query=fmt.Sprintf("select fromtype,fromobj from efilemeta where uuid='%s'",obj.Obj)
+	}else if obj.Type==core.CSDFILE{
+		query=fmt.Sprintf("select fromtype,datauuid from sharetags where uuid='%s'",obj.Obj)
+	}
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("select from db error:",err)
+		return nil,err
+	}
+	if res.Next(){
+		err=res.Scan(&retobj[0].Type,&retobj[0].Obj)
+		if err!=nil{
+			return nil,err
+		}
+		return retobj,nil
+	}else{
+		fmt.Println("Can't find ",obj.Obj,"in db")
+		return nil,errors.New("Cant find"+obj.Obj+"data in db")
+	}
+}
+
 /*
 
 func DelSel(id int) bool {
@@ -357,7 +359,4 @@ func DelSel(id int) bool {
 	}
 	return false
 }
-
-
-
 */
