@@ -22,15 +22,6 @@ type ITokenInfo struct{
 	Data *TokenInfo `json:"data"`
 }
 
-func NewToken()*ITokenInfo{
-    data:=&TokenInfo{Id:-1,Token:"nil",Key:"nil"}
-	token:=new (ITokenInfo)
-	token.Code=-1
-	token.Msg="Error Parameter"
-	token.Data=data
-    return token
-}
-
 type EncDataReq struct{
 	Token string `json:"token"`
 	Uuid string `json:"uuid"`
@@ -52,15 +43,6 @@ type EncDataAck struct{
 type IEncDataAck struct{
 	RetStat
 	Data *EncDataAck `json:"data"`
-}
-
-func NewDataAck() *IEncDataAck{
-	data:=new (EncDataAck)
-	eda:=new (IEncDataAck)
-	eda.Code=-1
-	eda.Msg="Invalid parameter"
-	eda.Data=data
-	return eda
 }
 
 type ShareInfoReq struct{
@@ -93,16 +75,6 @@ type IShareInfoAck struct{
 	Data *ShareInfoData `json:"data"`
 }
 
-func NewShareInfoAck()*IShareInfoAck{
-    data:=new (ShareInfoData)
-	data.RcvrIds=make([]int32,0,20)
-	data.Receivers=make([]string,0,20)
-	ack:=new (IShareInfoAck)
-	ack.Msg="Error Parameter"
-	ack.Data=data
-    return ack
-}
-
 type ShareDataReq struct{
 	Token string `json:"token"`
 	Data *ShareInfoData `json:"Data"`
@@ -114,15 +86,6 @@ type ShareDataAck struct{
 type IShareDataAck struct{
 	RetStat
 //	Data *ShareDataAck `json:"data"`
-}
-
-func NewShareAck() *IShareDataAck{
-//	data:=new (ShareDataAck)
-	sda:=new (IShareDataAck)
-	sda.Code=-1
-	sda.Msg="Invalid parameter"
-//	sda.Data=data
-	return sda
 }
 
 type UserInfoData struct{
@@ -147,14 +110,6 @@ type IUserInfoAck struct{
 	Data []UserInfoData `json:"data"`
 }
 
-func NewUserInfoAck() *IUserInfoAck{
-	ack:=new (IUserInfoAck)
-	ack.Code=-1
-	ack.Msg="Invalid parameter"
-	ack.Data=make([]UserInfoData,0,20)
-	return ack
-}
-
 type FindUserNameReq struct{
 	Token string `json:"token"`
 	Name []string `json:"names"`
@@ -175,13 +130,6 @@ type IUpdateDataAck struct{
 	RetStat
 }
 
-func NewUpdateDataAck()*IUpdateDataAck{
-	ack:=new (IUpdateDataAck)
-	ack.Code=-1
-	ack.Msg="Invalid parameter"
-	return ack
-}
-
 type EncDataInfo struct{
 	Uuid string `json:"uuid"`
 	Descr string `json:"descr"`
@@ -199,19 +147,17 @@ type IDataInfoAck struct{
 	Data *EncDataInfo	`json:"data"`
 }
 
-func NewDataInfoAck() *IDataInfoAck{
-	data:=new (EncDataInfo)
-	dia:=new (IDataInfoAck)
-	dia.Code=-1
-	dia.Msg="Invalid parameter"
-	dia.Data=data
-	return dia
-}
 
 type DataObj struct{
 	Obj	string	`json:"obj"`
 	Type int `json:"type"`
 }
+
+type QueryObjsReq struct{
+	Token string `json:"token"`
+	Data	[]DataObj `json:"data"`
+}
+
 
 type TraceBackReq struct{
 	Token string `json:"token"`
@@ -223,13 +169,11 @@ type ITraceBackAck struct{
 	Data [][]DataObj `json:"data"`
 }
 
-func NewTraceBackAck(nobj int)*ITraceBackAck{
-	data:=make([][]DataObj,0,nobj)
-	tfa:=new (ITraceBackAck)
-	tfa.Code=-1
-	tfa.Msg="Invalid parameter"
-	tfa.Data=data
-	return tfa
-
+type IQueryObjsAck struct{
+	RetStat
+	Data []IFDataDesc `json:"dataobj"`
 }
 
+type IFDataDesc interface{
+	PrintDataInfo(int,string,func (int32)string) error
+}

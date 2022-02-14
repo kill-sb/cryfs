@@ -36,18 +36,17 @@ int get_passwd(char *buf,int len)
 	return i;
 }*/
 import "C"
+
 var APIServer string="https://127.0.0.1:8080/api/v1/"
 
 func HttpAPIPost(param interface{},ret interface{},entry string)error{
 	obj,_:=json.Marshal(param)
-//	fmt.Println("Sending:",string(obj))
 	req,err:=http.NewRequest("POST",APIServer+entry,bytes.NewBuffer(obj))
 	if err!=nil{
 		fmt.Println("New request error:",err)
 		return err
 	}
     req.Header.Set("Content-Type","application/json")
-//	tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:false}}
 	tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:true}}
 	client:=&http.Client{Transport:tr, Timeout:time.Second*10}
 	resp,err:=client.Do(req)

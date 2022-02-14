@@ -32,7 +32,6 @@ import(
 	"unsafe"
 	"strings"
 	"errors"
-	api "apiv1"
 	core "coredata"
 )
 
@@ -259,7 +258,7 @@ func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInf
 		}
 		pdata.IsDir=0
 	}
-	err:=RecordMetaFromRaw_API(pdata,linfo.Keylocalkey,passwd,sinfo.FileUri,opath,linfo.Token)
+	err:=RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,sinfo.FileUri,opath,linfo.Token)
 	return err
 }
 
@@ -482,7 +481,7 @@ func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, 
 	return UpdateDataInfo_API(dinfo,linfo)
 	//return dbop.UpdateMeta(dinfo)
 }
-
+/*
 func UpdateDataInfo_API(dinfo *core.EncryptedData,linfo *core.LoginInfo) error{
 	upreq:=api.UpdateDataInfoReq{Token:linfo.Token,Uuid:dinfo.Uuid,Hash256:dinfo.HashMd5}
 	ack:=new (api.IUpdateDataAck)
@@ -495,3 +494,4 @@ func UpdateDataInfo_API(dinfo *core.EncryptedData,linfo *core.LoginInfo) error{
 	}
 	return nil
 }
+*/

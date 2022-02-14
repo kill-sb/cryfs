@@ -9,7 +9,6 @@ import(
 	"errors"
 	"os/exec"
 	"strings"
-	api "apiv1"
 	core "coredata"
 )
 /*
@@ -233,8 +232,8 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 	tag.SaveTagToDisk(pdata.Path+"/"+pdata.Uuid+".tag")
 	return tag,nil
 }
-
-func SendMetaToServer(pdata *core.EncryptedData, token string)error{
+/*
+func SendMetaToServer_API(pdata *core.EncryptedData, token string)error{
 	encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,OrgName:pdata.OrgName}
     ack:=new (api.IEncDataAck)
 	err:=HttpAPIPost(&encreq,ack,"newdata")
@@ -245,7 +244,7 @@ func SendMetaToServer(pdata *core.EncryptedData, token string)error{
 		return errors.New(ack.Msg)
 	}
 	return err
-}
+}*/
 
 func DoEncodeInC(src,passwd,dst []byte,length int){
 	csrc:=(*C.char)(unsafe.Pointer(&src[0]))
@@ -261,13 +260,13 @@ func DoDecodeInC(src, passwd, dst []byte,length int){
 	C.decode(csrc,cpasswd,cdst,C.int(length))
 }
 
-func RecordMetaFromRaw_API(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string,token string)error{
+func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string,token string)error{
 	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
 	// RecordLocal && Record Remote
 	savedkey:=make([]byte,128/8)
 	DoEncodeInC(passwd , keylocalkey ,savedkey,128/8)
 	SaveLocalFileTag(pdata,savedkey)
-	SendMetaToServer(pdata,token)
+	SendMetaToServer_API(pdata,token)
 	return nil
 }
 
@@ -320,7 +319,7 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	*/
 	DoEncodeFileInC(ipath,ofile,passwd)
 	pdata.HashMd5,_=GetFileMd5(ofile)
-	RecordMetaFromRaw_API(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
+	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
 	return pdata.Uuid,nil
 }
 
@@ -598,7 +597,7 @@ func doSep(){
 	io.Copy(efile,ifile)
 	SaveLocalFileTag(dst,dtag.EKey[:])
 
-    SendMetaToServer(dst,linfo.Token)
+    SendMetaToServer_API(dst,linfo.Token)
 
 	fmt.Println(dst.Uuid,"seperated ok")
 }

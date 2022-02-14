@@ -14,3 +14,9 @@ dbop remove:
 
 logical problem:
 limit time should be readonly
+
+----------------------
+demo2.0
+1. getuser return no data on error
+2. getsharedata/getencdata process multiple request
+3. redesign traceback

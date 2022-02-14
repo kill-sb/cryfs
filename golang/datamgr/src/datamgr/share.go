@@ -244,7 +244,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	//sinfo.Expire=  set it later
 	return nil
 }
-
+/*
 func GetShareInfo_Public_API(uuid string)(*api.IShareInfoAck,error){
 	req:=&api.ShareInfoReq{Token:"0",Uuid:uuid,NeedKey:0}
 	ack:=api.NewShareInfoAck()
@@ -266,7 +266,7 @@ func GetShareInfo_User_API(token string, uuid string)(*api.IShareInfoAck,error){
     }
     return ack,nil
 
-}
+}*/
 
 func GetShareInfoFromHead(head* core.ShareInfoHeader,linfo* core.LoginInfo)(*core.ShareInfo,error){
 	uuid:=string(head.Uuid[:])
@@ -299,7 +299,7 @@ func WriteShareInfo(token string, sinfo* core.ShareInfo)error{
 	}
 	return nil
 }
-
+/*
 func ShareData_API(token string,sinfo *core.ShareInfo)(*api.IShareDataAck,error){
 	data:=FillShareReqData(sinfo)
 	req:=&api.ShareDataReq{Token:token,Data:data}
@@ -311,7 +311,7 @@ func ShareData_API(token string,sinfo *core.ShareInfo)(*api.IShareDataAck,error)
 	}
 	return ack,nil
 }
-
+*/
 func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*core.ShareInfo{
     sinfo:=new (core.ShareInfo)
     sinfo.Uuid=uuid

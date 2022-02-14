@@ -51,5 +51,4 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 
 func TraceForwardFunc(w http.ResponseWriter, r *http.Request){
 }
-
-
+// prepare queryobj

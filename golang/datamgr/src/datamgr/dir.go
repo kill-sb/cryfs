@@ -37,7 +37,7 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
 	os.MkdirAll(ofile,finfo.Mode())
 //    pdata.HashMd5,_=GetFileMd5(ofile)
     pdata.HashMd5=""
-    RecordMetaFromRaw_API(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
+    RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
 
 	filepath.Walk(ipath, func (pathname string,info os.FileInfo, err error) error{
 		if ipath==pathname{

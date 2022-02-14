@@ -148,7 +148,7 @@ func ListCSDs(csds[]string){
 		}
     }
 }
-
+/*
 func GetDataInfo_API(uuid string)(*api.IDataInfoAck,error){
 	req:=&api.GetDataInfoReq{Token:"0",Uuid:uuid}
 	ack:=api.NewDataInfoAck()
@@ -163,7 +163,7 @@ func GetDataInfo_API(uuid string)(*api.IDataInfoAck,error){
 	}
 	return ack,nil
 }
-
+*/
 func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
     info:=new (core.EncryptedData)
     info.Uuid=adata.Uuid
@@ -335,7 +335,7 @@ func GetUserName(id int32)(ret string,err error){
 	namemap[ret]=id
 	return ret,nil
 }
-
+/*
 func GetUserInfo_API(ids []int32)(*api.IUserInfoAck,error){
 	req:=&api.GetUserReq{Token:"0",Id:ids}
     ack:=api.NewUserInfoAck()
@@ -363,10 +363,5 @@ func FindUserName_API(names []string)(*api.IUserInfoAck,error){
 		fmt.Println("request error:",ack.Msg)
 		return nil,errors.New(ack.Msg)
 	}
-	/*
-	fmt.Println("listing result:")
-	for _,v:=range ack.Data{
-		fmt.Println(v.Id,v.Name)
-	}*/
 	return ack,nil
-}
+}*/

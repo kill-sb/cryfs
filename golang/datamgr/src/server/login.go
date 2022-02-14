@@ -124,6 +124,7 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 			if err!=nil{
 				usrack.Code=3
 				usrack.Msg=fmt.Sprintf("search userid=%d error: %s",v,err.Error())
+				usrack.Data=[]api.UserInfoData{}
 				break
 			}else{
 				usrack.Data=append(usrack.Data,*usr)
@@ -161,6 +162,7 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 			if err!=nil{
 				usrack.Code=3
 				usrack.Msg=fmt.Sprintf("search user %s error: %s",v,err.Error())
+				usrack.Data=[]api.UserInfoData{}
 				break
 			}else{
 				log.Println(usr.Name,usr.Id)
