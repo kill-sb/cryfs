@@ -31,7 +31,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 		curl -H  "Content-Type: application/json" -X POST -d '{"token":"c09ef2ba2be3aaf90553304fc3e6f9d8","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":1}' -k https://127.0.0.1:8080/api/v1/getshareinfo
     return ok: 
 		{"code":0,"message":"OK","data":{"ownerid":2,"descr":"","perm":1,"receivers":["zhang3","li4","wang2"],"rcvrids":[1,2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"ad5d314cf0496d46091f8a784f6270ab","fromtype":1,"fromuuid":"5d12b326-3a7a-4727-a7bb-a2cace3450db","crtime":"2022-01-28 15:40:43","orgname":"TODO"}}
-	return false: 
+	return error: 
 		{"code":1,"message":"You should login first","data":{"uuid":"","ownerid":0,"descr":"","perm":0,"receivers":[],"rcvrids":[],"expire":"","maxuse":0,"leftuse":0,"enckey":"","fromtype":0,"fromuuid":"","crtime":"","orgname":""}}
 
 4. sharedata:
@@ -45,6 +45,12 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2]}' -k https://127.0.0.1:8080/api/v1/getuser 
 	return ok: 
 		{"code":0,"message":"OK","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}
+
+	call: 
+		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2,100,3]}' -k https://127.0.0.1:8080/api/v1/getuser
+	return error: 
+		{"code":3,"message":"search userid=100 error: No such user ","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}
+
 
 6. findusername:
 	call: 
