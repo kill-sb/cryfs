@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"time"
 	"strings"
@@ -314,6 +315,51 @@ func LookupPasswdSHA(user string)(int32,string,string,error){
 		}
 	}
 	return -1,"","",errors.New("No such user")
+}
+
+func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
+	db:=GetDB()
+	if obj.Type<0{
+		return nil,errors.New("wrong data type")
+	}
+	retobj:=make([]*api.DataObj,0,10) // current only 1 parent, later will be multiple
+	curtype:=obj.Type
+	curobj:=obj.Obj
+	ptype:=-1
+	i:=0
+	for {
+	var query string
+	if curtype==core.RAWDATA{
+		query=fmt.Sprintf("select fromtype,fromobj from efilemeta where uuid='%s'",curobj)
+	}else if curtype==core.CSDFILE{
+		query=fmt.Sprintf("select fromtype,datauuid from sharetags where uuid='%s'",curobj)
+	}
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("select from db error:",err)
+		return nil,err
+	}
+	if res.Next(){
+		newobj:=new (api.DataObj)
+		err=res.Scan(&newobj.Type,&newobj.Obj)
+		if err!=nil{
+			return nil,err
+		}
+		retobj=append(retobj,newobj)
+		ptype=newobj.Type
+		i++
+		if curtype==core.RAWDATA && ptype==core.RAWDATA{
+			newobj.Type=-1
+			break
+		}
+		curtype=newobj.Type
+		curobj=newobj.Obj
+	}else{
+		log.Println("Can't find ",obj.Obj,"in db")
+		return nil,errors.New(fmt.Sprintf("Cant find %s with type %d in db",curobj,curtype))
+	}
+	}
+	return retobj,nil
 }
 
 func GetDataParent(obj *api.DataObj)([]api.DataObj,error){

@@ -24,7 +24,7 @@ func NewDataInfoAck() *IDataInfoAck{
 }
 
 func NewTraceBackAck(nobj int)*ITraceBackAck{
-	data:=make([][]DataObj,0,nobj)
+	data:=make([][]*DataObj,0,nobj)
 	tfa:=new (ITraceBackAck)
 	tfa.Code=-1
 	tfa.Msg="Invalid parameter"
@@ -78,7 +78,8 @@ func NewToken()*ITokenInfo{
 func NewQueryObjsAck(reqinfo []DataObj)*IQueryObjsAck {
 	cnt:=len(reqinfo)
 	data:=make([]IFDataDesc,0,cnt)
-	for _,v:=range reqinfo{
+	fmt.Println("obj num:",cnt)
+/*	for _,v:=range reqinfo{
 		if v.Type==0{
 			dinfo:=new (EncDataInfo)
 			data=append(data,dinfo)
@@ -86,7 +87,7 @@ func NewQueryObjsAck(reqinfo []DataObj)*IQueryObjsAck {
 			sinfo:=new (ShareInfoData)
 			data=append(data,sinfo)
 		}
-	}
+	}*/
 	qda:=new (IQueryObjsAck)
 	qda.Code=-1
 	qda.Msg="Invalid parameter"

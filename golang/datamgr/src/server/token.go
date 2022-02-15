@@ -22,7 +22,6 @@ func TokenCacheMgr(){
 	tm:=time.NewTimer(time.Second*WAKEUP_TIME)
 	for{
 		<-tm.C
-		fmt.Println("Cur:",len(tokenmap))
 		cur:=time.Now()
 		tokenlock.Lock()
 		delist:=make([]string,0,len(tokenmap))
@@ -40,7 +39,6 @@ func TokenCacheMgr(){
 		}
 		tokenlock.Unlock()
 		tm.Reset(time.Second*WAKEUP_TIME)
-		fmt.Println("Left:",len(tokenmap))
 	}
 }
 

@@ -76,11 +76,23 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 9. traceback
 	call(single): 
-		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"a105682a-9a0c-4583-b0e9-0168e57b5bc6","type":1}]}' -k https://127.0.0.1:8080/api/v1/traceback
+	curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1}]}' -k https://127.0.0.1:8080/api/v1/traceback
 	return ok:
-		{"code":0,"message":"OK","data":[[{"obj":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","type":0}]]}
+	{"code":0,"message":"OK","data":[[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0},{"obj":"samplefs","type":-1}]]}
 	
 	call(multiple):
-		curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"a105682a-9a0c-4583-b0e9-0168e57b5bc6","type":1},{"obj":"c98c0741-577b-47e7-a610-881f80c11112","type":0},{"obj":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","type":0}]}' -k https://127.0.0.1:8080/api/v1/traceback
+	curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}]}' -k https://127.0.0.1:8080/api/v1/traceback
 	return ok:
-		{"code":0,"message":"OK","data":[[{"obj":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","type":0}],[{"obj":"a105682a-9a0c-4583-b0e9-0168e57b5bc6","type":1}],[{"obj":"Makefile","type":0}]]}
+	{"code":0,"message":"OK","data":[[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0},{"obj":"samplefs","type":-1}],[{"obj":"samplefs","type":-1}]]}
+
+10. queryobjs
+	call:
+	curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}]}' -k https://127.0.0.1:8080/api/v1/queryobjs
+	return ok:
+	{"code":0,"message":"OK","dataobj":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","ownerid":1,"descr":"","perm":1,"receivers":["li4","wang2"],"rcvrids":[2,3],"expire":"2999-12-31 00:00:00","maxuse":2,"leftuse":0,"enckey":"83a47e65d005760e499466cceba68eae","fromtype":0,"fromuuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","crtime":"2022-02-11 16:09:32","orgname":""},{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","descr":"cmit encrypted dir","fromtype":0,"fromobj":"samplefs","ownerid":1,"sha256":"","isdir":1,"orgname":"samplefs","crtime":"2022-02-11 16:08:59"}]}
+
+	call:
+	curl -H  "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":1}]}' -k https://127.0.0.1:8080/api/v1/queryobjs
+	return error:
+	{"code":3,"message":"query obj 'ac1ada36-c79e-4951-bb6a-c37cca8952c0' error:No shared info found in server","dataobj":[]}	
+

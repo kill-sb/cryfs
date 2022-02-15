@@ -3,10 +3,12 @@ package main
 import (
     "net/http"
 	"encoding/json"
+	"errors"
 	"log"
 	api "apiv1"
     "dbop"
     "fmt"
+	core "coredata"
    // "os"
 )
 
@@ -33,10 +35,11 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 		tback.Code=0
 		tback.Msg="OK"
 		for _,v:=range tbreq.Data{
-			objs,err:=dbop.GetDataParent(&v)
+			objs,err:=dbop.SingleTrace(&v)
+			//objs,err:=dbop.GetDataParent(&v)
 			if err!=nil{
 				tback.Code=3
-				tback.Msg=fmt.Sprintf("search userid=%d error: %s",v,err.Error())
+				tback.Msg=fmt.Sprintf("search uuid=%s error: %s",v.Obj,err.Error())
 				break
 			}else{
 				tback.Data=append(tback.Data,objs)
@@ -51,4 +54,52 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 
 func TraceForwardFunc(w http.ResponseWriter, r *http.Request){
 }
-// prepare queryobj
+
+func QueryObjs(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		w.Header().Set("Content-Type","application/json")
+		var qoreq api.QueryObjsReq
+		err:=json.NewDecoder(r.Body).Decode(&qoreq)
+		qoack:=api.NewQueryObjsAck(qoreq.Data)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(qoack)
+			return
+		}
+		/*
+		_,err=GetLoginUserInfo(sifreq.Token)
+        if err!=nil{
+            sifack.Code=1
+            sifack.Msg="You should login first"
+            json.NewEncoder(w).Encode(sifack)
+            return
+        }*/
+		qoack.Code=0
+		qoack.Msg="OK"
+		for k,v:=range qoreq.Data{
+			var obj api.IFDataDesc=nil
+			var err error=nil
+			switch v.Type{
+			case core.RAWDATA:
+				obj,err=dbop.GetEncDataInfo(v.Obj)
+			case core.CSDFILE:
+				obj,err=dbop.GetShareInfoData(v.Obj)
+			default:
+				err=errors.New("Unknown obj type")
+			}
+
+			if err!=nil{
+				qoack.Code=3
+				qoack.Msg="query obj '"+qoreq.Data[k].Obj+"' error:"+err.Error()
+				qoack.Data=[]api.IFDataDesc{}
+				break
+			}else{
+				qoack.Data=append(qoack.Data,obj)
+			}
+		}
+		json.NewEncoder(w).Encode(qoack)
+	}else{
+		http.NotFound(w,r)
+	}
+
+}

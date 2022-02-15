@@ -147,17 +147,10 @@ type IDataInfoAck struct{
 	Data *EncDataInfo	`json:"data"`
 }
 
-
 type DataObj struct{
 	Obj	string	`json:"obj"`
 	Type int `json:"type"`
 }
-
-type QueryObjsReq struct{
-	Token string `json:"token"`
-	Data	[]DataObj `json:"data"`
-}
-
 
 type TraceBackReq struct{
 	Token string `json:"token"`
@@ -166,7 +159,12 @@ type TraceBackReq struct{
 
 type ITraceBackAck struct{
 	RetStat
-	Data [][]DataObj `json:"data"`
+	Data [][]*DataObj `json:"data"`
+}
+
+type QueryObjsReq struct{
+	Token string `json:"token"`
+	Data	[]DataObj `json:"data"`
 }
 
 type IQueryObjsAck struct{
