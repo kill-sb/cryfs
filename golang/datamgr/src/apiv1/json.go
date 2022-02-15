@@ -22,6 +22,14 @@ type ITokenInfo struct{
 	Data *TokenInfo `json:"data"`
 }
 
+type LoginStatReq struct{
+	Token string `json:"token"`
+}
+
+type ILoginStatAck struct{
+	RetStat
+}
+
 type EncDataReq struct{
 	Token string `json:"token"`
 	Uuid string `json:"uuid"`

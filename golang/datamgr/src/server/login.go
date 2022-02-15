@@ -40,7 +40,6 @@ type LoginUserInfo struct{
     RegTime time.Time
     Mobile string
     */
-
 }
 
 func GenUserInfo(ainfo* api.AuthInfo, tinfo *api.TokenInfo)*LoginUserInfo{
@@ -64,7 +63,10 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(token)
 			return
 		}
-		log.Print("")
+		if g_config.Debug{
+			log.Println("request:",&ainfo)
+			defer log.Println("return:",token,"Data->",token.Data)
+		}
 //		log.Println("login:",ainfo)
 //		token.GetUserInfo(&ainfo)
 		// check user/passwd
@@ -108,6 +110,10 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 			log.Println("Decode json error:",err)
 			json.NewEncoder(w).Encode(usrack)
 			return
+		}
+		if g_config.Debug{
+			log.Println("request:",&usrreq)
+			defer log.Println("return:",usrack,"Data->",usrack.Data)
 		}
 		/*
 		_,err=GetLoginUserInfo(sifreq.Token)
@@ -175,3 +181,58 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 	}
 
 }
+
+func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		rfack:=new (api.ILoginStatAck)
+		w.Header().Set("Content-Type","application/json")
+		var rfreq api.LoginStatReq
+		err:=json.NewDecoder(r.Body).Decode(&rfreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(rfack)
+			return
+		}
+		_,err=GetLoginUserInfo(rfreq.Token)
+        if err!=nil{
+            rfack.Code=1
+            rfack.Msg="Invalid token"
+            json.NewEncoder(w).Encode(rfack)
+            return
+        }
+		rfack.Code=0
+		rfack.Msg="OK"
+		json.NewEncoder(w).Encode(rfack)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+
+
+func LogoutFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		loack:=new (api.ILoginStatAck)
+		w.Header().Set("Content-Type","application/json")
+		var loreq api.LoginStatReq
+		err:=json.NewDecoder(r.Body).Decode(&loreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(loack)
+			return
+		}
+		info,err:=GetLoginUserInfo(loreq.Token)
+        if err!=nil{
+            loack.Code=1
+            loack.Msg="Invalid token"
+            json.NewEncoder(w).Encode(loack)
+            return
+        }
+		info.RemoveToken(loreq.Token)
+		loack.Code=0
+		loack.Msg="OK"
+		json.NewEncoder(w).Encode(loack)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+

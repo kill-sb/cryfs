@@ -18,6 +18,14 @@ const(
 	WAKEUP_TIME=3*60
 )
 
+func (info* LoginUserInfo)RemoveToken(token string){
+	tokenlock.Lock()
+	if _,ok:=tokenmap[token];ok{
+		delete(tokenmap,token)
+	}
+    tokenlock.Unlock()
+}
+
 func TokenCacheMgr(){
 	tm:=time.NewTimer(time.Second*WAKEUP_TIME)
 	for{

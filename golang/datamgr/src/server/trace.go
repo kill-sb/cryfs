@@ -55,7 +55,7 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 func TraceForwardFunc(w http.ResponseWriter, r *http.Request){
 }
 
-func QueryObjs(w http.ResponseWriter, r *http.Request){
+func QueryObjsFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		w.Header().Set("Content-Type","application/json")
 		var qoreq api.QueryObjsReq

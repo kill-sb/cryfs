@@ -3,12 +3,17 @@ package main
 import (
 	_"dbop"
 	"net/http"
+	"log"
 	"fmt"
 	"flag"
 	"sync"
 	"os"
 )
 
+/*
+#include <unistd.h>
+*/
+import "C"
 
 const(
 	PASSWD=1
@@ -22,6 +27,7 @@ type ServerConfig struct{
 	KeyPem string
 	Version string
 	LoginMethod	int
+	Debug	bool
 }
 
 var configfile string
@@ -38,6 +44,12 @@ func LoadSvrConfig() *ServerConfig{
 	g_config.KeyPem="key.pem"
 	g_config.Version="v1"
 	g_config.LoginMethod=PASSWD
+
+	if len(os.Args)>1 && os.Args[1]=="-d"{
+		g_config.Debug=true
+	}else{
+		g_config.Debug=false
+	}
 
 	flag.StringVar(&configfile,"config","server.cfg","name of configure file for server setup")
 	file,err:=os.Open(configfile)
@@ -62,6 +74,12 @@ func defhandler(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+func DebugOutput(obj...interface{}){
+	if g_config.Debug{
+		log.Println(obj...)
+	}
+}
+
 func SetupHandler(cfg *ServerConfig) error{
 	fhandler=http.FileServer(http.Dir("/root/linux-5.9.1"))
 	http.HandleFunc("/", defhandler)
@@ -76,7 +94,9 @@ func SetupHandler(cfg *ServerConfig) error{
 	http.HandleFunc(prefix+"traceback",TraceBackFunc) // GET
 	http.HandleFunc(prefix+"updatedata",UpdateDataFunc) // GET
 	http.HandleFunc(prefix+"traceforward",TraceForwardFunc) // GET
-	http.HandleFunc(prefix+"queryobjs",QueryObjs) // GET
+	http.HandleFunc(prefix+"queryobjs",QueryObjsFunc) // GET
+	http.HandleFunc(prefix+"logout",LogoutFunc) // GET
+	http.HandleFunc(prefix+"refreshtoken",RefreshTokenFunc) // GET
 
 	return nil
 }
