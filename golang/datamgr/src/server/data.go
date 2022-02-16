@@ -17,10 +17,14 @@ func NewDataFunc(w http.ResponseWriter, r *http.Request){
 		var encreq api.EncDataReq
 		err:=json.NewDecoder(r.Body).Decode(&encreq)
 		if err!=nil{
-			log.Println("Decode json error:",err)
+			Debug("Decode json error:",err)
 			json.NewEncoder(w).Encode(encack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&encreq)
+            defer DebugJson("Response:",encack)
+        }
 		luinfo,err:=GetLoginUserInfo(encreq.Token)
 		if err!=nil{
 			encack.Code=1
@@ -66,10 +70,14 @@ func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
 		var difreq api.GetDataInfoReq
 		err:=json.NewDecoder(r.Body).Decode(&difreq)
 		if err!=nil{
-			log.Println("Decode json error:",err)
+			Debug("Decode json error:",err)
 			json.NewEncoder(w).Encode(ifack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&difreq)
+            defer DebugJson("Response:",ifack)
+        }
 		/*
 		_,err=GetLoginUserInfo(sifreq.Token)
         if err!=nil{
@@ -107,6 +115,10 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(sifack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&sifreq)
+            defer DebugJson("Response:",sifack)
+        }
 		retdata,err:=dbop.GetShareInfoData(sifreq.Uuid)
 		if err!=nil{
 			sifack.Code=2
@@ -177,6 +189,10 @@ func ShareDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(shrack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&shrreq)
+            defer DebugJson("Response:",shrack)
+        }
 		luinfo,err:=GetLoginUserInfo(shrreq.Token)
 		if err!=nil{
 			shrack.Code=1
@@ -217,6 +233,10 @@ func UpdateDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(udack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&udreq)
+            defer DebugJson("Response:",udack)
+        }
 		luinfo,err:=GetLoginUserInfo(udreq.Token)
 		if err!=nil{
 			udack.Code=1

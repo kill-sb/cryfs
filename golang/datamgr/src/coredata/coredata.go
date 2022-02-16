@@ -182,6 +182,20 @@ func GetUuid()(string,error){
     }
 }
 
+func GetSelfPath()string{
+    pid:=os.Getpid()
+    exe:=fmt.Sprintf("/proc/%d/exe",pid)
+    rname,err:=os.Readlink(exe)
+    if err!=nil{
+        return ""
+    }
+    finfo,err:=os.Stat(rname)
+    if err!=nil{
+        return ""
+    }
+    return strings.TrimSuffix(rname,finfo.Name())
+}
+
 func IsValidUuid(uuid string)bool{
 	return true
 }

@@ -64,8 +64,8 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 			return
 		}
 		if g_config.Debug{
-			log.Println("request:",&ainfo)
-			defer log.Println("return:",token,"Data->",token.Data)
+			DebugJson("Request:",&ainfo)
+			defer DebugJson("Response:",token)
 		}
 //		log.Println("login:",ainfo)
 //		token.GetUserInfo(&ainfo)
@@ -107,13 +107,13 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 		var usrreq api.GetUserReq
 		err:=json.NewDecoder(r.Body).Decode(&usrreq)
 		if err!=nil{
-			log.Println("Decode json error:",err)
+			Debug("Decode json error:",err)
 			json.NewEncoder(w).Encode(usrack)
 			return
 		}
 		if g_config.Debug{
-			log.Println("request:",&usrreq)
-			defer log.Println("return:",usrack,"Data->",usrack.Data)
+			DebugJson("Request:",&usrreq)
+			defer DebugJson("Response:",usrack)
 		}
 		/*
 		_,err=GetLoginUserInfo(sifreq.Token)
@@ -149,10 +149,15 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 		var usrreq api.FindUserNameReq
 		err:=json.NewDecoder(r.Body).Decode(&usrreq)
 		if err!=nil{
-			log.Println("Decode json error:",err)
+			Debug("Decode json error:",err)
 			json.NewEncoder(w).Encode(usrack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&usrreq)
+            defer DebugJson("Response:",usrack)
+        }
+
 		/*
 		_,err=GetLoginUserInfo(sifreq.Token)
         if err!=nil{
@@ -171,7 +176,7 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 				usrack.Data=[]api.UserInfoData{}
 				break
 			}else{
-				log.Println(usr.Name,usr.Id)
+				Debug(usr.Name,usr.Id)
 				usrack.Data=append(usrack.Data,*usr)
 			}
 		}
@@ -193,6 +198,11 @@ func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(rfack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&rfreq)
+            defer DebugJson("Response:",rfack)
+        }
+
 		_,err=GetLoginUserInfo(rfreq.Token)
         if err!=nil{
             rfack.Code=1
@@ -220,6 +230,10 @@ func LogoutFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(loack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&loreq)
+            defer DebugJson("Response:",loack)
+        }
 		info,err:=GetLoginUserInfo(loreq.Token)
         if err!=nil{
             loack.Code=1

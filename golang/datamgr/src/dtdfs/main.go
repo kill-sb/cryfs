@@ -2,6 +2,8 @@ package main
 import (
 	"unsafe"
 	"os"
+	"coredata"
+	"fmt"
 )
 
 /*
@@ -11,7 +13,7 @@ import (
 import "C"
 
 func main(){
-	strcmd:="unshare -m ./datamgr "
+	strcmd:=fmt.Sprintf("unshare -m %s/datamgr ",coredata.GetSelfPath())
 	nlen:=len(os.Args)
 	for i:=1;i<nlen;i++{
 		strcmd=strcmd+" "+os.Args[i]

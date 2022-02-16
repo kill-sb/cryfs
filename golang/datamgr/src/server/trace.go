@@ -23,7 +23,10 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(tback)
 			return
 		}
-
+        if g_config.Debug{
+            DebugJson("Request:",&tbreq)
+            defer DebugJson("Response:",tback)
+        }
 		/*
 		_,err=GetLoginUserInfo(sifreq.Token)
         if err!=nil{
@@ -66,6 +69,10 @@ func QueryObjsFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(qoack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&qoreq)
+            defer DebugJson("Response:",qoack)
+        }
 		/*
 		_,err=GetLoginUserInfo(sifreq.Token)
         if err!=nil{

@@ -71,7 +71,7 @@ func doAuth(user string)(*api.ITokenInfo,error){
 	token:=new (api.ITokenInfo)
 	err:=HttpAPIPost(&ainfo,token,"login")
 	if err==nil{
-		fmt.Println("call api ok:",token,",data:",token.Data)
+//		fmt.Println("call api ok:",token,",data:",token.Data)
 		return token,nil
 	}else{
 		fmt.Println("call api error:",err)
