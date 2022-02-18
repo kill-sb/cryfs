@@ -35,6 +35,7 @@ var g_config ServerConfig
 var fhandler http.Handler
 var tokenmap map[string] *LoginUserInfo
 var tokenlock sync.RWMutex
+var routemap map[string] func (w http.ResponseWriter, r *http.Request)
 
 func LoadSvrConfig() *ServerConfig{
 //	g_config= new (ServerConfig)
@@ -88,10 +89,37 @@ func DebugJson(tip string,obj interface{}){
 	}
 }
 
+
+func DistroFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		if proc,ok:=routemap[r.RequestURI];ok{
+			w.Header().Set("Access-Control-Allow-Origin","*")
+			proc(w,r)
+		}else{
+			Debug("Warining: Unknown request url ->",r.RequestURI)
+		}
+	}
+}
 func SetupHandler() error{
 //	fhandler=http.FileServer(http.Dir("/root/linux-5.9.1"))
-	http.HandleFunc("/", defhandler)
+//	http.HandleFunc("/", defhandler)
 	prefix:="/api/"+g_config.Version+"/"
+	routemap=make(map[string]func(w http.ResponseWriter, r *http.Request))
+	routemap[prefix+"login"]=LoginFunc
+	routemap[prefix+"getuser"]=GetUserFunc
+    routemap[prefix+"findusername"]=FindUserNameFunc
+    routemap[prefix+"newdata"]=NewDataFunc
+    routemap[prefix+"getshareinfo"]=GetShareInfoFunc
+    routemap[prefix+"sharedata"]=ShareDataFunc
+    routemap[prefix+"getdatainfo"]=GetDataInfoFunc
+    routemap[prefix+"traceback"]=TraceBackFunc
+    routemap[prefix+"updatedata"]=UpdateDataFunc
+    routemap[prefix+"traceforward"]=TraceForwardFunc
+    routemap[prefix+"queryobjs"]=QueryObjsFunc
+    routemap[prefix+"logout"]=LogoutFunc
+    routemap[prefix+"refreshtoken"]=RefreshTokenFunc
+	http.HandleFunc(prefix,DistroFunc)
+	/*
 	http.HandleFunc(prefix+"login",LoginFunc) // POST
 	http.HandleFunc(prefix+"getuser",GetUserFunc) // GET
 	http.HandleFunc(prefix+"findusername",FindUserNameFunc) // GET
@@ -105,7 +133,7 @@ func SetupHandler() error{
 	http.HandleFunc(prefix+"queryobjs",QueryObjsFunc) // GET
 	http.HandleFunc(prefix+"logout",LogoutFunc) // GET
 	http.HandleFunc(prefix+"refreshtoken",RefreshTokenFunc) // GET
-
+*/
 	return nil
 }
 

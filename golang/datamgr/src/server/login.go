@@ -59,7 +59,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 		var ainfo api.AuthInfo
 		err:= json.NewDecoder(r.Body).Decode(&ainfo)
 		if err!=nil{
-			fmt.Println("Decode json error:",r.Body,"-",err)
+			Debug("Decode json error:",r.Body,"-",err)
 			json.NewEncoder(w).Encode(token)
 			return
 		}

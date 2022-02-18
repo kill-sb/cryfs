@@ -4,7 +4,6 @@ import (
     "net/http"
 	"encoding/json"
 	"errors"
-	"log"
 	api "apiv1"
     "dbop"
     "fmt"
@@ -19,7 +18,7 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&tbreq)
 		tback:=api.NewTraceBackAck(len(tbreq.Data))
 		if err!=nil{
-			log.Println("Decode json error:",err)
+			Debug("Decode json error:",err)
 			json.NewEncoder(w).Encode(tback)
 			return
 		}
@@ -65,7 +64,7 @@ func QueryObjsFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&qoreq)
 		qoack:=api.NewQueryObjsAck(qoreq.Data)
 		if err!=nil{
-			log.Println("Decode json error:",err)
+			Debug("Decode json error:",err)
 			json.NewEncoder(w).Encode(qoack)
 			return
 		}
