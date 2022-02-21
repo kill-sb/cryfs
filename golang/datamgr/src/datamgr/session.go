@@ -37,7 +37,8 @@ int get_passwd(char *buf,int len)
 }*/
 import "C"
 
-var APIServer string="https://127.0.0.1:8080/api/v1/"
+//var APIServer string="https://127.0.0.1:8080/api/v1/"
+var APIServer string="https://apisvr:8080/api/v1/"
 
 func HttpAPIPost(param interface{},ret interface{},entry string)error{
 	obj,_:=json.Marshal(param)

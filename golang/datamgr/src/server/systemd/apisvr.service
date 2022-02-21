@@ -1,0 +1,20 @@
+[Unit]
+Description=Data defense api server
+After=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+#ExecStart=/usr/local/bin/apisvr
+ExecStart=/usr/local/bin/apisvr.run
+ExecStop=killall apisvr
+User=root
+
+
+#PrivateNetwork=false
+
+KillMode=process
+KillSignal=SIGTERM
+

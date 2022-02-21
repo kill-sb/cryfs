@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+# modify /boot/loader/entries/xxx.conf and add "apisvr=on" to options variant
+/usr/bin/grep "apisvr=on" /proc/cmdline >/dev/null
+if [ $? -eq 0 ]; then 
+/usr/local/bin/apisvr
+fi 

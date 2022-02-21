@@ -97,6 +97,19 @@ func CheckParent()bool{
 	return false
 }
 
+func testlogin(){
+	token,err:=doAuth(loginuser)
+	if err!=nil {
+		fmt.Println("Login error:",err)
+	}else{
+		if token.Code==0{
+			fmt.Println("test login ok:",token,",data:",token.Data)
+		}else{
+			fmt.Println("login failed:",token.Msg)
+		}
+	}
+}
+
 func main(){
 	if !CheckParent(){
 		fmt.Println("'datamgr' is a inner module, use 'dtdfs' instead")
@@ -110,7 +123,8 @@ func main(){
 	outpath=strings.TrimSuffix(outpath,"/")
 	switch fun{
 	case core.LOGIN:
-		doAuth(loginuser)
+//		doAuth(loginuser)
+		testlogin()
 	case core.ENCODE:
 		doEncode()
 	case core.DISTRIBUTE:
