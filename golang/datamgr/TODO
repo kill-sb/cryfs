@@ -17,4 +17,4 @@ limit time should be readonly
 
 ----------------------
 demo2.0
-1. fix bug: open times is shared between users
+1. fix bug: open times is shared between users(move opentimes to shareusers)
