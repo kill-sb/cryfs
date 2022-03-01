@@ -13,8 +13,9 @@ dbop remove:
 5. dbop.ParseVisitors
 
 logical problem:
-limit time should be readonly
+shared data with limit time should be readonly
 
 ----------------------
 demo2.0
 1. fix bug: open times is shared between users(move opentimes to shareusers)
+2. add timeout stamp in login and update interface return

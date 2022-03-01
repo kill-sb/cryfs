@@ -114,20 +114,19 @@ func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
 	}
 }
 
-func DecreaseOpenTimes(sinfo *api.ShareInfoData) error{
+func DecreaseOpenTimes(sinfo *api.ShareInfoData, userid int32) error{
 	db:=GetDB()
 	if sinfo.LeftUse<=0{
 		fmt.Printf("Impossible here, while MaxUse=%d and LeftUse=%d",sinfo.MaxUse,sinfo.LeftUse)
 		return errors.New("Invalid LeftTime")
 	}
 	sinfo.LeftUse--
-	query:=fmt.Sprintf("update sharetags set leftuse=%d where uuid='%s'",sinfo.LeftUse,sinfo.Uuid)
+	query:=fmt.Sprintf("update shareusers set leftuse=%d where taguuid='%s' and userid=%d",sinfo.LeftUse,sinfo.Uuid,userid)
 	if _,err:=db.Exec(query);err!=nil{
 		fmt.Println("Update lefttime error:",err)
 		return err
 	}
 	return nil
-
 }
 /*
 func UpdateOpenTimes(sinfo *core.ShareInfo)error{
@@ -148,7 +147,36 @@ func UpdateOpenTimes(sinfo *core.ShareInfo)error{
 
 func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,leftuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname from sharetags where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,datauuid,perm,fromtype, crtime,orgname from sharetags where uuid='%s'",uuid)
+   res,err:=db.Query(query)
+    if err!=nil{
+        return nil,err
+    }
+	if res.Next(){
+		info:=new (api.ShareInfoData)
+	// info.FileUri will be filled outside
+		var recv string
+		info.Uuid=uuid
+        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
+			fmt.Println("query",query,"error:",err)
+			return nil,err
+		}
+		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
+		if err!=nil{
+			fmt.Println("Parse visitor from db error",err)
+			return nil,err
+		}
+		info.EncKey=""
+		info.LeftUse=0
+		return info,nil
+	}else{
+		return nil,errors.New("No shared info found in server")
+	}
+}
+
+func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
+	db:=GetDB()
+	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname from sharetags where uuid='%s'",uuid)
    res,err:=db.Query(query)
     if err!=nil{
         return nil,err
@@ -159,24 +187,26 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 		var recv string
 
 		info.Uuid=uuid
-        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.LeftUse,&info.EncKey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
+        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.EncKey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
-/*		userdata,err:=GetUserInfo(info.OwnerId)
-		if err!=nil{
-			return nil,err
-		}
-
-		info.OwnerName=userdata.Name
-		*/
 		info.Receivers,info.RcvrIds,err=ParseVisitors(recv)
 		if err!=nil{
 			fmt.Println("Parse visitor from db error",err)
 			return nil,err
 		}
+		query=fmt.Sprintf("select leftuse from shareusers where taguuid='%s' and userid=%d", uuid,userid)
+		res,err=db.Query(query)
+		if err!=nil || !res.Next(){
+			info.LeftUse=0
+		}else{
+			err=res.Scan(&info.LeftUse)
+			if err!=nil{
+				return nil,err
+			}
+		}
 		return info,nil
-
 	}else{
 		return nil,errors.New("No shared info found in server")
 	}
@@ -195,7 +225,7 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 			recvlist+=","
 		}
 		recvlist+=user
-		query=fmt.Sprintf("insert into shareusers (taguuid,userid) values ('%s',%d)",sinfo.Uuid,sinfo.RcvrIds[i])
+		query=fmt.Sprintf("insert into shareusers (taguuid,userid,leftuse) values ('%s',%d,%d)",sinfo.Uuid,sinfo.RcvrIds[i],sinfo.MaxUse)
 		if _,err:=db.Exec(query);err!=nil{
 			fmt.Println("Insert into shareusers error",err)
 			return err

@@ -119,60 +119,68 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
             DebugJson("Request:",&sifreq)
             defer DebugJson("Response:",sifack)
         }
-		retdata,err:=dbop.GetShareInfoData(sifreq.Uuid)
-		if err!=nil{
-			sifack.Code=2
-			sifack.Msg=err.Error()
-		}else{
-			if sifreq.NeedKey==1{
-				inlist:=false
-				linfo,err:=GetLoginUserInfo(sifreq.Token)
-				if err!=nil{
-		            sifack.Code=1
-		            sifack.Msg="You should login first"
-		            json.NewEncoder(w).Encode(sifack)
-		            return
-				}
 
-				for _,id:=range retdata.RcvrIds{
-					if linfo.Id==id{
-						inlist=true
-						break
-					}
-				}
-				if !inlist{
-					sifack.Code=3
-					sifack.Msg="user not in share list"
-
-		            json.NewEncoder(w).Encode(sifack)
-		            return
-				}
-				// check and update Left Use
-				if retdata.LeftUse==0{
-					sifack.Code=4
-					sifack.Msg="open times exhausted"
-		            json.NewEncoder(w).Encode(sifack)
-		            return
-				}
-				if retdata.LeftUse>0{
-					err=dbop.DecreaseOpenTimes(retdata)
-					if err!=nil{
-						sifack.Code=5
-						sifack.Msg=err.Error()
-	                    json.NewEncoder(w).Encode(sifack)
-		                return
-					}
-				}
-				// check expired time later
-			}else{
-				retdata.EncKey=""
-			}
-			sifack.Code=0
-			sifack.Msg="OK"
-			sifack.Data=retdata
+	var retdata *api.ShareInfoData
+	var linfo *LoginUserInfo
+	linfo,err=GetLoginUserInfo(sifreq.Token)
+	if err!=nil{ // not a valid token
+		if sifreq.NeedKey==1{
+			sifack.Code=1
+			sifack.Msg="You should login first"
+			json.NewEncoder(w).Encode(sifack)
+			return
+		}else{ // if token is not valid , LeftUse may be incorrect(0)
+			retdata,err=dbop.GetShareInfoData(sifreq.Uuid)
 		}
-        json.NewEncoder(w).Encode(sifack)
+	}else{ // NeedKey should be checked later, if NeedKey==1 will cause LeftUse--
+		retdata,err=dbop.GetUserShareInfoData(sifreq.Uuid,linfo.Id)
+	}
+	if err!=nil{ // get share info error in db
+		sifack.Code=2
+		sifack.Msg=err.Error()
+		json.NewEncoder(w).Encode(sifack)
+		return
+	}
+
+	if sifreq.NeedKey==0{
+			retdata.EncKey=""
 	}else{
+		inlist:=false
+		for _,id:=range retdata.RcvrIds{
+			if linfo.Id==id{
+				inlist=true
+				break
+			}
+		}
+		if !inlist{
+			sifack.Code=3
+			sifack.Msg="user not in share list"
+			json.NewEncoder(w).Encode(sifack)
+			return
+		}
+		if retdata.LeftUse==0{
+			sifack.Code=4
+			sifack.Msg="open times exhausted"
+	        json.NewEncoder(w).Encode(sifack)
+	        return
+		}
+
+		if retdata.LeftUse>0{
+			err=dbop.DecreaseOpenTimes(retdata,linfo.Id)
+			if err!=nil{
+				sifack.Code=5
+				sifack.Msg=err.Error()
+                json.NewEncoder(w).Encode(sifack)
+	            return
+			}
+			// check expired time later
+		}// otherwise, LeftUse==-1, ulimited
+	}
+	sifack.Code=0
+	sifack.Msg="OK"
+	sifack.Data=retdata
+	json.NewEncoder(w).Encode(sifack)
+	} else{
 		http.NotFound(w,r)
 	}
 }
