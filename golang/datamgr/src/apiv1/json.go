@@ -15,6 +15,7 @@ type TokenInfo struct{
     Id int32 `json:"id"`
     Token string `json:"token"`
     Key string `json:"key"`
+    Timeout int32 `json:"timeout"`
 }
 
 type ITokenInfo struct{
@@ -22,12 +23,18 @@ type ITokenInfo struct{
 	Data *TokenInfo `json:"data"`
 }
 
+
 type LoginStatReq struct{
 	Token string `json:"token"`
 }
 
+type LoginStatInfo struct{
+	Timeout int32 `json:"timeout"`
+}
+
 type ILoginStatAck struct{
 	RetStat
+	Data *LoginStatInfo `json:"data"`
 }
 
 type EncDataReq struct{

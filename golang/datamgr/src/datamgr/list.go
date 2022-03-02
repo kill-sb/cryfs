@@ -301,7 +301,7 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 		maxtime=fmt.Sprintf("%d",sinfo.MaxUse)
 		lefttime=fmt.Sprintf("%d",sinfo.LeftUse)
 	}
-	result+=fmt.Sprintf("\tPermissions :Data Access Mode(%s), Expire Date(%s), Max/Left Open Times(%s/%s)\n",perm,sinfo.Expire,maxtime,lefttime)
+	result+=fmt.Sprintf("\tPermissions :Data Access Mode(%s), Expire Date(%s), Left/Max Open Times(%s/%s)\n",perm,sinfo.Expire,lefttime,maxtime)
 
 	result+=fmt.Sprintf("\tOriginal filename :%s\n",sinfo.OrgName)
 	if sinfo.IsDir==1{

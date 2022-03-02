@@ -53,7 +53,7 @@ func NewShareInfoAck()*IShareInfoAck{
 	data.RcvrIds=make([]int32,0,20)
 	data.Receivers=make([]string,0,20)
 	ack:=new (IShareInfoAck)
-	ack.Msg="Error Parameter"
+	ack.Msg="Invalid Parameter"
 	ack.Data=data
     return ack
 }
@@ -66,13 +66,23 @@ func NewDataAck() *IEncDataAck{
 	eda.Data=data
 	return eda
 }
+
 func NewToken()*ITokenInfo{
     data:=&TokenInfo{Id:-1,Token:"nil",Key:"nil"}
 	token:=new (ITokenInfo)
 	token.Code=-1
-	token.Msg="Error Parameter"
+	token.Msg="Invalid Parameter"
 	token.Data=data
     return token
+}
+
+func NewLoginStatAck() *ILoginStatAck{
+	data:=&LoginStatInfo{0}
+	lsa:=new (ILoginStatAck)
+	lsa.Data=data;
+	lsa.Code=-1
+	lsa.Msg="Invalid parameter"
+	return lsa
 }
 
 func NewQueryObjsAck(reqinfo []DataObj)*IQueryObjsAck {

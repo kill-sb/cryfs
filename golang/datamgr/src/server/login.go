@@ -33,6 +33,7 @@ type LoginUserInfo struct{
     Id int32
     Keylocalkey []byte
     PriMask int32
+	Timeout int32
     LogExpire time.Time
 	Lock sync.RWMutex
 /*  Email string
@@ -48,6 +49,7 @@ func GenUserInfo(ainfo* api.AuthInfo, tinfo *api.TokenInfo)*LoginUserInfo{
 	luinfo.Id=tinfo.Id
 	luinfo.Keylocalkey=core.StringToBinkey(tinfo.Key)
 	luinfo.PriMask=ainfo.PriMask
+	luinfo.Timeout=tinfo.Timeout
 	luinfo.UpdateToken()
 	return luinfo
 }
@@ -84,6 +86,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 			token.Data.Id=id
 			token.Data.Key=key
 			token.Data.Token=makeToken(token.Data.Id)
+			token.Data.Timeout=EXPIRE_TIME
 			luinfo:=GenUserInfo(&ainfo,token.Data)
 			AddToken(token.Data.Token,luinfo)
 		//	log.Println(*luinfo)
@@ -189,7 +192,7 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 
 func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
-		rfack:=new (api.ILoginStatAck)
+		rfack:=api.NewLoginStatAck()
 		w.Header().Set("Content-Type","application/json")
 		var rfreq api.LoginStatReq
 		err:=json.NewDecoder(r.Body).Decode(&rfreq)
@@ -203,7 +206,7 @@ func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
             defer DebugJson("Response:",rfack)
         }
 
-		_,err=GetLoginUserInfo(rfreq.Token)
+		info,err:=GetLoginUserInfo(rfreq.Token)
         if err!=nil{
             rfack.Code=1
             rfack.Msg="Invalid token"
@@ -212,6 +215,7 @@ func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
         }
 		rfack.Code=0
 		rfack.Msg="OK"
+		rfack.Data.Timeout=info.Timeout
 		json.NewEncoder(w).Encode(rfack)
 	}else{
 		http.NotFound(w,r)
@@ -221,7 +225,7 @@ func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
 
 func LogoutFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
-		loack:=new (api.ILoginStatAck)
+		loack:=api.NewLoginStatAck()
 		w.Header().Set("Content-Type","application/json")
 		var loreq api.LoginStatReq
 		err:=json.NewDecoder(r.Body).Decode(&loreq)
