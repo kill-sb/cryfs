@@ -71,6 +71,9 @@ func defhandler(w http.ResponseWriter, r *http.Request){
 }
 
 func Debug(obj...interface{}){
+	if !g_config.Debug{
+		return
+	}
 	if g_config.Log!=nil{
 		g_config.Log.Println(obj...)
 	}else{
@@ -79,6 +82,9 @@ func Debug(obj...interface{}){
 }
 
 func DebugJson(tip string,obj interface{}){
+	if !g_config.Debug{
+		return
+	}
 	ret,err:=json.Marshal(obj)
 	if err==nil{
 		if g_config.Log!=nil{
@@ -91,6 +97,9 @@ func DebugJson(tip string,obj interface{}){
 
 
 func DistroFunc(w http.ResponseWriter, r *http.Request){
+	if g_config.Debug{
+		Debug("\n------ Processing uri:",r.RequestURI,",  Method:",r.Method,"------")
+	}
 	if r.Method=="POST"{
 		if proc,ok:=routemap[r.RequestURI];ok{
 			w.Header().Set("Access-Control-Allow-Origin","*")

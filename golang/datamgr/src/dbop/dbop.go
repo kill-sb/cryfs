@@ -347,6 +347,27 @@ func LookupPasswdSHA(user string)(int32,string,string,error){
 	return -1,"","",errors.New("No such user")
 }
 
+func SearchShareData(req *api.SearchShareDataReq)([]api.ShareDataNode,error){
+	if req.FromId<=0 && req.UserId<=0{
+		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
+	}
+	db:=GetDB()
+	query:="select shareusers.taguuid, shareusers.leftuse, sharetags.ownerid, shareusers.userid from shareusers "
+	if req.FromId>0 && req.ToId>0{
+		query+=fmt.Sprintf("where fromid=%d and toid=%d ")
+	}else if req.FromId>0{
+		query+=fmt.Sprintf("where fromid=%d ")
+	}else{
+		query+=fmt.Sprintf("where toid=%d ")
+	}
+	if req.Start!=""{
+		query+=fmt.Sprintf("and crtime > '%s' ",req.Start+" 00:00:00")
+	}
+	if req.End!=""{
+		query+=fmt.Sprintf("and crtime < '%s' ",req.End+" 23.59:59")
+	}
+}
+
 func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
 	db:=GetDB()
 	if obj.Type<0{

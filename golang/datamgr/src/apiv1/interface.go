@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+const INIT_MSG string ="Invalid parameter"
+
+
 func NewShareAck() *IShareDataAck{
 //	data:=new (ShareDataAck)
 	sda:=new (IShareDataAck)
@@ -103,6 +106,14 @@ func NewQueryObjsAck(reqinfo []DataObj)*IQueryObjsAck {
 	qda.Msg="Invalid parameter"
 	qda.Data=data
 	return qda
+}
+
+func NewSearchDataAck(result []ShareDataNode) *ISearchDataAck{
+	sda:=new (ISearchDataAck)
+	sda.Code=-1
+	sda.Msg=INIT_MSG
+	sda.Data=result
+	return sda
 }
 
 func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (int32)string)error{

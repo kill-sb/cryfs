@@ -102,6 +102,38 @@ func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		w.Header().Set("Content-Type","application/json")
+		var ssdreq api.SearchShareDataReq
+		ssdack:=api.NewSearchDataAck(make([]api.ShareDataNode,0,0))
+		err:=json.NewDecoder(r.Body).Decode(&ssdreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(ssdack)
+			return
+		}
+
+		objs,err:=dbop.SearchShareData(&ssdreq)
+		if err!=nil{
+			ssdack.Code=-2
+			ssdack.Msg=err.Error()
+		}else{
+			ssdack=api.NewSearchDataAck(objs)
+			ssdack.Code=0
+			ssdack.Msg="OK"
+		}
+		json.NewEncoder(w).Encode(ssdack)
+        if g_config.Debug{
+            DebugJson("Request:",&ssdreq)
+            DebugJson("Response:",ssdack)
+        }
+		/*
+		var linfo *LoginUserInfo
+		linfo,err=GetLoginUserInfo(sifreq.Token)
+		*/
+	}
+}
 
 func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 	//if r.Method=="GET"{

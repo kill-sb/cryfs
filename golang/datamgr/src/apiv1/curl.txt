@@ -5,12 +5,12 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call: 
 		curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
 	return ok: 
-		{"code":0,"message":"","data":{"id":1,"token":"64f0a69a0f66e2faf993f354e9190340","key":"f447b20a7fcbf53a5d5be013ea0b15af"}}
+		{"code":0,"message":"","data":{"id":1,"token":"64f0a69a0f66e2faf993f354e9190340","key":"f447b20a7fcbf53a5d5be013ea0b15af","timeout":900}}
 
 	call:
 		curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123","primask":0}' -k https://127.0.0.1:8080/api/v1/login
 	return error: 
-		{"code":1,"message":"Invalid user/password","data":{"id":-1,"token":"nil","key":"nil"}}
+		{"code":1,"message":"Invalid user/password","data":{"id":-1,"token":"nil","key":"nil","timeout":0}}
 
 
 2. newdata:
@@ -100,14 +100,14 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"9f7e6adf87546d1acfdb796e85bf4e60"}' -k https://127.0.0.1:8080/api/v1/logout
 	return ok:
-	{"code":0,"message":"OK"}
+	{"code":0,"message":"OK","data":{"timeout":0}}
 
 12. refreshtoken
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"9f7e6adf87546d1acfdb796e85bf4e60"}' -k https://127.0.0.1:8080/api/v1/refreshtoken
 	return OK:
-	{"code":0,"message":"OK"}
+	{"code":0,"message":"OK","data":{"timeout":900}}
 	return error:
-	{"code":1,"message":"Invalid token"}
+	{"code":1,"message":"Invalid token","data":{"timeout":0}}
 
 
