@@ -347,25 +347,42 @@ func LookupPasswdSHA(user string)(int32,string,string,error){
 	return -1,"","",errors.New("No such user")
 }
 
-func SearchShareData(req *api.SearchShareDataReq)([]api.ShareDataNode,error){
-	if req.FromId<=0 && req.UserId<=0{
+func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
+	if req.FromId<=0 && req.ToId<=0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
 	db:=GetDB()
-	query:="select shareusers.taguuid, shareusers.leftuse, sharetags.ownerid, shareusers.userid from shareusers "
+	query:="select sharetags.uuid, sharetags.ownerid,sharetags.crtime, shareusers.userid, shareusers.leftuse from sharetags,shareusers "
 	if req.FromId>0 && req.ToId>0{
-		query+=fmt.Sprintf("where fromid=%d and toid=%d ")
+		query+=fmt.Sprintf("where sharetags.ownerid=%d and shareusers.userid=%d ",req.FromId,req.ToId)
 	}else if req.FromId>0{
-		query+=fmt.Sprintf("where fromid=%d ")
+		query+=fmt.Sprintf("where sharetags.ownerid=%d ",req.FromId)
 	}else{
-		query+=fmt.Sprintf("where toid=%d ")
+		query+=fmt.Sprintf("where shareusers.userid=%d ",req.ToId)
 	}
+	query+=" and sharetags.uuid=shareusers.taguuid "
 	if req.Start!=""{
-		query+=fmt.Sprintf("and crtime > '%s' ",req.Start+" 00:00:00")
+		query+=fmt.Sprintf("and sharetags.crtime >= '%s' ",req.Start+" 00:00:00")
 	}
 	if req.End!=""{
-		query+=fmt.Sprintf("and crtime < '%s' ",req.End+" 23.59:59")
+		query+=fmt.Sprintf("and sharetags.crtime <= '%s' ",req.End+" 23.59:59")
 	}
+	log.Println("search query:",query)
+	res,err:=db.Query(query)
+	if err!=nil{
+		log.Println("select from db error:",err)
+		return nil,err
+	}
+	ret:=make([]*api.ShareDataNode,0,50)
+	for res.Next(){
+		node:=new(api.ShareDataNode)
+		err=res.Scan(&node.Uuid,&node.FromId,&node.Crtime,&node.ToId,&node.LeftTimes)
+		if err!=nil{
+			return nil,err
+		}
+		ret=append(ret,node)
+	}
+	return ret,nil
 }
 
 func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
@@ -387,7 +404,7 @@ func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
 	}
 	res,err:=db.Query(query)
 	if err!=nil{
-		fmt.Println("select from db error:",err)
+		log.Println("select from db error:",err)
 		return nil,err
 	}
 	if res.Next(){

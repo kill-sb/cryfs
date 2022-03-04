@@ -202,12 +202,13 @@ type SearchShareDataReq struct{
 
 type ShareDataNode struct{
 	Uuid string `json:"uuid"`
-	LeftTime int32 `json:"lefttimes"`
+	LeftTimes int32 `json:"lefttimes"`
 	FromId int32 `json:"fromid"`
 	ToId int32 `json:"toid"`
+	Crtime string `json:"crtime"`
 }
 
 type ISearchDataAck struct{
 	RetStat
-	Data []ShareDataNode `json:"shareddata"`
+	Data []*ShareDataNode `json:"shareddata"`
 }

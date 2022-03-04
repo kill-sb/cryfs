@@ -127,6 +127,7 @@ func SetupHandler() error{
     routemap[prefix+"queryobjs"]=QueryObjsFunc
     routemap[prefix+"logout"]=LogoutFunc
     routemap[prefix+"refreshtoken"]=RefreshTokenFunc
+	routemap[prefix+"searchsharedata"]=SearchShareDataFunc
 	http.HandleFunc(prefix,DistroFunc)
 	/*
 	http.HandleFunc(prefix+"login",LoginFunc) // POST

@@ -108,7 +108,7 @@ func NewQueryObjsAck(reqinfo []DataObj)*IQueryObjsAck {
 	return qda
 }
 
-func NewSearchDataAck(result []ShareDataNode) *ISearchDataAck{
+func NewSearchDataAck(result []*ShareDataNode) *ISearchDataAck{
 	sda:=new (ISearchDataAck)
 	sda.Code=-1
 	sda.Msg=INIT_MSG

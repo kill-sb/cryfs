@@ -106,7 +106,7 @@ func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		w.Header().Set("Content-Type","application/json")
 		var ssdreq api.SearchShareDataReq
-		ssdack:=api.NewSearchDataAck(make([]api.ShareDataNode,0,0))
+		ssdack:=api.NewSearchDataAck(make([]*api.ShareDataNode,0,0))
 		err:=json.NewDecoder(r.Body).Decode(&ssdreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
