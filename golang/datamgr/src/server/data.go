@@ -102,6 +102,7 @@ func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+// check token/ownerid later, valid only when ownerid==fromid || owner==toid
 func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		w.Header().Set("Content-Type","application/json")
@@ -114,9 +115,23 @@ func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 			return
 		}
 
+		uinfo,err:=GetLoginUserInfo(ssdreq.Token)
+        if err!=nil{
+            ssdack.Code=1
+            ssdack.Msg="You should login first"
+            json.NewEncoder(w).Encode(ssdack)
+            return
+        }
+		if uinfo.Id!=ssdreq.ToId && uinfo.Id!=ssdreq.FromId{
+			ssdack.Code=3
+			ssdack.Msg="You should be either OWNER or RECEIVER of the data"
+			json.NewEncoder(w).Encode(ssdack)
+			return
+		}
+
 		objs,err:=dbop.SearchShareData(&ssdreq)
 		if err!=nil{
-			ssdack.Code=-2
+			ssdack.Code=2
 			ssdack.Msg=err.Error()
 		}else{
 			ssdack=api.NewSearchDataAck(objs)

@@ -17,6 +17,6 @@ shared data with limit time should be readonly
 
 ----------------------
 demo2.0
-1. fix bug: open times is shared between users(move opentimes to shareusers)
-2. add timeout stamp in login and update interface return
-3. fix unecessary reduce of leftuse in GetShareDataInfo
+1. fix bug: open times is shared between users(move opentimes to shareusers) ... done
+2. add timeout stamp in login and update interface return ... done
+3. fix unecessary reduce of leftuse in GetShareDataInfo(client) 

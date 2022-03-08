@@ -111,8 +111,13 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	{"code":1,"message":"Invalid token","data":{"timeout":0}}
 
 13. searchsharedata
+    login first:
+        curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+    login return:
+        {"code":0,"message":"OK","data":{"id":1,"token":"cd77cf0d36158d815d8c626739fe7c67","key":"4a62cf6ee3f8d889e65af1cc271f20fa"}}
+
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","fromid":1,"toid":0,"startdate":"2022-02-01","enddate":""}' -k https://127.0.0.1:8080/api/v1/searchsharedata
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"cd77cf0d36158d815d8c626739fe7c67","fromid":1,"toid":0,"startdate":"2022-02-01","enddate":""}' -k https://127.0.0.1:8080/api/v1/searchsharedata
 	return ok:
 	{"code":0,"message":"OK","shareddata":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":2,"crtime":"2022-02-11 16:09:32"},{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":0,"crtime":"2022-02-11 16:09:32"},{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","lefttimes":3,"fromid":1,"toid":2,"crtime":"2022-03-01 16:07:57"},{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","lefttimes":2,"fromid":1,"toid":3,"crtime":"2022-03-01 16:07:57"}]}
 
