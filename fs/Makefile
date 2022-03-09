@@ -17,6 +17,8 @@ demo:cmfs
 
 	./cmfs /root/encrypt /root/plain -o big_writes -o max_write=65536 -o entry_timeout=120 -o attr_timeout=120  -o kernel_cache -o auto_cache
 
+install:cmfs
+	/bin/cp cmfs /usr/local/bin
 test:cmfs
 #	./cmfs  /tmp/mnt  /mnt -o big_writes -o max_write=65536 -o entry_timeout=120 -o attr_timeout=120
 	./cmfs  /root/mnt  /mnt -o big_writes -o max_write=65536 -o entry_timeout=120 -o attr_timeout=120  -o kernel_cache -o auto_cache
