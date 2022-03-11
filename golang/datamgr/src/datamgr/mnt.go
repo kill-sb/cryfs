@@ -23,6 +23,8 @@ int mount_cmfs(const char* src, const char* dst,const char* passwd, const char* 
 */
 import "C"
 
+//var multisrc []string
+
 import(
 	"fmt"
 	"os"
@@ -49,7 +51,7 @@ func LocalTempDir(ipath string)string{
 	if finfo.IsDir(){
 		return strings.TrimSuffix(ipath,"/")+"/"
 	}
-	return strings.TrimSuffix(ipath,finfo.Name()) 
+	return strings.TrimSuffix(ipath,finfo.Name())
 	// return value must with a '/' in the end
 
 }
@@ -59,12 +61,15 @@ func doMount(){
         fmt.Println("You should set inpath explicitly")
         return
     }
+	paths:=strings.Split(inpath,",")
+	multisrc:=make([]string,0,len(paths))
+	for _,str:=range paths{
+		str=strings.TrimSpace(str)
+		if str!=""{
+			multisrc=append(multisrc,str)
+		}
+	}
 
-    info,err:=os.Stat(inpath)
-	if err!=nil{
-        fmt.Println("Can't find ",inpath)
-        return
-    }
 /*
     if outpath=="" {
         fmt.Println("You should set outpath explicitly")
@@ -82,12 +87,34 @@ func doMount(){
 	}
 	defer linfo.Logout()
 
+	/*
+    info,err:=os.Stat(inpath)
+	if err!=nil{
+        fmt.Println("Can't find ",inpath)
+        return
+    }*/
+
+/*
 	if info.IsDir(){
 		MountDir(inpath,linfo) // must be encrypted data, not shared file
 	}else{
 
 		MountFile(inpath,linfo) // may be a encrypted data or a csdfile(may also be a file or a dir)
+	}*/
+	MountObjs(multisrc)
+}
+
+func MountObjs(inputs []string){
+/*
+
+	for _,obj:=range inputs{
 	}
+	1. detect path valid
+	2. check data access permission, any readonly data will cause not output path(mount return different value),then mount them with different key
+	3. put all cmfs-mounted dir and import dir in a slice, then mount in-paths to /indata/dataN, mount import-path to /indata/import
+	4. write data to /output as old
+	5. record all in-paths and import-path to server(db)
+*/
 }
 
 func MountDirInC(src,dst string,passwd []byte,mode string)error{
