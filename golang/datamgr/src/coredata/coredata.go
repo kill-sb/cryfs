@@ -29,6 +29,7 @@ const (
 
 const (
     RAWDATA=iota
+	ENCDATA
 	CSDFILE
 //	ENCDATA // Only occured in 'FromType' of EncryptedData. 'FromType' of CSD FILE is always CSDEILE OR RAWDATA(although it is encoded data actually)
 	UNKNOWN
@@ -62,7 +63,23 @@ type TagInFile struct{ // .tag
 	EKey	[16] byte //16
 	Descr	[100] byte // 100
 	OrgName [254] byte
-//	Padding	[60] byte // 512-4--36-32-256-24-100=60
+}
+
+type EncDataTag struct{
+	Uuid	[36] byte
+	EKey	[16] byte
+}
+
+type SourceInfo struct{
+	DataType int
+	DataUuid string
+}
+
+type PlainFile struct{
+	RelName string
+	FileDesc string
+	Sha256	string
+	Size	int64
 }
 
 type EncryptedData struct{
@@ -70,13 +87,16 @@ type EncryptedData struct{
     Descr string
 	IsDir	byte
 	OwnerName string
-    FromType int
-    FromObj string
+
+    FromType int // 0 means from local plain, 1 for multi sources
+	OrgName string // only valid then FromType==0
+
+	Sources	[]SourceInfo
+	Imports	[]PlainFile // support 10 files at most
     OwnerId int32
 	HashMd5 string
     EncryptingKey []byte
 	Path	string
-	OrgName string
 	CrTime	string
 }
 
@@ -128,8 +148,9 @@ func (sinfo*ShareInfo)PrintTraceInfo(level int,keyword string) error{
 	}else{
 		result+=fmt.Sprintf(", Perm->Resharable")
 	}
-	if sinfo.FromType==RAWDATA{
-		result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
+
+	// should be replaced later because of multi-source processing
+	if sinfo.FromType==RAWDATA{		result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
 	}else{
 		result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
 	}
@@ -148,6 +169,8 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 	}
 	fmt.Print("-->")
 	var result string
+
+	// should be replaced later because of multi-source processing
 	if dinfo.FromType==RAWDATA{
 		result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
 	}else if dinfo.FromType==CSDFILE{
@@ -221,7 +244,7 @@ func GetFileType(fname string)(int,error){
     if IsValidUuid(finfo.Name()){
         _,err=os.Stat(fname+".tag")
         if err==nil{
-            return RAWDATA,nil
+            return ENCDATA,nil
         }
     }
     if !finfo.IsDir() && (strings.HasSuffix(fname,".csd") || strings.HasSuffix(fname,".CSD")){
@@ -248,7 +271,7 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 	sinfo.LeftUse=-1
 	sinfo.FromType=fromtype
 	sinfo.RandKey,_=RandPasswd()
-	if fromtype==RAWDATA{
+	if fromtype==ENCDATA{
 	//if fromtype!=UNKNOWN{
 		st,_:=os.Stat(fromobj)
 		sinfo.FromUuid=st.Name()
@@ -263,6 +286,9 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 	}else if fromtype==CSDFILE{
 		// unknown file type: Uuid, OrgName  and IsDir will be filled according to source csd file outside
 		// seems nothing to do here
+	}else{
+		fmt.Println("Invalid fromtype:",fromtype)
+		return nil,errors.New("Invalid fromtype in NewShareInfo")
 	}
 	sinfo.FileUri=fromobj
 	sinfo.EncryptedKey=make([]byte,16) // calc outside later
@@ -330,7 +356,7 @@ func (sinfo *ShareInfo)CreateCSDFile(dstfile string)error{
 			return err
 	}
 	defer fw.Close()
-	if sinfo.FromType==RAWDATA{
+	if sinfo.FromType==ENCDATA{
 		if sinfo.WriteFileHead(fw)==BINCONTENT{
 			if sinfo.IsDir==0{
 				fr,err:=os.Open(sinfo.FileUri)
@@ -410,6 +436,7 @@ func (tag *TagInFile) SaveTagToDisk(fname string)error{
 }
 
 func (tag *TagInFile) GetDataInfo()(*EncryptedData,error){
+// need to be rewritten later because of multi source mnt supporting
 	if(tag.FromType==RAWDATA/* || tag.FromType==ENCDATA*/){
 		return DataFromTag(tag),nil
 	}else{

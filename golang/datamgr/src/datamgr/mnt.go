@@ -107,14 +107,15 @@ func doMount(){
 func MountObjs(inputs []string){
 /*
 
-	for _,obj:=range inputs{
-	}
 	1. detect path valid
 	2. check data access permission, any readonly data will cause not output path(mount return different value),then mount them with different key
 	3. put all cmfs-mounted dir and import dir in a slice, then mount in-paths to /indata/dataN, mount import-path to /indata/import
 	4. write data to /output as old
 	5. record all in-paths and import-path to server(db)
 */
+
+//	for _,obj:=range inputs{
+//	}
 }
 
 func MountDirInC(src,dst string,passwd []byte,mode string)error{
@@ -259,6 +260,7 @@ func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInf
 
     pdata.Uuid=datauuid
     pdata.Descr="cmit encrypted dir"
+	// should be replaced later because of multi-source processing
     pdata.FromType=core.CSDFILE
     pdata.FromObj=sinfo.Uuid
 	finfo,_:=os.Stat(sinfo.FileUri)
@@ -407,7 +409,7 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 			CreatePod("cmro",mntmap)
 		}
 
-	}else if ftype==core.RAWDATA{
+	}else if ftype==core.ENCDATA{
 		if err:=MountSingleEncFile(ipath,linfo);err!=nil{
 			fmt.Println("Mount single encoded file error:",err)
 			return err

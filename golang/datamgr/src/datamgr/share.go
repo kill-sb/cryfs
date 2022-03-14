@@ -41,22 +41,25 @@ func doShare(){
 }
 
 func GetDataType(ipath string /* .tag or .csd stand for local encrypted data or data shared from other user */) int{
+
+    // should be replaced later because of multi-source processing
+
 	if strings.HasSuffix(ipath,".csd") || strings.HasSuffix(ipath,".CSD"){
 		return core.CSDFILE
 	}else if core.IsValidUuid(strings.TrimSuffix(ipath,".tag"))|| core.IsValidUuid(strings.TrimSuffix(ipath,".TAG")) {
-		return core.RAWDATA
+		return core.ENCDATA
 	}else{
 		return core.UNKNOWN
 	}
 }
 
 func shareDir(ipath,opath string, linfo *core.LoginInfo){
-/*	fromtype shoud be RAWDATA
+/*	fromtype shoud be ENCDATA
 	0. write shareinfo header
 	1. zip path to file after header
 	2. rename the file to ofile
 */
-	sinfo,err:=core.NewShareInfo(linfo,core.RAWDATA,ipath)
+	sinfo,err:=core.NewShareInfo(linfo,core.ENCDATA,ipath)
 	dinfo,_,err:=GetEncDataFromDisk(linfo,ipath)
 	if err!=nil{
 		fmt.Println("GetEncDataFromDisk in shareDir error:",err)
@@ -118,7 +121,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		fmt.Println("new share info error:",err)
 		return err
 	}
-	if fromtype==core.RAWDATA{
+	if fromtype==core.ENCDATA{
 		// todo: judge Isdir
 		dinfo,_,err:=GetEncDataFromDisk(linfo,ipath)
 		if(err!=nil){

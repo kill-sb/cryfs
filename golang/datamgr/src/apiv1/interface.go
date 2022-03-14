@@ -7,6 +7,14 @@ import (
 
 const INIT_MSG string ="Invalid parameter"
 
+const (
+    RAWDATA=iota
+    ENCDATA
+    CSDFILE
+    UNKNOWN
+)
+
+
 
 func NewShareAck() *IShareDataAck{
 //	data:=new (ShareDataAck)
@@ -122,15 +130,15 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (i
     }
     fmt.Print("-->")
     var result string
-    if dinfo.FromType==0{
+    if dinfo.FromType==RAWDATA{
         result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
-    }else if dinfo.FromType==1{
+    }else if dinfo.FromType==ENCDATA || dinfo.FromType==CSDFILE{
         result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
     }
     result+=fmt.Sprintf("Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
-    if dinfo.FromType==0{
+    if dinfo.FromType==RAWDATA{
         result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
-    }else{
+    }else if dinfo.FromType==CSDFILE{
         result+=fmt.Sprintf(", From User Share Data UUID->%s(Orginal Filename :%s)",dinfo.FromObj,strings.TrimSuffix(dinfo.OrgName,".outdata"))
     }
 
@@ -156,7 +164,7 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, keyword string,getuser func(
     }else{
         result+=fmt.Sprintf(", Perm->Resharable")
     }
-    if sinfo.FromType==0{
+    if sinfo.FromType==RAWDATA{
         result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
     }else{
         result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)

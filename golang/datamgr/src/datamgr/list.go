@@ -103,6 +103,8 @@ func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
 	if err==nil{
 		result+=fmt.Sprintf("\tData Owner :%s(%d)\n",user,data.OwnerId)
 	}
+
+    // should be replaced later because of multi-source processing
 	if data.FromType==core.RAWDATA{
 		result+=fmt.Sprintf("\tFrom Type: Plain Local File\n")
 		result+=fmt.Sprintf("\tOrginal filename :%s\n",data.OrgName)
@@ -198,6 +200,9 @@ func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error)
 		return nil,err
 	}
 	tracer=append(tracer,dinfo)
+
+    // should be replaced later because of multi-source processing
+
 	if dinfo.FromType==core.RAWDATA{
 		return tracer,nil
 	}else if dinfo.FromType==core.CSDFILE{
@@ -221,7 +226,9 @@ func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error
 	}
 	sinfo:=FillShareInfo(sifack.Data,uuid,0,0,nil)
 	tracer=append(tracer,sinfo)
-	if sinfo.FromType==core.RAWDATA{
+
+    // should be replaced later because of multi-source processing
+	if sinfo.FromType==core.ENCDATA{
 		return traceRawData(tracer,sinfo.FromUuid)
 	}else if sinfo.FromType==core.CSDFILE{
 		return traceCSDFile(tracer,sinfo.FromUuid)
@@ -239,6 +246,8 @@ func doTraceAll(){
 	ftype:=GetDataType(inpath)
 	var tracer =make([]core.InfoTracer,0,20)
 	switch ftype{
+// should be replaced later because of multi-source processing, more cases like  core.ENCDATA
+
 	case core.RAWDATA:
 	    if tag,err:=core.LoadTagFromDisk(inpath);err!=nil{
 			fmt.Println("Load tag info error in traceAll:",err)
