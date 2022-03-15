@@ -28,11 +28,10 @@ const (
 )
 
 const (
-    RAWDATA=iota
+    RAWDATA=iota-1
 	ENCDATA
 	CSDFILE
-//	ENCDATA // Only occured in 'FromType' of EncryptedData. 'FromType' of CSD FILE is always CSDEILE OR RAWDATA(although it is encoded data actually)
-	UNKNOWN
+	UNKNOWN=0xff
 )
 
 const (
@@ -51,7 +50,7 @@ type LoginInfo struct{
     Id int32
     Keylocalkey []byte
 }
-
+/*
 type TagInFile struct{ // .tag
 	OwnerId int32
 	Uuid	[36] byte //36
@@ -63,7 +62,7 @@ type TagInFile struct{ // .tag
 	EKey	[16] byte //16
 	Descr	[100] byte // 100
 	OrgName [254] byte
-}
+}*/
 
 type EncDataTag struct{
 	Uuid	[36] byte
@@ -88,13 +87,15 @@ type EncryptedData struct{
 	IsDir	byte
 	OwnerName string
 
-    FromType int // 0 means from local plain, 1 for multi sources
-	OrgName string // only valid then FromType==0
+    FromPlain int // 1 means from local plain, 0 for multi(maybe single) sources
+
+	// if FromType==0, OrgName is plain data filename/dirname; otherwize, it comes from a mount operation, and a new name(with -dataname cmdline parameter should be set as OrgName)
+	OrgName string
 
 	Sources	[]SourceInfo
 	Imports	[]PlainFile // support 10 files at most
     OwnerId int32
-	HashMd5 string
+//	HashMd5 string
     EncryptingKey []byte
 	Path	string
 	CrTime	string
@@ -107,6 +108,15 @@ type ShareInfoHeader struct{ // .csd , cmit shared data
 	ContentType byte //  0 for direct binary data, for remote file url
 	IsDir byte //  data type(both for local and remote): 0 for single file, 1 for compressed dir packge
 }	// 60 bytes total, should be placed in the end of file
+
+type ShareInfoHeader_V2 struct{ // .csd , cmit shared data
+	MagicStr [6] byte // CMFSV2
+	Uuid	[36] byte // uuid used to search in db
+	EncryptedKey	[16] byte // raw key encrypted with temp key(saved on server)
+	Sha256	[64] byte // file content sha256 sum
+	Sign	[512] byte // 2048-bit / 8 (8 bits per byte)  / 2 (each byte need 2 ascii-char)
+}	// 60 bytes total, should be placed in the end of file
+
 
 type ShareInfo struct{
 	Uuid string
@@ -487,7 +497,7 @@ func LoadShareInfoHead(fname string)(*ShareInfoHeader,error){
 
 }
 
-func (info *LoginInfo) Logout() error{
+func (info *LoginInfo) Logout() error{ //  should be implemented later
     return  nil
 }
 

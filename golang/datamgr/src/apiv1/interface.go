@@ -8,10 +8,10 @@ import (
 const INIT_MSG string ="Invalid parameter"
 
 const (
-    RAWDATA=iota
+    RAWDATA=iota-1
     ENCDATA
     CSDFILE
-    UNKNOWN
+    UNKNOWN=0xff
 )
 
 

@@ -260,11 +260,12 @@ func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInf
 
     pdata.Uuid=datauuid
     pdata.Descr="cmit encrypted dir"
-	// should be replaced later because of multi-source processing
-    pdata.FromType=core.CSDFILE
+	// FIXME: should be replaced later because of multi-source processing
+    //pdata.FromType=core.CSDFILE
+    pdata.FromPlain=0
     pdata.FromObj=sinfo.Uuid
 	finfo,_:=os.Stat(sinfo.FileUri)
-    pdata.OrgName=finfo.Name()+".outdata"
+	pdata.OrgName=finfo.Name()+".outdata" //FIXME: modified to parameter: newname
     pdata.OwnerId=linfo.Id
     pdata.EncryptingKey=passwd
     pdata.Path=opath
