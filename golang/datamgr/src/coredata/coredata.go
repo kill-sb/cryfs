@@ -110,12 +110,12 @@ type ShareInfoHeader struct{ // .csd , cmit shared data
 }	// 60 bytes total, should be placed in the end of file
 
 type ShareInfoHeader_V2 struct{ // .csd , cmit shared data
-	MagicStr [6] byte // CMFSV2
+	MagicStr [12] byte // CSDHEADER_V2
 	Uuid	[36] byte // uuid used to search in db
 	EncryptedKey	[16] byte // raw key encrypted with temp key(saved on server)
 	Sha256	[64] byte // file content sha256 sum
 	Sign	[512] byte // 2048-bit / 8 (8 bits per byte)  / 2 (each byte need 2 ascii-char)
-}	// 60 bytes total, should be placed in the end of file
+}	// 640 bytes total, .csd file header
 
 
 type ShareInfo struct{

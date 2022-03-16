@@ -1,16 +1,9 @@
 1. combine cmro,cmrw,cmit to a unique docker image
-2. add csd md5 check
+2. add csd sha256 check and digital sign
 3. multi source mount
 4. trace after multi source mount
-5. outside tool dir import and log
-6. ----real login server archietecture----
-realize traceback 
-dbop remove: 
-1. dbop.GetUserName
-2. dbop.GetEncDataInfo
-3. dbop.UpdateOpenTimes
-4. dbop.UpdateMeta
-5. dbop.ParseVisitors
+5. outside tool dir import(record in db) 
+6. encrypt keys saved in db
 
 logical problem:
 shared data with limit time should be readonly
