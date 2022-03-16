@@ -1,6 +1,6 @@
 -- MySQL dump 10.19  Distrib 10.3.28-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: cmit
+-- Host: 127.0.0.1    Database: cmit
 -- ------------------------------------------------------
 -- Server version	10.3.28-MariaDB
 
@@ -117,6 +117,8 @@ CREATE TABLE `sharetags` (
   `hashmd5` char(32) DEFAULT '',
   `crtime` datetime DEFAULT NULL,
   `orgname` varchar(255) DEFAULT '',
+  `isdir` int(11) NOT NULL DEFAULT 0,
+  `content` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -127,7 +129,7 @@ CREATE TABLE `sharetags` (
 
 LOCK TABLES `sharetags` WRITE;
 /*!40000 ALTER TABLE `sharetags` DISABLE KEYS */;
-INSERT INTO `sharetags` VALUES (42,'5d12b326-3a7a-4727-a7bb-a2cace3450db',1,'li4,wang2','2999-12-31 00:00:00',-1,'08bb4f4e191a467770c86ba0ef57a4dc','1a45df84-c3c8-47ff-a34b-128f4806ec7f',1,0,NULL,'2022-01-28 14:43:52','TODO'),(43,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',2,'zhang3,li4,wang2','2999-12-31 00:00:00',-1,'ad5d314cf0496d46091f8a784f6270ab','5d12b326-3a7a-4727-a7bb-a2cace3450db',1,1,NULL,'2022-01-28 15:40:43','TODO'),(44,'773b4a93-aa9d-42a6-8b47-46bd89872832',1,'li4','2999-12-31 00:00:00',-1,'24dfbc58ec833a051c3ff1c22a6612b3','1a45df84-c3c8-47ff-a34b-128f4806ec7f',1,0,NULL,'2022-01-30 09:20:32','TODO'),(45,'c38eb51b-fea0-4654-9bfc-b1d4c83123cf',2,'wang2,cmit','2999-12-31 00:00:00',-1,'f473653760f74ce9108946711498d925','773b4a93-aa9d-42a6-8b47-46bd89872832',1,1,NULL,'2022-01-30 09:21:42','TODO'),(46,'44acb473-1aa1-455f-b8a8-765d8d250d48',1,'li4,wang2','2999-12-31 00:00:00',-1,'83a47e65d005760e499466cceba68eae','ac1ada36-c79e-4951-bb6a-c37cca8952c0',1,0,NULL,'2022-02-11 16:09:32',''),(47,'2e888dcf-7e68-4665-910a-eb906995b60f',2,'wang2','2999-12-31 00:00:00',-1,'162b4cb2cd7efbb4f564d34962c571af','44acb473-1aa1-455f-b8a8-765d8d250d48',1,1,NULL,'2022-02-15 15:00:15',''),(48,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,'li4,wang2','2999-12-31 00:00:00',3,'3b7b57bef298969fcf272b8caa56d3d6','f6e63544-ebe2-4c83-bdc9-9a10baf2438e',1,0,'','2022-03-01 16:07:57','Makefile'),(49,'b178ea6d-877d-405e-a440-35ba705773d1',3,'li4','2999-12-31 00:00:00',-1,'eb6586dcbf60bc559a1b31b4a6e496be','cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1,'','2022-03-02 14:00:00','Makefile'),(50,'eb60fafe-bac1-4343-b863-5c60ddd7e5b8',2,'li4','2999-12-31 00:00:00',-1,'93ab627ed3433957130d639c564e0ad6','b178ea6d-877d-405e-a440-35ba705773d1',1,1,'','2022-03-02 14:35:11','Makefile');
+INSERT INTO `sharetags` VALUES (42,'5d12b326-3a7a-4727-a7bb-a2cace3450db',1,'li4,wang2','2999-12-31 00:00:00',-1,'08bb4f4e191a467770c86ba0ef57a4dc','1a45df84-c3c8-47ff-a34b-128f4806ec7f',1,0,NULL,'2022-01-28 14:43:52','TODO',0,0),(43,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',2,'zhang3,li4,wang2','2999-12-31 00:00:00',-1,'ad5d314cf0496d46091f8a784f6270ab','5d12b326-3a7a-4727-a7bb-a2cace3450db',1,1,NULL,'2022-01-28 15:40:43','TODO',0,0),(44,'773b4a93-aa9d-42a6-8b47-46bd89872832',1,'li4','2999-12-31 00:00:00',-1,'24dfbc58ec833a051c3ff1c22a6612b3','1a45df84-c3c8-47ff-a34b-128f4806ec7f',1,0,NULL,'2022-01-30 09:20:32','TODO',0,0),(45,'c38eb51b-fea0-4654-9bfc-b1d4c83123cf',2,'wang2,cmit','2999-12-31 00:00:00',-1,'f473653760f74ce9108946711498d925','773b4a93-aa9d-42a6-8b47-46bd89872832',1,1,NULL,'2022-01-30 09:21:42','TODO',0,0),(46,'44acb473-1aa1-455f-b8a8-765d8d250d48',1,'li4,wang2','2999-12-31 00:00:00',-1,'83a47e65d005760e499466cceba68eae','ac1ada36-c79e-4951-bb6a-c37cca8952c0',1,0,NULL,'2022-02-11 16:09:32','',0,0),(47,'2e888dcf-7e68-4665-910a-eb906995b60f',2,'wang2','2999-12-31 00:00:00',-1,'162b4cb2cd7efbb4f564d34962c571af','44acb473-1aa1-455f-b8a8-765d8d250d48',1,1,NULL,'2022-02-15 15:00:15','',0,0),(48,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,'li4,wang2','2999-12-31 00:00:00',3,'3b7b57bef298969fcf272b8caa56d3d6','f6e63544-ebe2-4c83-bdc9-9a10baf2438e',1,0,'','2022-03-01 16:07:57','Makefile',0,0),(49,'b178ea6d-877d-405e-a440-35ba705773d1',3,'li4','2999-12-31 00:00:00',-1,'eb6586dcbf60bc559a1b31b4a6e496be','cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1,'','2022-03-02 14:00:00','Makefile',0,0),(50,'eb60fafe-bac1-4343-b863-5c60ddd7e5b8',2,'li4','2999-12-31 00:00:00',-1,'93ab627ed3433957130d639c564e0ad6','b178ea6d-877d-405e-a440-35ba705773d1',1,1,'','2022-03-02 14:35:11','Makefile',0,0);
 /*!40000 ALTER TABLE `sharetags` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -141,7 +143,7 @@ DROP TABLE IF EXISTS `shareusers`;
 CREATE TABLE `shareusers` (
   `taguuid` char(36) NOT NULL,
   `userid` int(11) NOT NULL,
-  `leftuse` int(11) DEFAULT NULL
+  `leftuse` int(11) DEFAULT -1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -196,4 +198,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-03-09 16:27:01
+-- Dump completed on 2022-03-16 16:13:53
