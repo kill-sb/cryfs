@@ -180,12 +180,16 @@ func GetRawKey(linfo *core.LoginInfo ,src []byte)([]byte, error){
     return nil,errors.New("Load key for decrypt localkey error")
 }*/
 
-func GetEncDataFromDisk(linfo *core.LoginInfo,fname string)(*core.EncryptedData,*core.TagInFile,error){
+func GetDataInfo(tag *core.EncDataTag)(*core.EncryptedData,error){
+	return GetEncDataInfo(string(tag.Uuid[:]))
+}
+
+func GetEncDataFromDisk(linfo *core.LoginInfo,fname string)(*core.EncryptedData,*core.EncDataTag,error){
     tag,err:=core.LoadTagFromDisk(fname)
     if(err!=nil){
         return nil,nil,err
     }
-    data,err:=tag.GetDataInfo()
+    data,err:=GetDataInfo(tag)
 	if(err!=nil){
 		fmt.Println("GetDataInfo error",err)
 		return nil,nil,err
@@ -203,6 +207,21 @@ func GetFileMd5(fname string)(string,error){
 	}
 }
 
+func GetFileSha256(fname string)(string,error){
+	if output,err:=exec.Command("sha256sum",fname).Output();err!=nil{
+		return "" ,err
+	}else{
+		return (strings.Split(string(output)," "))[0],nil
+	}
+}
+
+func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.EncDataTag,error){
+	tag:=new (core.EncDataTag)
+	copy(tag.Uuid[:],[]byte(pdata.Uuid))
+	copy(tag.EKey[:],savedkey)
+	return tag,nil
+}
+/*
 func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFile,error){
 	tag:=new (core.TagInFile)
 	tag.OwnerId=pdata.OwnerId
@@ -232,7 +251,7 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFil
 	tag.SaveTagToDisk(pdata.Path+"/"+pdata.Uuid+".tag")
 	return tag,nil
 }
-/*
+
 func SendMetaToServer_API(pdata *core.EncryptedData, token string)error{
 	encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,OrgName:pdata.OrgName}
     ack:=new (api.IEncDataAck)
@@ -446,40 +465,26 @@ func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)er
 		return err
 	}
 
-	pdata,_:=tag.GetDataInfo()
+	pdata,_:=GetDataInfo(tag)
 	if pdata.OwnerId!=linfo.Id{
 		fmt.Println("The data does not belong to",linfo.Name)
 		return errors.New("Invalid user")
 	}
 	pdata.Path=ipath
 
-	if(pdata.FromType!=core.UNKNOWN ){
-		DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
-		ofile:=opath+"/"+pdata.OrgName
-		if pdata.IsDir==0{
-//		fmt.Println("raw file",pdata.Uuid,"key",core.BinkeyToString(pdata.EncryptingKey))
-/*		cpasswd:=(*C.char)(unsafe.Pointer(&pdata.EncryptingKey[0]))
-		cipath:=C.CString(ipath)
-		cofile:=C.CString(ofile)
-		defer C.free(unsafe.Pointer(cipath))
-		defer C.free(unsafe.Pointer(cofile))
-		C.do_decodefile(cipath,cofile,cpasswd,0)
-		*/
+	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
+	ofile:=opath+"/"+pdata.OrgName
+	if pdata.IsDir==0{
 		DoDecodeFileInC(ipath,ofile,pdata.EncryptingKey,0)
-		}else{
-			err=os.MkdirAll(ofile,finfo.Mode())
-			if err!=nil{
-				fmt.Println("mkdir error:",err)
-			}
-			DecodeDir(ipath,ofile,pdata.EncryptingKey)
+	}else{
+		err=os.MkdirAll(ofile,finfo.Mode())
+		if err!=nil{
+			fmt.Println("mkdir error:",err)
 		}
-
-		fmt.Println(ofile,"restored ok")
-	}else {
-		//if pdata.FromType==core.CSDFILE or core.ENCDATA,should be same with above, FromType is used only for trace source, the file is still a raw encrypted file
-		// pdata.EncryptingKey need to be filled first
-//		rootdata:=LoadRootData(pdata)
+		DecodeDir(ipath,ofile,pdata.EncryptingKey)
 	}
+
+	fmt.Println(ofile,"restored ok")
 	return nil
 }
 

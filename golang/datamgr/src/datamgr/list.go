@@ -81,7 +81,7 @@ func ListTags(tags[]string){
 	for _,tag:=range tags{
 		tinfo,err:=core.LoadTagFromDisk(tag)
 		if err==nil{
-			edata,err:=tinfo.GetDataInfo()
+			edata,err:=GetDataInfo(tag)
 			if err==nil{
 		//		fmt.Printf("\t%d\n",i+1)
 				if PrintEncDataInfo(edata,i){

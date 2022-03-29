@@ -82,7 +82,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 		LoadShareInfoConfig(sinfo)
 	}
 	sinfo.CrTime=core.GetCurTime()
-	err=WriteShareInfo(linfo.Token,sinfo)
+	sign,err:=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
 		fmt.Println(err)
 		return
@@ -92,7 +92,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 	if err==nil && st.IsDir(){
 		dst=opath+"/"+sinfo.Uuid+".csd"
 	}
-	err=sinfo.CreateCSDFile(dst)
+	err=CreateCSDFile(sinfo,sign,dst)
 	if err!=nil{
 		return
 	}
@@ -180,7 +180,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		LoadShareInfoConfig(sinfo)
 	}
 	sinfo.CrTime=core.GetCurTime()
-	err=WriteShareInfo(linfo.Token,sinfo)
+	err,sign:=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
 		fmt.Println(err)
 		return err
@@ -190,7 +190,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 	if err==nil && st.IsDir(){
 		dst=opath+"/"+sinfo.Uuid+".csd"
 	}
-	err=sinfo.CreateCSDFile(dst) // local or remote uri will be processed in diffrent way in CreateCSDFile
+	err=CreateCSDFile(sinfo,sign,dst) // local or remote uri will be processed in diffrent way in CreateCSDFile
 	if err!=nil{
 		return err
 	}
@@ -247,29 +247,77 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	//sinfo.Expire=  set it later
 	return nil
 }
-/*
-func GetShareInfo_Public_API(uuid string)(*api.IShareInfoAck,error){
-	req:=&api.ShareInfoReq{Token:"0",Uuid:uuid,NeedKey:0}
-	ack:=api.NewShareInfoAck()
-	err:=HttpAPIPost(req,ack,"getshareinfo")
+
+func CreateCSDFile(sinfo *ShareInfo,[]byte sign, dstfile string)error{
+	fw,err:=os.Create(dstfile) // fixme: file mode should be assigned later
 	if err!=nil{
-		fmt.Println("call getshareinfo error:",err)
-		return nil,err
+		fmt.Println("CreateCSDFile error:",err)
+			return err
 	}
-	return ack,nil
+	defer fw.Close()
+	if sinfo.FromType==ENCDATA{
+		if WriteCSDHead(sinfo,sign,fw)==BINCONTENT{
+			if sinfo.IsDir==0{
+				fr,err:=os.Open(sinfo.FileUri)
+				if err!=nil{
+					fmt.Println("Open FileUri error:",err)
+					return err
+				}
+				defer fr.Close()
+				io.Copy(fw,fr)
+			}else{
+				ZipToFile(sinfo.FileUri,fw)
+			}
+		}else{
+			fw.Write([]byte(sinfo.FileUri))
+		}
+	}else{
+        if WriteCSDHead(sinfo,sign,fw)==BINCONTENT{
+            fr,err:=os.Open(sinfo.FileUri)
+            if err!=nil{
+                fmt.Println("Open FileUri error:",err)
+                return err
+            }
+            defer fr.Close()
+			fr.Seek(60,0)
+            io.Copy(fw,fr)
+        }else{
+            fw.Write([]byte(sinfo.FileUri))
+        }
+	}
+	return nil
 }
 
-func GetShareInfo_User_API(token string, uuid string)(*api.IShareInfoAck,error){
-    req:=&api.ShareInfoReq{Token:token,Uuid:uuid,NeedKey:1}
-    ack:=api.NewShareInfoAck()
-    err:=HttpAPIPost(req,ack,"getshareinfo")
-    if err!=nil{
-        fmt.Println("call getshareinfo error:",err)
-        return nil,err
-    }
-    return ack,nil
 
-}*/
+func WriteCSDHead(sinfo *ShareInfo, sign []byte,fw *os.File) error {
+	/*
+	head:=new (ShareInfoHeader)
+	copy(head.MagicStr[:],[]byte("CMITFS"))
+	copy(head.Uuid[:],[]byte(sinfo.Uuid))
+	copy(head.EncryptedKey[:],sinfo.EncryptedKey)
+	if IsLocalFile(sinfo.FileUri){
+		head.ContentType=BINCONTENT
+	}else{
+		head.ContentType=REMOTEURL
+	}
+	head.IsDir=sinfo.IsDir
+	buf:=new(bytes.Buffer)
+	binary.Write(buf,binary.LittleEndian,head)
+	fw.Write(buf.Bytes())
+*/
+/*	err,sha256:=GetFileSha256(sinfo.FileUri)
+	if err!=nil{
+		return err
+	}
+*/
+	head:=new (ShareInfoHeader_V2)
+	copy(head.MagicStr[:],[]byte("CSDFMTV2"))
+	copy(head.Uuid[:],[]byte(sinfo.Uuid))
+	copy(head.EncryptedKey[:],sinfo.EncryptedKey)
+//	copy(head.Sha256[:],[]byte(sha256))
+//	copy(head.Sign[:],sign)
+	return nil
+}
 
 func GetShareInfoFromHead(head* core.ShareInfoHeader,linfo* core.LoginInfo)(*core.ShareInfo,error){
 	uuid:=string(head.Uuid[:])
@@ -292,15 +340,15 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader,linfo* core.LoginInfo)(*cor
 	return sinfo,nil
 }
 
-func WriteShareInfo(token string, sinfo* core.ShareInfo)error{
+func WriteShareInfo(token string, sinfo* core.ShareInfo)([]byte,error){
 	ack,err:=ShareData_API(token,sinfo)
 	if err!=nil{
-		return err
+		return nil,err
 	}
 	if ack!=nil && ack.Code!=0{
 		return errors.New(ack.Msg)
 	}
-	return nil
+	return nil,nil // TODO: sign will be filled in ack.Msg
 }
 /*
 func ShareData_API(token string,sinfo *core.ShareInfo)(*api.IShareDataAck,error){

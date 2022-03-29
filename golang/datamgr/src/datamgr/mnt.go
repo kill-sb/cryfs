@@ -441,7 +441,7 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 		fmt.Println("LoadTagFromDisk error in MountDir:",err)
 		return err
 	}
-	dinfo,err:=tag.GetDataInfo()
+	dinfo,err:=GetDataInfo(tag)
 	if err!=nil{
 		fmt.Println("GetDataInfo in MountSingleEncFile error:",err)
 		return err
@@ -501,6 +501,8 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 	return err
 }
 
+
+// TODO  the function should be removed, since modify an encrypted file will create a new encrypted file, instead of update the original one
 func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, linfo *core.LoginInfo)error{
 	dinfo.HashMd5,_=GetFileMd5(ipath)
     for i,j:=range []byte(dinfo.HashMd5){
@@ -511,17 +513,4 @@ func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, 
 	return UpdateDataInfo_API(dinfo,linfo)
 	//return dbop.UpdateMeta(dinfo)
 }
-/*
-func UpdateDataInfo_API(dinfo *core.EncryptedData,linfo *core.LoginInfo) error{
-	upreq:=api.UpdateDataInfoReq{Token:linfo.Token,Uuid:dinfo.Uuid,Hash256:dinfo.HashMd5}
-	ack:=new (api.IUpdateDataAck)
-	err:=HttpAPIPost(&upreq,ack,"updatedata")
-	if err!=nil{
-		return err
-	}
-	if ack.Code!=0{
-		return errors.New(ack.Msg)
-	}
-	return nil
-}
-*/
+

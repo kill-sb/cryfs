@@ -70,11 +70,11 @@ func NewShareInfoAck()*IShareInfoAck{
 }
 
 func NewDataAck() *IEncDataAck{
-	data:=new (EncDataAck)
+//	data:=new (EncDataAck)
 	eda:=new (IEncDataAck)
 	eda.Code=-1
 	eda.Msg="Invalid parameter"
-	eda.Data=data
+//	eda.Data=data
 	return eda
 }
 

@@ -42,11 +42,8 @@ type EncDataReq struct{
 	Uuid string `json:"uuid"`
 	Descr string `json:"descr"`
 	IsDir   byte `json:"isdir"`
-	FromType int `json:"fromtype"`
-	FromObj string `json:"fromobj"`
+	FromRCId int `json:"fromrcid"`
 	OwnerId int32 `json:"ownerid"`
-	Hash256 string `json:"hash256"`
-//	EncKey string `json:"enckey"`
 	OrgName string `json:"orgname"`
 }
 
@@ -57,10 +54,10 @@ type EncDataAck struct{
 
 type IEncDataAck struct{
 	RetStat
-	Data *EncDataAck `json:"data"`
+//	Data *EncDataAck `json:"data"`
 }
 
-type ShareInfoReq struct{
+type ShareInfoReq structi{
 	Token string `json:"token"`
 	Uuid string `json:"uuid"`
 	NeedKey byte	`json:"needkey"`
@@ -83,6 +80,7 @@ type ShareInfoData struct{
 	CrTime  string `json:"crtime"`
 //	FileUri string `json:"fileuri"`
 	OrgName string `json:"orgname"`
+	IsDir int `json:"isdir"`
 }
 
 type IShareInfoAck struct{

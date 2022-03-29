@@ -69,38 +69,46 @@ type EncDataTag struct{
 	EKey	[16] byte
 }
 
-type SourceInfo struct{
+type SourceObj struct{
 	DataType int
 	DataUuid string
 }
 
-type PlainFile struct{
+type ImportFile struct{
 	RelName string
 	FileDesc string
 	Sha256	string
 	Size	int64
 }
 
+type RunContext struct{
+	Id int64
+	InputData []SourceObj
+	ImportPlain []ImportFile
+	OS string
+	BaseImg string
+	OutputUuid string
+	StartTime string
+	EndTime string
+}
 type EncryptedData struct{
     Uuid string
     Descr string
 	IsDir	byte
 	OwnerName string
 
-    FromPlain int // 1 means from local plain, 0 for multi(maybe single) sources
+    FromRCId int // -1 means from local plain, >0 indicates a run-context id in database, from which FromContext can be created, 
 
-	// if FromType==0, OrgName is plain data filename/dirname; otherwize, it comes from a mount operation, and a new name(with -dataname cmdline parameter should be set as OrgName)
+	// if FromRCId==-1, OrgName is plain data filename/dirname; otherwize, it comes from a mount operation, and a new name(with -dataname cmdline parameter should be set as OrgName)
 	OrgName string
+	FromContext *RunContext
 
-	Sources	[]SourceInfo
-	Imports	[]PlainFile // support 10 files at most
     OwnerId int32
-//	HashMd5 string
     EncryptingKey []byte
 	Path	string
 	CrTime	string
 }
-
+/*
 type ShareInfoHeader struct{ // .csd , cmit shared data
 	MagicStr [6] byte // CMITFS
 	Uuid	[36] byte // uuid used to search in db
@@ -108,13 +116,14 @@ type ShareInfoHeader struct{ // .csd , cmit shared data
 	ContentType byte //  0 for direct binary data, for remote file url
 	IsDir byte //  data type(both for local and remote): 0 for single file, 1 for compressed dir packge
 }	// 60 bytes total, should be placed in the end of file
+*/
 
 type ShareInfoHeader_V2 struct{ // .csd , cmit shared data
-	MagicStr [12] byte // CSDHEADER_V2
+	MagicStr [8] byte // CSDFMTV2
 	Uuid	[36] byte // uuid used to search in db
 	EncryptedKey	[16] byte // raw key encrypted with temp key(saved on server)
-	Sha256	[64] byte // file content sha256 sum
-	Sign	[512] byte // 2048-bit / 8 (8 bits per byte)  / 2 (each byte need 2 ascii-char)
+//	Sha256	[64] byte // file content sha256 sum
+//	Sign	[512] byte // 2048-bit / 8 (8 bits per byte)  / 2 (each byte need 2 ascii-char)
 }	// 640 bytes total, .csd file header
 
 
@@ -124,6 +133,7 @@ type ShareInfo struct{
 	OwnerName string
 	Descr string
 	Perm	int32
+	Sha256 string
 	Receivers []string
 	RcvrIds	[]int32
 	Expire	string // convert to time.Time later
@@ -159,7 +169,6 @@ func (sinfo*ShareInfo)PrintTraceInfo(level int,keyword string) error{
 		result+=fmt.Sprintf(", Perm->Resharable")
 	}
 
-	// should be replaced later because of multi-source processing
 	if sinfo.FromType==RAWDATA{		result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
 	}else{
 		result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
@@ -181,16 +190,17 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 	var result string
 
 	// should be replaced later because of multi-source processing
-	if dinfo.FromType==RAWDATA{
+	if dinfo.FromRCId==-1{
 		result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
-	}else if dinfo.FromType==CSDFILE{
+	}else/* if dinfo.FromType==CSDFILE*/{
 		result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
 	}
 	result+=fmt.Sprintf("Owner->%s(uid:%d)",dinfo.OwnerName,dinfo.OwnerId)
-	if dinfo.FromType==RAWDATA{
+	if dinfo.FromRcId==-1{
 		result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
 	}else{
-		result+=fmt.Sprintf(", From User Share Data UUID->%s(Orginal Filename :%s)",dinfo.FromObj,strings.TrimSuffix(dinfo.OrgName,".outdata"))
+		// TODO: print all source data later
+//		result+=fmt.Sprintf(", From User Share Data UUID->%s(Orginal Filename :%s)",dinfo.FromObj,strings.TrimSuffix(dinfo.OrgName,".outdata"))
 	}
 
 	result+=fmt.Sprintf(", Create at->%s\n",dinfo.CrTime)
@@ -240,10 +250,6 @@ func RandPasswd()([]byte,error){
     }else {
         return nil,err
     }
-}
-
-func GetIsDirFromUuid(uuid string)byte{
-	return 0 // todo: get from server/db by uuid later
 }
 
 func GetFileType(fname string)(int,error){
@@ -341,7 +347,8 @@ func IsLocalFile(uri string)bool{
 	return true // may be http,ftp,or nfs...later, then will return false
 }
 
-func (sinfo* ShareInfo)WriteFileHead(fw *os.File)byte /* ContentType*/{
+/*
+func (sinfo* ShareInfo)WriteFileHead(fw *os.File)byte{
 	head:=new (ShareInfoHeader)
 	copy(head.MagicStr[:],[]byte("CMITFS"))
 	copy(head.Uuid[:],[]byte(sinfo.Uuid))
@@ -355,9 +362,9 @@ func (sinfo* ShareInfo)WriteFileHead(fw *os.File)byte /* ContentType*/{
 	buf:=new(bytes.Buffer)
 	binary.Write(buf,binary.LittleEndian,head)
 	fw.Write(buf.Bytes())
-
 	return head.ContentType
 }
+
 
 func (sinfo *ShareInfo)CreateCSDFile(dstfile string)error{
 	fw,err:=os.Create(dstfile) // fixme: file mode should be assigned later
@@ -400,10 +407,11 @@ func (sinfo *ShareInfo)CreateCSDFile(dstfile string)error{
 }
 
 
-func DataFromTag(tag *TagInFile) *EncryptedData{
-
+func DataFromTag(tag *EncDataTag) *EncryptedData{
+// TODO Load Info from remote server
 	data:=new(EncryptedData)
 	data.Uuid=string(tag.Uuid[:])
+
 	data.Descr=string(tag.Descr[:])
 	data.FromType=int(tag.FromType)
 //	data.FromObj=string(tag.FromObj[:])
@@ -432,8 +440,8 @@ func DataFromTag(tag *TagInFile) *EncryptedData{
 	// EncryptedKey and Path will be filled later outside
 	return data
 }
-
-func (tag *TagInFile) SaveTagToDisk(fname string)error{
+*/
+func (tag *EncDataTag) SaveTagToDisk(fname string)error{
 	fd,err:=os.Create(fname)
 	if err!=nil{
 		return err
@@ -445,19 +453,7 @@ func (tag *TagInFile) SaveTagToDisk(fname string)error{
 	return nil
 }
 
-func (tag *TagInFile) GetDataInfo()(*EncryptedData,error){
-// need to be rewritten later because of multi source mnt supporting
-	if(tag.FromType==RAWDATA/* || tag.FromType==ENCDATA*/){
-		return DataFromTag(tag),nil
-	}else{
-		// CSDFILE
-	//	fmt.Println("data from tag will be finished soon")
-	//	return nil,nil
-		return DataFromTag(tag),nil
-	}
-}
-
-func LoadTagFromDisk(fname string /* uuid file name*/)(*TagInFile,error){
+func LoadTagFromDisk(fname string /* uuid file name*/)(*EncDataTag,error){
 	fname=strings.TrimSuffix(fname,"/")
 	if !strings.HasSuffix(fname,".tag") && !strings.HasSuffix(fname,".TAG"){
 		fname+=".tag"
@@ -467,7 +463,7 @@ func LoadTagFromDisk(fname string /* uuid file name*/)(*TagInFile,error){
 		return nil,err
 	}
 	defer f.Close()
-	tag:=new(TagInFile)
+	tag:=new(EncDataTag)
 	if err=binary.Read(f,binary.LittleEndian,tag);err==nil{
 		return tag,nil
 	}else{
@@ -476,7 +472,7 @@ func LoadTagFromDisk(fname string /* uuid file name*/)(*TagInFile,error){
 	}
 }
 
-func LoadShareInfoHead(fname string)(*ShareInfoHeader,error){
+func LoadShareInfoHead(fname string)(*ShareInfoHeader_V2,error){
 	fr,err:=os.Open(fname)
 	if err!=nil{
 		fmt.Println("Open file error",fname)
@@ -484,26 +480,25 @@ func LoadShareInfoHead(fname string)(*ShareInfoHeader,error){
 	}
 	defer fr.Close()
 
-	head:=new (ShareInfoHeader)
+	head:=new (ShareInfoHeader_V2)
 	if err=binary.Read(fr,binary.LittleEndian,head);err!=nil{
 		fmt.Println("Load share info head error",err)
 		return nil,err
 	}
-	if string(head.MagicStr[:])=="CMITFS" && IsValidUuid(string(head.Uuid[:])){
+	if string(head.MagicStr[:])=="CSDFMTV2" && IsValidUuid(string(head.Uuid[:])){
 		return head,nil
 	}else{
+		// TODO : check sign and SHA256
 		return nil,errors.New("Invalid csd file format")
 	}
 
 }
 
 func (info *LoginInfo) Logout() error{ //  should be implemented later
+	// TODO invoke logout API
     return  nil
 }
 
-func GetNameFromID(id int32)string{
-	return ""
-}
 /*
 func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*ShareInfo{
     sinfo:=new (ShareInfo)
