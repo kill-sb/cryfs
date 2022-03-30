@@ -143,7 +143,7 @@ type ShareInfo struct{
 	RandKey	[]byte
 	FromType	int
 	FromUuid	string
-	ContentType int
+//	ContentType int
 	IsDir	byte
 	CrTime	string
 	FileUri	string // source local filename or remote url

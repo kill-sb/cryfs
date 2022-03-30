@@ -44,8 +44,7 @@ func NewDataFunc(w http.ResponseWriter, r *http.Request){
 		pdata:=new(core.EncryptedData)
 	    pdata.Uuid=encreq.Uuid
 	    pdata.Descr=encreq.Descr
-	    pdata.FromType=encreq.FromType
-	    pdata.FromObj=encreq.FromObj
+	    pdata.FromRCId=encreq.FromRCId // TODO FromContext should be created and filled in dbop.SaveMeta
 	    pdata.OrgName=encreq.OrgName
 	    pdata.OwnerId=encreq.OwnerId
 	    pdata.EncryptingKey=nil //""core.StringToBinkey(encreq.EncKey)

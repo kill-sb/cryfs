@@ -514,3 +514,26 @@ func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, 
 	//return dbop.UpdateMeta(dinfo)
 }
 
+func CreateRunContext(baseimg string,srcobj []core.SourceObj, tools []core.ImportFile)(*core.RunContext,error){
+	rc:=new (core.RunContext)
+	rc.BaseImg=baseimg
+	rc.OS="Linux"
+	rc.InputData=srcobj
+	rc.ImportPlain=tools
+	rc.StartTime=core.GetCurTime()
+	err:=dbop.CreateContext(rc)
+	if err!=nil{
+		return nil,err
+	}
+	return rc,nil
+}
+
+func UpdateRunContext(rc *core.RunContext, datauuid string) error{
+// add datauuid, EndTime
+	rc.EndTime=core.GetCurTime()
+	rc.OutputUuid=datauuid
+	if err:=dbop.UpdateContext(rc);err!=nil{
+		return err
+	}
+	return nil
+}

@@ -321,7 +321,7 @@ func WriteCSDHead(sinfo *ShareInfo, sign []byte,fw *os.File) error {
 
 func GetShareInfoFromHead(head* core.ShareInfoHeader,linfo* core.LoginInfo)(*core.ShareInfo,error){
 	uuid:=string(head.Uuid[:])
-	enckey:=head.EncryptedKey[:]
+//	enckey:=head.EncryptedKey[:]
 	var err error
 	var apiack *api.IShareInfoAck
 	if linfo==nil{
@@ -336,7 +336,9 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader,linfo* core.LoginInfo)(*cor
     if apiack.Code!=0{
         return nil,errors.New(apiack.Msg)
     }
-	sinfo:=FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
+	// TODO: Fill IsDir from remove server, remove ContentType
+	sinfo:=FillShareInfo(apiack.Data,head.EncryptedKey[:])
+	//sinfo:=FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
 	return sinfo,nil
 }
 
@@ -350,22 +352,10 @@ func WriteShareInfo(token string, sinfo* core.ShareInfo)([]byte,error){
 	}
 	return nil,nil // TODO: sign will be filled in ack.Msg
 }
-/*
-func ShareData_API(token string,sinfo *core.ShareInfo)(*api.IShareDataAck,error){
-	data:=FillShareReqData(sinfo)
-	req:=&api.ShareDataReq{Token:token,Data:data}
-	ack:=api.NewShareAck()
-	err:=HttpAPIPost(req,ack,"sharedata")
-	if err!=nil{
-		fmt.Println("call getshareinfo error:",err)
-		return nil,err
-	}
-	return ack,nil
-}
-*/
-func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*core.ShareInfo{
+
+func FillShareInfo(apidata *api.ShareInfoData, encryptedkey []byte)*core.ShareInfo{
     sinfo:=new (core.ShareInfo)
-    sinfo.Uuid=uuid
+    sinfo.Uuid=apidata.Uuid
     sinfo.OwnerId=apidata.OwnerId
     sinfo.OwnerName,_=GetUserName(apidata.OwnerId)
     sinfo.Descr=apidata.Descr
@@ -379,10 +369,13 @@ func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int,
     sinfo.EncryptedKey=encryptedkey
     sinfo.FromType=apidata.FromType
     sinfo.FromUuid=apidata.FromUuid
-    sinfo.ContentType=ctype
-    sinfo.IsDir=isdir
+//    sinfo.ContentType=ctype
+	if apidata.IsDir==0{
+		sinfo.IsDir=false
+	}else{
+		sinfo.IsDir=true
+	}
     sinfo.CrTime=apidata.CrTime
- //   sinfo.FileUri=apidata.FileUri
     sinfo.OrgName=apidata.OrgName
     return sinfo
 }
@@ -406,5 +399,10 @@ func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
     asi.CrTime=sinfo.CrTime
    // asi.FileUri=sinfo.FileUri
     asi.OrgName=sinfo.OrgName
+	if sinfo.IsDir{
+		asi.IsDir=1
+	}else{
+		asi.IsDir=0
+	}
 	return asi
 }
