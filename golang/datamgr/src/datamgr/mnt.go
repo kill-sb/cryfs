@@ -521,7 +521,7 @@ func CreateRunContext(baseimg string,srcobj []core.SourceObj, tools []core.Impor
 	rc.InputData=srcobj
 	rc.ImportPlain=tools
 	rc.StartTime=core.GetCurTime()
-	err:=dbop.CreateContext(rc)
+	err:=CreateContext_API(rc)
 	if err!=nil{
 		return nil,err
 	}
@@ -532,7 +532,7 @@ func UpdateRunContext(rc *core.RunContext, datauuid string) error{
 // add datauuid, EndTime
 	rc.EndTime=core.GetCurTime()
 	rc.OutputUuid=datauuid
-	if err:=dbop.UpdateContext(rc);err!=nil{
+	if err:=UpdateContext_API(rc);err!=nil{
 		return err
 	}
 	return nil

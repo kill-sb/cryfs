@@ -118,3 +118,10 @@ func ShareData_API(token string,sinfo *core.ShareInfo)(*api.IShareDataAck,error)
     return ack,nil
 }
 
+func CreateRunContext_APICreateRunContext(baseimg string,srcobj []core.SourceObj, tools []core.ImportFile)(*api.IRCInfoAck,error)
+	return nil,nil
+}
+
+func UpdateRunContext_API(rc *core.RunContext, datauuid string)( *api.ISimpleAck,error){
+	return nil,nil
+}

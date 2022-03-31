@@ -83,6 +83,7 @@ type ImportFile struct{
 
 type RunContext struct{
 	Id int64
+	UserId int32
 	InputData []SourceObj
 	ImportPlain []ImportFile
 	OS string
@@ -91,6 +92,7 @@ type RunContext struct{
 	StartTime string
 	EndTime string
 }
+
 type EncryptedData struct{
     Uuid string
     Descr string

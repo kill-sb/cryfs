@@ -128,6 +128,8 @@ func SetupHandler() error{
     routemap[prefix+"logout"]=LogoutFunc
     routemap[prefix+"refreshtoken"]=RefreshTokenFunc
 	routemap[prefix+"searchsharedata"]=SearchShareDataFunc
+	routemap[prefix+"createrc"]=CreateRCFunc
+	routemap[prefix+"updaterc"]=UpdateRCFunc
 	http.HandleFunc(prefix,DistroFunc)
 	/*
 	http.HandleFunc(prefix+"login",LoginFunc) // POST

@@ -58,6 +58,56 @@ func ParseVisitors(recvlist string) ([]string,[]int32,error){
     return strret,intret,nil
 }
 
+func NewRunContext(rc *api.RCInfo) error{
+	db:=GetDB()
+	query:=fmt.Sprintf("insert into runcontext (userid,os,baseimg,crtime) values (%d,'%s','%s','%s')",rc.UserId,rc.OS,rc.BaesImg,rc.StartTime)
+	if result, err := db.Exec(query); err == nil {
+        rc.RCId, _ = result.LastInsertId()
+		// create other info in rcinputdata & rcimport
+		for _,data:=range rc.InputData{
+			query=fmt.Sprintf("insert into rcinputdata (rcid, srcuuid, srctype) values (%d,'%s',%d)",rc.RCId, data.DataUuid,data.DataType)
+			_,err=db.Exec(query)
+			if err!=nil{
+				return err
+			}
+		}
+		for _,tool:=range rc.ImportPlain{
+			query=fmt.Sprintf("insert into rcimport (rcid,relname,filedesc,sha256,size) values (%d,'%s','%s','%s',%d)",rc.RCId,tool.RelName,tool.FileDesc,tool.Sha256,tool.Size)
+			_,err=db.Exec(query)
+			if err!=nil{
+				return err
+			}
+		}
+		return nil
+	}else {
+		return err
+	}
+}
+
+func UpdateRunContext(userid int32, rcid int64, datauuid string, endtime string) error{
+	db:=GetDB()
+	// TODO : check userid in RCInfo from rcid
+	query:=fmt.Sprintf("select userid from runcontext where id=%d",rcid)
+	res,err:=db.Query(query)
+    if err!=nil{
+        fmt.Println("select from runcontext error:",err)
+        return err
+    }
+    if res.Next(){
+		var uid int32
+        err=res.Scan(&uid)
+        if err!=nil{
+            return err
+        }
+        if uid!=userid{
+			return errors.New("invalid user")
+		}
+    }
+	query=fmt.Sprintf("update runcontext set outputuuid='%s', endtime='%s' where id=%d",rcid, datauuid, endtime)
+	_,err:=db.Exec(query)
+	return err
+}
+
 func SaveMeta(pdata *core.EncryptedData) error{
 	db:=GetDB()
 	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5,orgname,isdir) values ('%s','%s',%d,'%s',%d,'%s','%s',%d)",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5,pdata.OrgName,pdata.IsDir)

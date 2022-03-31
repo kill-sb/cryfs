@@ -15,12 +15,18 @@ const (
 )
 
 
+func NewSimpleAck() *ISimpleAck{
+	sa:=new (ISimpleAck)
+	sa.Code=-1
+	sa.Msg=INIT_MSG
+	return sa
+}
 
 func NewShareAck() *IShareDataAck{
 //	data:=new (ShareDataAck)
 	sda:=new (IShareDataAck)
 	sda.Code=-1
-	sda.Msg="Invalid parameter"
+	sda.Msg=INIT_MSG
 //	sda.Data=data
 	return sda
 }
@@ -29,33 +35,41 @@ func NewDataInfoAck() *IDataInfoAck{
 	data:=new (EncDataInfo)
 	dia:=new (IDataInfoAck)
 	dia.Code=-1
-	dia.Msg="Invalid parameter"
+	dia.Msg=INIT_MSG
 	dia.Data=data
 	return dia
+}
+
+func NewRCInfoAck() *IRCInfoAck{
+	data:=new (RCInfo)
+	ria:=new (IRCInfoAck)
+	ria.Code=-1
+	ria.Msg=INIT_MSG
+	ria.Data=data
+	return ria
 }
 
 func NewTraceBackAck(nobj int)*ITraceBackAck{
 	data:=make([][]*DataObj,0,nobj)
 	tfa:=new (ITraceBackAck)
 	tfa.Code=-1
-	tfa.Msg="Invalid parameter"
+	tfa.Msg=INIT_MSG
 	tfa.Data=data
 	return tfa
 
 }
-
-
+/*
 func NewUpdateDataAck()*IUpdateDataAck{
 	ack:=new (IUpdateDataAck)
 	ack.Code=-1
-	ack.Msg="Invalid parameter"
+	ack.Msg=INIT_MSG
 	return ack
-}
+}*/
 
 func NewUserInfoAck() *IUserInfoAck{
 	ack:=new (IUserInfoAck)
 	ack.Code=-1
-	ack.Msg="Invalid parameter"
+	ack.Msg=INIT_MSG
 	ack.Data=make([]UserInfoData,0,20)
 	return ack
 }
@@ -73,7 +87,7 @@ func NewDataAck() *IEncDataAck{
 //	data:=new (EncDataAck)
 	eda:=new (IEncDataAck)
 	eda.Code=-1
-	eda.Msg="Invalid parameter"
+	eda.Msg=INIT_MSG
 //	eda.Data=data
 	return eda
 }
@@ -92,7 +106,7 @@ func NewLoginStatAck() *ILoginStatAck{
 	lsa:=new (ILoginStatAck)
 	lsa.Data=data;
 	lsa.Code=-1
-	lsa.Msg="Invalid parameter"
+	lsa.Msg=INIT_MSG
 	return lsa
 }
 
@@ -111,7 +125,7 @@ func NewQueryObjsAck(reqinfo []DataObj)*IQueryObjsAck {
 	}*/
 	qda:=new (IQueryObjsAck)
 	qda.Code=-1
-	qda.Msg="Invalid parameter"
+	qda.Msg=INIT_MSG
 	qda.Data=data
 	return qda
 }

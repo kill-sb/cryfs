@@ -5,6 +5,8 @@ type RetStat struct{
 	Msg string `json:"message"`
 }
 
+type ISimpleAck RetStat
+
 type AuthInfo struct{
     Name string `json:"name"`
     Passwd string `json:"passwd"`
@@ -139,15 +141,56 @@ type UpdateDataInfoReq struct{
 	Hash256	string `json:"sha256"`
 }
 
+/*
 type IUpdateDataAck struct{
 	RetStat
+}*/
+
+type SourceObj struct{
+	DataType int `json:"type"`
+	DataUuid string `json:"uuid"`
+}
+
+type ImportFile struct{
+	RelName string `json:"relname"`
+	FileDesc string `json:"desc"`
+	Sha256  string `json:"sha256"`
+	Size    int64 `json:"size"`
+}
+
+type RCInfo struct{
+	RCId int64 `json:"rcid"`
+	UserId int32 `json:"userid"`
+	InputData []*SourceObj `json:"sources"`
+	ImportPlain []*ImportFile `json:"imports"`
+	OS string `json:"os"`
+	BaseImg string `json:"baseimg"`
+	OutputUuid string `json:"output"`
+	StartTime string `json:"start"`
+	EndTime string `json:"end"`
+}
+
+type CreateRCReq struct{
+	Token string `json:"token"`
+	Data *RCInfo `json:"Data"`
+}
+
+type UpdateRCReq struct{
+	Token string `json:"token"`
+	RCId int64 `json:"rcid"`
+	OutputUuid string `json:"datauuid"`
+	EndTime string `json:"endtime"`
+}
+
+type IRCInfoAck struct{
+	RetStat
+	Data *RCInfo	`json:"data"`
 }
 
 type EncDataInfo struct{
 	Uuid string `json:"uuid"`
 	Descr string `json:"descr"`
-	FromType int	`json:"fromtype"`
-	FromObj	string	`json:"fromobj"`
+	FromRCId int	`json:"fromrcid"`
 	OwnerId	int32	`json:"ownerid"`
 	Hash256	string	`json:"sha256"`
 	IsDir	byte	`json:"isdir"`
