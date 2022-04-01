@@ -187,12 +187,17 @@ type IRCInfoAck struct{
 	Data *RCInfo	`json:"data"`
 }
 
+type GetRCInfoReq struct{
+	Token string `json:"token"`
+	RCId int64 `json:"rcid"`
+}
+
 type EncDataInfo struct{
 	Uuid string `json:"uuid"`
 	Descr string `json:"descr"`
 	FromRCId int	`json:"fromrcid"`
+	SrcObj	[]*SourceObj `json:"srcobj"`
 	OwnerId	int32	`json:"ownerid"`
-	Hash256	string	`json:"sha256"`
 	IsDir	byte	`json:"isdir"`
 	OrgName	string	`json:"orgname"`
 	CrTime string	`json:"crtime"`

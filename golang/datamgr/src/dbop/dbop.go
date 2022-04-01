@@ -108,16 +108,43 @@ func UpdateRunContext(userid int32, rcid int64, datauuid string, endtime string)
 	return err
 }
 
-func SaveMeta(pdata *core.EncryptedData) error{
+func GetRCInfo(rcid int64)(*api.RCInfo,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromtype,fromobj,ownerid,hashmd5,orgname,isdir) values ('%s','%s',%d,'%s',%d,'%s','%s',%d)",pdata.Uuid,pdata.Descr,pdata.FromType,pdata.FromObj,pdata.OwnerId,pdata.HashMd5,pdata.OrgName,pdata.IsDir)
+	query:=fmt.Sprintf("select userid,os,baseimg,outputuuid,crtime,detime from runcontext where id=%d",rcid)
+	res,err:=db.Query(query)
+	if err!=nil{
+		return nil,err
+	}
+	info:=new (api.RCInfo)
+	if res.Next(){
+		err=res.Scan(&info.UserId,&info.OS,&info.BaseImg,&info.OutputUuid,&info.StartTime,&info.EndTime)
+		if err!=nil{
+			return nil,err
+		}
+		info.InputData,err=GetSrcObjs(rcid)
+		if err!=nil{
+			return nil,err
+		}
+		info.ImportData,err=GetImportInfo(rcid)
+		if err!=nil{
+			return nil,err
+		}
+		info.RCId=rcid
+		return info,nil
+	}
+	return nil,errors.New("runcontext id not found")
+}
+
+func SaveEncMeta(pdata *api.EncDataReq) error{
+	db:=GetDB()
+	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromrcid,ownerid,orgname,isdir) values ('%s','%s',%d,'%d,'%s',%d)",pdata.Uuid,pdata.Descr,pdata.FromRCId,pdata.OwnerId,pdata.OrgName,pdata.IsDir)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert encrypted data info db error:", err)
 		return err
 	}
 	return nil
 }
-
+/*
 func UpdateMeta(pdata *api.UpdateDataInfoReq) error{
 	db:=GetDB()
 	query:=fmt.Sprintf("update efilemeta set hashmd5='%s' where uuid='%s'",pdata.Hash256,pdata.Uuid)
@@ -126,34 +153,63 @@ func UpdateMeta(pdata *api.UpdateDataInfoReq) error{
 		return err
 	}
 	return nil
-}
+}*/
 
-/*
-func UpdateMeta(pdata *core.EncryptedData) error{
+func GetSrcObjs(rcid int64)([]*api.SourceObj,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("update efilemeta set hashmd5='%s' where uuid='%s'",pdata.HashMd5,pdata.Uuid)
-	if _, err := db.Exec(query); err != nil {
-		fmt.Println("Update encrypted data info db error:", err)
-		return err
+	query:=fmt.Sprintf("select srctype,srcuuid from rcinputdata where rcid=%d",rcid)
+	res,err:=db.Query(query)
+	if err!=nil{
+		return nil,err
 	}
-	return nil
+	objs:=make([]*api.SourceObj,0,10)
+	for res.Next(){
+		obj:=new(api.SourceObj)
+		err=res.Scan(&obj.DataType,&obj.DataUuid)
+		if err!=nil{
+			return nil,err
+		}
+		objs=append(objs,obj)
+	}
+	return objs,nil
 }
 
-*/
+func GetImportInfo(rcid int64)([]*ImportFile,error){
+    db:=GetDB()
+    query:=fmt.Sprintf("select relname,filedesc,sha256,size from rcimport where rcid=%d",rcid)
+    res,err:=db.Query(query)
+    if err!=nil{
+        return nil,err
+    }
+    objs:=make([]*api.ImportFile,0,10)
+    for res.Next(){
+        obj:=new(api.ImportFile)
+        err=res.Scan(&obj.RelName,&obj.FileDesc,&obj.Sha256,&obj.Size)
+        if err!=nil{
+            return nil,err
+        }
+        objs=append(objs,obj)
+    }
+    return objs,nil
+}
 
 func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
 	db:=GetDB()
-
 	data:=new (api.EncDataInfo)
 	data.Uuid=uuid
-	query:=fmt.Sprintf("select descr,fromtype,fromobj,ownerid,hashmd5,isdir,orgname,crtime from efilemeta where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select descr,fromrcid,ownerid,isdir,orgname,crtime from efilemeta where uuid='%s'",uuid)
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("select from efilemeta error:",err)
 		return nil,err
 	}
 	if res.Next(){
-		err=res.Scan(&data.Descr,&data.FromType,&data.FromObj,&data.OwnerId,&data.Hash256,&data.IsDir,&data.OrgName,&data.CrTime)
+		err=res.Scan(&data.Descr,&data.FromRCId,&data.OwnerId,&data.IsDir,&data.OrgName,&data.CrTime)
+		if err!=nil{
+			return nil,err
+		}
+		// search srcobj
+		data.SrcObj,err=GetSrcObjs(data.FromRCId)
 		if err!=nil{
 			return nil,err
 		}
@@ -178,26 +234,10 @@ func DecreaseOpenTimes(sinfo *api.ShareInfoData, userid int32) error{
 	}
 	return nil
 }
-/*
-func UpdateOpenTimes(sinfo *core.ShareInfo)error{
-	db:=GetDB()
-	if sinfo.LeftUse<=0{
-		fmt.Printf("Impossible here, while MaxUse=%d and LeftUse=%d",sinfo.MaxUse,sinfo.LeftUse)
-		return errors.New("Invalid LeftTime")
-	}
-	sinfo.LeftUse--
-	query:=fmt.Sprintf("update sharetags set leftuse=%d where uuid='%s'",sinfo.LeftUse,sinfo.Uuid)
-	if _,err:=db.Exec(query);err!=nil{
-		fmt.Println("Update lefttime error:",err)
-		return err
-	}
-
-	return nil
-}*/
 
 func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,datauuid,perm,fromtype, crtime,orgname from sharetags where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select ownerid,descr, receivers,expire,maxuse,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
    res,err:=db.Query(query)
     if err!=nil{
         return nil,err
@@ -207,7 +247,7 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 	// info.FileUri will be filled outside
 		var recv string
 		info.Uuid=uuid
-        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
+        if err=res.Scan(&info.OwnerId, &info.Descr,&recv,&info.Expire,&info.MaxUse,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName,&info.IsDir);err!=nil{
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
@@ -226,7 +266,7 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 
 func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select ownerid,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname from sharetags where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
    res,err:=db.Query(query)
     if err!=nil{
         return nil,err
@@ -237,7 +277,7 @@ func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
 		var recv string
 
 		info.Uuid=uuid
-        if err=res.Scan(&info.OwnerId, &recv,&info.Expire,&info.MaxUse,&info.EncKey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName);err!=nil{
+        if err=res.Scan(&info.OwnerId, &info.Descr, &recv,&info.Expire,&info.MaxUse,&info.EncKey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName,&info.IsDir);err!=nil{
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
@@ -283,7 +323,7 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 	}
 	recvlist=strings.TrimSpace(recvlist)
 	keystr:=sinfo.EncKey
-	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname) values ('%s',%d,'%s','%s',%d,'%s','%s',%d,%d,'%s','%s')",sinfo.Uuid,sinfo.OwnerId,recvlist,sinfo.Expire,sinfo.MaxUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName)
+	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname,isdir) values ('%s',%d,'%s','%s','%s',%d,'%s','%s',%d,%d,'%s','%s',%d)",sinfo.Uuid,sinfo.OwnerId,sinfo.Descr,recvlist,sinfo.Expire,sinfo.MaxUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName,sinfo.IsDir)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
 		return err
@@ -436,12 +476,13 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 }
 
 func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
-	db:=GetDB()
+	// TODO : need to be implemented with multi source supported
+//	db:=GetDB()
 	if obj.Type<0{
 		return nil,errors.New("wrong data type")
 	}
 	retobj:=make([]*api.DataObj,0,10) // current only 1 parent, later will be multiple
-	curtype:=obj.Type
+/*	curtype:=obj.Type
 	curobj:=obj.Obj
 	ptype:=-1
 	i:=0
@@ -476,11 +517,14 @@ func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
 		log.Println("Can't find ",obj.Obj,"in db")
 		return nil,errors.New(fmt.Sprintf("Cant find %s with type %d in db",curobj,curtype))
 	}
-	}
+	}*/
 	return retobj,nil
 }
 
 func GetDataParent(obj *api.DataObj)([]api.DataObj,error){
+	// TODO: need to be reimplemented
+	return nil,nil
+/*
 	db:=GetDB()
 	if obj.Type<0{
 		return nil,errors.New("wrong data type")
@@ -507,10 +551,10 @@ func GetDataParent(obj *api.DataObj)([]api.DataObj,error){
 		fmt.Println("Can't find ",obj.Obj,"in db")
 		return nil,errors.New("Cant find"+obj.Obj+"data in db")
 	}
+	*/
 }
 
 /*
-
 func DelSel(id int) bool {
 	db := GetDB()
 	query := fmt.Sprintf("delete from mysel where id=%d", id)

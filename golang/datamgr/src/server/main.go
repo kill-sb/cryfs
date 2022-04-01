@@ -110,8 +110,6 @@ func DistroFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 func SetupHandler() error{
-//	fhandler=http.FileServer(http.Dir("/root/linux-5.9.1"))
-//	http.HandleFunc("/", defhandler)
 	prefix:="/api/"+g_config.Version+"/"
 	routemap=make(map[string]func(w http.ResponseWriter, r *http.Request))
 	routemap[prefix+"login"]=LoginFunc
@@ -122,7 +120,7 @@ func SetupHandler() error{
     routemap[prefix+"sharedata"]=ShareDataFunc
     routemap[prefix+"getdatainfo"]=GetDataInfoFunc
     routemap[prefix+"traceback"]=TraceBackFunc
-    routemap[prefix+"updatedata"]=UpdateDataFunc
+//    routemap[prefix+"updatedata"]=UpdateDataFunc
     routemap[prefix+"traceforward"]=TraceForwardFunc
     routemap[prefix+"queryobjs"]=QueryObjsFunc
     routemap[prefix+"logout"]=LogoutFunc
@@ -130,6 +128,7 @@ func SetupHandler() error{
 	routemap[prefix+"searchsharedata"]=SearchShareDataFunc
 	routemap[prefix+"createrc"]=CreateRCFunc
 	routemap[prefix+"updaterc"]=UpdateRCFunc
+	routemap[prefix+"getrcinfo"]=GetRCInfoFunc
 	http.HandleFunc(prefix,DistroFunc)
 	/*
 	http.HandleFunc(prefix+"login",LoginFunc) // POST
