@@ -144,16 +144,16 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (i
     }
     fmt.Print("-->")
     var result string
-    if dinfo.FromType==RAWDATA{
+    if dinfo.FromRCId==-1{
         result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
-    }else if dinfo.FromType==ENCDATA || dinfo.FromType==CSDFILE{
+    }else {
         result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
     }
     result+=fmt.Sprintf("Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
-    if dinfo.FromType==RAWDATA{
+    if dinfo.FromRCId==-1{
         result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
-    }else if dinfo.FromType==CSDFILE{
-        result+=fmt.Sprintf(", From User Share Data UUID->%s(Orginal Filename :%s)",dinfo.FromObj,strings.TrimSuffix(dinfo.OrgName,".outdata"))
+    }else {
+		result+=fmt.Sprintf(", From Encrypted/Shared Data, Original Name: %s",strings.TrimSuffix(dinfo.OrgName,".outdata"))// UUID->%s(Orginal Filename :%s)",dinfo.FromObj,strings.TrimSuffix(dinfo.OrgName,".outdata"))
     }
 
     result+=fmt.Sprintf(", Create at->%s\n",dinfo.CrTime)
@@ -178,11 +178,11 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, keyword string,getuser func(
     }else{
         result+=fmt.Sprintf(", Perm->Resharable")
     }
-    if sinfo.FromType==RAWDATA{
+/*    if sinfo.FromRCId==-1{
         result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
     }else{
         result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
-    }
+    }*/
     result+=fmt.Sprintf(", Create at->%s\n",sinfo.CrTime)
 
     if keyword!=""{

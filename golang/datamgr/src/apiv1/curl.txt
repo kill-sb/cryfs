@@ -15,9 +15,10 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 2. newdata:
 	call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"token":"d4bf07e70045397ed7d4b2cd8d10a155","uuid":"ef5e29c3-0b0b-4c49-a157-c81d836e7571","descr":"cmit encrypted data","isdir":0,"fromtype":0,"fromobj":"TODO","ownerid":1,"hash256":"5787ee7c39d78f3cfe0e9586dcaec011","orgname":"TODO"}' -k https://127.0.0.1:8080/api/v1/newdata
-	return ok: 
-		{"code":0,"message":"OK","data":{}} 
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"06ba920c033dabc7605ceea47c1b0435","uuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","descr":"test new data","isdir":0,"fromrcid":1,"ownerid":1,"orgname":"Makefile"}' -k https://127.0.0.1:8080/api/v1/newdata
+	return ok:
+	{"code":0,"message":"OK"}
+
 
 3. getshareinfo:
 	a) public(not return encrypted key)
@@ -61,7 +62,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call: 
 		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d"}' -k https://127.0.0.1:8080/api/v1/getdatainfo
 	return ok: 
-		{"code":0,"message":"OK","data":{"uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","descr":"","fromtype":0,"fromobj":"Makefile","ownerid":1,"sha256":"","isdir":0,"orgname":"Makefile","crtime":"2022-02-10 15:05:23"}}
+	{"code":0,"message":"OK","data":{"uuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","descr":"test new data","fromrcid":1,"srcobj":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"ownerid":1,"isdir":0,"orgname":"Makefile","crtime":"2022-04-06 15:25:25"}}
 
 8. updatedata:
 	login first:
@@ -120,4 +121,24 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"cd77cf0d36158d815d8c626739fe7c67","fromid":1,"toid":0,"startdate":"2022-02-01","enddate":""}' -k https://127.0.0.1:8080/api/v1/searchsharedata
 	return ok:
 	{"code":0,"message":"OK","shareddata":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":2,"crtime":"2022-02-11 16:09:32"},{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":0,"crtime":"2022-02-11 16:09:32"},{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","lefttimes":3,"fromid":1,"toid":2,"crtime":"2022-03-01 16:07:57"},{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","lefttimes":2,"fromid":1,"toid":3,"crtime":"2022-03-01 16:07:57"}]}
+
+14. createrc
+    login first:
+	curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"a83efc49ef6ef69b12be3e5260cd4da3","data":{"rcid":0,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"","start":"2022-04-06", "end":""}}' -k https://127.0.0.1:8080/api/v1/createrc
+	return ok:
+	{"code":0,"message":"OK","data":{"rcid":1,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"","start":"2022-04-06","end":""}}
+
+15. updaterc:
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"2d7ced467acba4f973099b7a145f7621","rcid":1,"datauuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","endtime":"2022-04-06 15:00:01"}' -k https://127.0.0.1:8080/api/v1/updaterc
+	return ok:
+	{"code":0,"message":"OK"}
+
+16. getrcinfo:
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"2d7ced467acba4f973099b7a145f7621","rcid":1}' -k https://127.0.0.1:8080/api/v1/getrcinfo
+	return ok:
+	{"code":0,"message":"OK","data":{"rcid":1,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","start":"2022-04-06 00:00:00","end":"2022-04-06 15:00:01"}}
 

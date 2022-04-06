@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"log"
-	core "coredata"
+//	core "coredata"
 //	"os"
 	"dbop"
 	api "apiv1"
@@ -371,7 +371,7 @@ func CreateRCFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
-func UpdateRCFunc(w https.ReponseWriter, r *http.Request){
+func UpdateRCFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		ack:=api.NewSimpleAck()
 		w.Header().Set("Content-Type","application/json")
@@ -394,7 +394,7 @@ func UpdateRCFunc(w https.ReponseWriter, r *http.Request){
 			return
 		}
 
-		if err:=dbop.UpdateRunContext(luinfo.Id,urcreq.RCId,urcreq.Output,urcreq.EndTime);err!=nil{
+		if err:=dbop.UpdateRunContext(luinfo.Id,urcreq.RCId,urcreq.OutputUuid,urcreq.EndTime);err!=nil{
 			ack.Code=2
 			ack.Msg=err.Error()
 		}else{
@@ -407,7 +407,7 @@ func UpdateRCFunc(w https.ReponseWriter, r *http.Request){
 	}
 }
 
-func GetRCInfoFunc(w https.ReponseWriter, r *http.Request){
+func GetRCInfoFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		rcack:=api.NewRCInfoAck()
 		w.Header().Set("Content-Type","application/json")
@@ -436,7 +436,7 @@ func GetRCInfoFunc(w https.ReponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(rcack)
 			return
 		}*/
-		if rcack.Data,err:=dbop.GetRCInfo(grireq.RCId);err!=nil{
+		if rcack.Data,err=dbop.GetRCInfo(grireq.RCId);err!=nil{
 			rcack.Code=2
 			rcack.Msg=err.Error()
 		}else{

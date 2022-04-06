@@ -5,7 +5,7 @@ import (
 	"time"
 	"bytes"
 	"errors"
-	"io"
+//	"io"
 	"encoding/binary"
 	"crypto/rand"
 	"os/exec"
@@ -99,7 +99,7 @@ type EncryptedData struct{
 	IsDir	byte
 	OwnerName string
 
-    FromRCId int // -1 means from local plain, >0 indicates a run-context id in database, from which FromContext can be created, 
+    FromRCId int64 // -1 means from local plain, >0 indicates a run-context id in database, from which FromContext can be created, 
 
 	// if FromRCId==-1, OrgName is plain data filename/dirname; otherwize, it comes from a mount operation, and a new name(with -dataname cmdline parameter should be set as OrgName)
 	OrgName string
@@ -198,7 +198,7 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 		result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
 	}
 	result+=fmt.Sprintf("Owner->%s(uid:%d)",dinfo.OwnerName,dinfo.OwnerId)
-	if dinfo.FromRcId==-1{
+	if dinfo.FromRCId==-1{
 		result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
 	}else{
 		// TODO: print all source data later

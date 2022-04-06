@@ -58,7 +58,7 @@ CREATE TABLE `efilemeta` (
   `ownerid` int(11) DEFAULT NULL,
   `crtime` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `isdir` int(11) DEFAULT 0,
-  `showname` varchar(255) DEFAULT NULL,
+  `orgname` varchar(255) DEFAULT NULL,
   `multisrc` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8;

@@ -59,7 +59,7 @@ type IEncDataAck struct{
 //	Data *EncDataAck `json:"data"`
 }
 
-type ShareInfoReq structi{
+type ShareInfoReq struct{
 	Token string `json:"token"`
 	Uuid string `json:"uuid"`
 	NeedKey byte	`json:"needkey"`
@@ -172,7 +172,7 @@ type RCInfo struct{
 
 type CreateRCReq struct{
 	Token string `json:"token"`
-	Data *RCInfo `json:"Data"`
+	Data *RCInfo `json:"data"`
 }
 
 type UpdateRCReq struct{
@@ -195,7 +195,7 @@ type GetRCInfoReq struct{
 type EncDataInfo struct{
 	Uuid string `json:"uuid"`
 	Descr string `json:"descr"`
-	FromRCId int	`json:"fromrcid"`
+	FromRCId int64	`json:"fromrcid"`
 	SrcObj	[]*SourceObj `json:"srcobj"`
 	OwnerId	int32	`json:"ownerid"`
 	IsDir	byte	`json:"isdir"`

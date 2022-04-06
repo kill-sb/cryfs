@@ -60,7 +60,7 @@ func ParseVisitors(recvlist string) ([]string,[]int32,error){
 
 func NewRunContext(rc *api.RCInfo) error{
 	db:=GetDB()
-	query:=fmt.Sprintf("insert into runcontext (userid,os,baseimg,crtime) values (%d,'%s','%s','%s')",rc.UserId,rc.OS,rc.BaesImg,rc.StartTime)
+	query:=fmt.Sprintf("insert into runcontext (userid,os,baseimg,crtime) values (%d,'%s','%s','%s')",rc.UserId,rc.OS,rc.BaseImg,rc.StartTime)
 	if result, err := db.Exec(query); err == nil {
         rc.RCId, _ = result.LastInsertId()
 		// create other info in rcinputdata & rcimport
@@ -103,8 +103,8 @@ func UpdateRunContext(userid int32, rcid int64, datauuid string, endtime string)
 			return errors.New("invalid user")
 		}
     }
-	query=fmt.Sprintf("update runcontext set outputuuid='%s', endtime='%s' where id=%d",rcid, datauuid, endtime)
-	_,err:=db.Exec(query)
+	query=fmt.Sprintf("update runcontext set outputuuid='%s', detime='%s' where id=%d",datauuid, endtime,rcid)
+	_,err=db.Exec(query)
 	return err
 }
 
@@ -125,7 +125,7 @@ func GetRCInfo(rcid int64)(*api.RCInfo,error){
 		if err!=nil{
 			return nil,err
 		}
-		info.ImportData,err=GetImportInfo(rcid)
+		info.ImportPlain,err=GetImportInfo(rcid)
 		if err!=nil{
 			return nil,err
 		}
@@ -137,7 +137,7 @@ func GetRCInfo(rcid int64)(*api.RCInfo,error){
 
 func SaveEncMeta(pdata *api.EncDataReq) error{
 	db:=GetDB()
-	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromrcid,ownerid,orgname,isdir) values ('%s','%s',%d,'%d,'%s',%d)",pdata.Uuid,pdata.Descr,pdata.FromRCId,pdata.OwnerId,pdata.OrgName,pdata.IsDir)
+	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromrcid,ownerid,orgname,isdir) values ('%s','%s',%d, %d,'%s',%d)",pdata.Uuid,pdata.Descr,pdata.FromRCId,pdata.OwnerId,pdata.OrgName,pdata.IsDir)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert encrypted data info db error:", err)
 		return err
@@ -174,7 +174,7 @@ func GetSrcObjs(rcid int64)([]*api.SourceObj,error){
 	return objs,nil
 }
 
-func GetImportInfo(rcid int64)([]*ImportFile,error){
+func GetImportInfo(rcid int64)([]*api.ImportFile,error){
     db:=GetDB()
     query:=fmt.Sprintf("select relname,filedesc,sha256,size from rcimport where rcid=%d",rcid)
     res,err:=db.Query(query)
