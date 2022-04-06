@@ -25,19 +25,21 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call: 
 		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":0}' -k https://127.0.0.1:8080/api/v1/getshareinfo
 	return ok: 
-		{"code":0,"message":"OK","data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83125ff","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"","fromtype":0,"fromuuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","crtime":"2022-01-30 09:21:42","orgname":"TODO"}}  
+		{"code":0,"message":"OK","data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83125ff","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"","fromtype":0,"fromuuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","crtime":"2022-01-30 09:21:42","orgname":"TODO"}}  
  
 	b) user(return encrypted key)
     call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"token":"c09ef2ba2be3aaf90553304fc3e6f9d8","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":1}' -k https://127.0.0.1:8080/api/v1/getshareinfo
-    return ok: 
-		{"code":0,"message":"OK","data":{"ownerid":2,"descr":"","perm":1,"receivers":["zhang3","li4","wang2"],"rcvrids":[1,2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"ad5d314cf0496d46091f8a784f6270ab","fromtype":1,"fromuuid":"5d12b326-3a7a-4727-a7bb-a2cace3450db","crtime":"2022-01-28 15:40:43","orgname":"TODO"}}
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"e838bf69cf4f6801211ed6705d6e3c2f","uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","needkey":1}' -k https://127.0.0.1:8080/api/v1/getshareinfo
+	return ok:
+	{"code":0,"message":"OK","data":{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","ownerid":1,"sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":1,"enckey":"3b7b57bef298969fcf272b8caa56d3d6","fromtype":0,"fromuuid":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","crtime":"2022-01-30 09:21:42","orgname":"TODO","isdir":0}}
+
 	return error: 
 		{"code":1,"message":"You should login first","data":{"uuid":"","ownerid":0,"descr":"","perm":0,"receivers":[],"rcvrids":[],"expire":"","maxuse":0,"leftuse":0,"enckey":"","fromtype":0,"fromuuid":"","crtime":"","orgname":""}}
 
 4. sharedata:
 	call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"token":"a316ed6ca59e49b02dd1a51f2561d14c","Data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83125ff","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999:12:31 0:00:00","maxuse":-1,"leftuse":-1,"enckey":"f473653760f74ce9108946711498d925","fromtype":0,"fromuuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","crtime":"2022-01-30 09:21:42","orgname":"TODO"}}' -k https://127.0.0.1:8080/api/v1/sharedata
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","Data":{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999:12:31 0:00:00","maxuse":-1,"enckey":"3b7b57bef298969fcf272b8caa56d3d6","fromtype":0,"fromuuid":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","crtime":"2022-01-30 09:21:42","orgname":"TODO","isdir":0}}' -k https://127.0.0.1:8080/api/v1/sharedata
+
 	return ok: 
 		{"code":0,"message":"OK"}
 
@@ -111,16 +113,6 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	return error:
 	{"code":1,"message":"Invalid token","data":{"timeout":0}}
 
-13. searchsharedata
-    login first:
-        curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
-    login return:
-        {"code":0,"message":"OK","data":{"id":1,"token":"cd77cf0d36158d815d8c626739fe7c67","key":"4a62cf6ee3f8d889e65af1cc271f20fa"}}
-
-	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"cd77cf0d36158d815d8c626739fe7c67","fromid":1,"toid":0,"startdate":"2022-02-01","enddate":""}' -k https://127.0.0.1:8080/api/v1/searchsharedata
-	return ok:
-	{"code":0,"message":"OK","shareddata":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":2,"crtime":"2022-02-11 16:09:32"},{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":0,"crtime":"2022-02-11 16:09:32"},{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","lefttimes":3,"fromid":1,"toid":2,"crtime":"2022-03-01 16:07:57"},{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","lefttimes":2,"fromid":1,"toid":3,"crtime":"2022-03-01 16:07:57"}]}
 
 14. createrc
     login first:
@@ -141,4 +133,15 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"2d7ced467acba4f973099b7a145f7621","rcid":1}' -k https://127.0.0.1:8080/api/v1/getrcinfo
 	return ok:
 	{"code":0,"message":"OK","data":{"rcid":1,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","start":"2022-04-06 00:00:00","end":"2022-04-06 15:00:01"}}
+
+17. searchsharedata
+	login:
+	curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	return:
+	{"code":0,"message":"OK","data":{"id":1,"token":"e20cecb76cfea4661dfd7fc5a9c1008d","key":"f447b20a7fcbf53a5d5be013ea0b15af","timeout":900}}
+
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","fromid":1,"startdate":"2022-02-01"}' -k https://127.0.0.1:8080/api/v1/searchsharedata
+	return ok:
+	{"code":0,"message":"OK","shareddata":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":2,"crtime":"2022-02-11 16:09:32"},{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":0,"crtime":"2022-02-11 16:09:32"}]}
 

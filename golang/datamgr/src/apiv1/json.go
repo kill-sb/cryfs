@@ -68,6 +68,7 @@ type ShareInfoReq struct{
 type ShareInfoData struct{
 	Uuid string `json:"uuid"`
 	OwnerId int32 `json:"ownerid"`
+	Sha256	string `json:"sha256"`
 //	OwnerName string `json:"ownername"`
 	Descr string `json:"descr"`
 	Perm    int32 `json:"perm"`

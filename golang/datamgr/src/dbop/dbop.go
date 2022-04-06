@@ -237,7 +237,7 @@ func DecreaseOpenTimes(sinfo *api.ShareInfoData, userid int32) error{
 
 func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select ownerid,descr, receivers,expire,maxuse,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select sha256, ownerid,descr, receivers,expire,maxuse,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
    res,err:=db.Query(query)
     if err!=nil{
         return nil,err
@@ -247,7 +247,7 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 	// info.FileUri will be filled outside
 		var recv string
 		info.Uuid=uuid
-        if err=res.Scan(&info.OwnerId, &info.Descr,&recv,&info.Expire,&info.MaxUse,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName,&info.IsDir);err!=nil{
+        if err=res.Scan(&info.Sha256,&info.OwnerId, &info.Descr,&recv,&info.Expire,&info.MaxUse,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName,&info.IsDir);err!=nil{
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
@@ -266,7 +266,7 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 
 func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
+	query:=fmt.Sprintf("select sha256,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
    res,err:=db.Query(query)
     if err!=nil{
         return nil,err
@@ -277,7 +277,7 @@ func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
 		var recv string
 
 		info.Uuid=uuid
-        if err=res.Scan(&info.OwnerId, &info.Descr, &recv,&info.Expire,&info.MaxUse,&info.EncKey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName,&info.IsDir);err!=nil{
+        if err=res.Scan(&info.Sha256,&info.OwnerId, &info.Descr, &recv,&info.Expire,&info.MaxUse,&info.EncKey,&info.FromUuid,&info.Perm,&info.FromType,&info.CrTime,&info.OrgName,&info.IsDir);err!=nil{
 			fmt.Println("query",query,"error:",err)
 			return nil,err
 		}
@@ -323,7 +323,7 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 	}
 	recvlist=strings.TrimSpace(recvlist)
 	keystr:=sinfo.EncKey
-	query=fmt.Sprintf("insert into sharetags (uuid,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname,isdir) values ('%s',%d,'%s','%s','%s',%d,'%s','%s',%d,%d,'%s','%s',%d)",sinfo.Uuid,sinfo.OwnerId,sinfo.Descr,recvlist,sinfo.Expire,sinfo.MaxUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName,sinfo.IsDir)
+	query=fmt.Sprintf("insert into sharetags (uuid,sha256,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname,isdir) values ('%s','%s',%d,'%s','%s','%s',%d,'%s','%s',%d,%d,'%s','%s',%d)",sinfo.Uuid,sinfo.Sha256,sinfo.OwnerId,sinfo.Descr,recvlist,sinfo.Expire,sinfo.MaxUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName,sinfo.IsDir)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
 		return err
