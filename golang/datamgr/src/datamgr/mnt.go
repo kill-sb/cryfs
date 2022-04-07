@@ -85,7 +85,7 @@ func doMount(){
 		fmt.Println("login error:",err)
 		return
 	}
-	defer linfo.Logout()
+	defer Logout(linfo)
 
 	/*
     info,err:=os.Stat(inpath)

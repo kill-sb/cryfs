@@ -109,3 +109,7 @@ func Login(user string)(*core.LoginInfo, error){
 		return linfo,nil
 	}*/
 }
+
+func Logout(linfo *core.LoginInfo) error{
+	return Logout_API(linfo.Token)
+}

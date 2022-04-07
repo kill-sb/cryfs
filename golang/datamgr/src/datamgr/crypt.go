@@ -366,7 +366,7 @@ func doDecode(){
 			fmt.Println("login error:",err)
 			return
 		}
-		defer linfo.Logout()
+		defer Logout(linfo)
 /*
 		if info.IsDir(){
 			fmt.Println("Decoding dir",inpath,outpath)
@@ -511,7 +511,7 @@ func doEncode(){
 			fmt.Println("login error:",err)
 			return
 		}
-		defer linfo.Logout()
+		defer Logout(linfo)
 
 		if info.IsDir(){
 			if uuid,err:=EncodeDir(inpath,outpath,linfo); err==nil{
@@ -568,7 +568,7 @@ func doSep(){
 		fmt.Println("login error:",err)
 		return
 	}
-	defer linfo.Logout()
+	defer Logout(linfo)
 
 	dinfo,dtag,err:=GetEncDataFromDisk(linfo,inpath)
 	if err!=nil{

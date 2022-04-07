@@ -216,12 +216,12 @@ type DataObj struct{
 
 type TraceBackReq struct{
 	Token string `json:"token"`
-	Data	[]DataObj `json:"data"`
+	Data *DataObj `json:"data"`
 }
 
 type ITraceBackAck struct{
 	RetStat
-	Data [][]*DataObj `json:"data"`
+	Data []*DataObj `json:"data"`
 }
 
 type QueryObjsReq struct{

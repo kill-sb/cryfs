@@ -31,7 +31,7 @@ func doShare(){
 		fmt.Println("login error:",err)
 		return
 	}
-	defer linfo.Logout()
+	defer Logout(linfo)
 
 	if info.IsDir(){
 		shareDir(inpath,outpath,linfo)

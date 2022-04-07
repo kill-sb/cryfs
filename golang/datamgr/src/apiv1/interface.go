@@ -49,8 +49,8 @@ func NewRCInfoAck() *IRCInfoAck{
 	return ria
 }
 
-func NewTraceBackAck(nobj int)*ITraceBackAck{
-	data:=make([][]*DataObj,0,nobj)
+func NewTraceBackAck()*ITraceBackAck{
+	data:=make([]*DataObj,0,20)
 	tfa:=new (ITraceBackAck)
 	tfa.Code=-1
 	tfa.Msg=INIT_MSG
@@ -113,16 +113,6 @@ func NewLoginStatAck() *ILoginStatAck{
 func NewQueryObjsAck(reqinfo []DataObj)*IQueryObjsAck {
 	cnt:=len(reqinfo)
 	data:=make([]IFDataDesc,0,cnt)
-	fmt.Println("obj num:",cnt)
-/*	for _,v:=range reqinfo{
-		if v.Type==0{
-			dinfo:=new (EncDataInfo)
-			data=append(data,dinfo)
-		}else if v.Type==1{
-			sinfo:=new (ShareInfoData)
-			data=append(data,sinfo)
-		}
-	}*/
 	qda:=new (IQueryObjsAck)
 	qda.Code=-1
 	qda.Msg=INIT_MSG

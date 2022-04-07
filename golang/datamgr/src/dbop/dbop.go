@@ -86,7 +86,6 @@ func NewRunContext(rc *api.RCInfo) error{
 
 func UpdateRunContext(userid int32, rcid int64, datauuid string, endtime string) error{
 	db:=GetDB()
-	// TODO : check userid in RCInfo from rcid
 	query:=fmt.Sprintf("select userid from runcontext where id=%d",rcid)
 	res,err:=db.Query(query)
     if err!=nil{
@@ -476,12 +475,51 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 }
 
 func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
-	// TODO : need to be implemented with multi source supported
-//	db:=GetDB()
 	if obj.Type<0{
 		return nil,errors.New("wrong data type")
 	}
-	retobj:=make([]*api.DataObj,0,10) // current only 1 parent, later will be multiple
+	objmap:=make(map[string]*api.DataObj)
+// ...
+	queue:=make([]*api.DataObj,1,100)
+	queue[0]=obj
+	cur:=0
+	for{
+		if cur==len(queue){
+			break
+		}
+		parents,err:=GetDataParents(queue[cur])
+		if err!=nil{
+			return nil,err
+		}
+		if parents==nil{
+			cur++
+			continue
+		}
+		for _,v:=range parents{
+			if v.Type==core.ENCDATA || v.Type==core.CSDFILE{
+				if _,ok:=objmap[v.Obj];ok{
+					continue // already found before
+				}else{
+					objmap[v.Obj]=v
+					queue=append(queue,v)
+				}
+			}else{
+				continue // plain text
+			}
+		}
+		cur++
+	}
+
+	retobj:=make([]*api.DataObj,len(objmap))
+	i:=0
+	for _,v:=range objmap{
+		retobj[i]=v
+		i++
+	}
+	return retobj,nil
+}
+
+	// current only 1 parent, later will be multiple
 /*	curtype:=obj.Type
 	curobj:=obj.Obj
 	ptype:=-1
@@ -518,17 +556,50 @@ func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
 		return nil,errors.New(fmt.Sprintf("Cant find %s with type %d in db",curobj,curtype))
 	}
 	}*/
-	return retobj,nil
-}
 
-func GetDataParent(obj *api.DataObj)([]api.DataObj,error){
+func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 	// TODO: need to be reimplemented
-	return nil,nil
-/*
 	db:=GetDB()
-	if obj.Type<0{
+	if obj.Type==core.CSDFILE{
+		cobj:=new (api.DataObj)
+		retobj:=make([]*api.DataObj,1)
+		query:=fmt.Sprintf("select fromtype,datauuid from sharetags where uuid='%s'",obj.Obj)
+		res,err:=db.Query(query)
+		if err!=nil{
+			return nil,err
+		}
+		if res.Next(){
+			err=res.Scan(&cobj.Type,&cobj.Obj)
+			if err!=nil{
+				return nil,err
+			}
+			retobj[0]=cobj
+			return retobj,nil
+		}else{
+			return nil,nil
+			//return nil,errors.New("csd data not found")
+		}
+	}else if obj.Type==core.ENCDATA{
+		query:=fmt.Sprintf("select rcinputdata.srcuuid,rcinputdata.srctype from rcinputdata, efilemeta where efilemeta.uuid='%s' and rcinputdata.rcid=efilemeta.fromrcid", obj.Obj)
+		res,err:=db.Query(query)
+		if err!=nil{
+			return nil,err
+		}
+		retobj:=make([]*api.DataObj,0,10)
+		for res.Next(){
+			nobj:=new (api.DataObj)
+			err=res.Scan(&nobj.Obj,&nobj.Type)
+			if err!=nil{
+				return nil,err
+			}
+			retobj=append(retobj,nobj)
+		}
+		return retobj,nil
+	}else{
 		return nil,errors.New("wrong data type")
 	}
+}
+/*
 	retobj:=make([]api.DataObj,1,10) // current only 1 parent, later will be multiple
 	var query string
 	if obj.Type==core.RAWDATA{
@@ -552,7 +623,6 @@ func GetDataParent(obj *api.DataObj)([]api.DataObj,error){
 		return nil,errors.New("Cant find"+obj.Obj+"data in db")
 	}
 	*/
-}
 
 /*
 func DelSel(id int) bool {

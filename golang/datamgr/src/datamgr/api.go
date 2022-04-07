@@ -125,3 +125,7 @@ func CreateRunContext_APICreateRunContext(baseimg string,srcobj []core.SourceObj
 func UpdateRunContext_API(rc *core.RunContext, datauuid string)( *api.ISimpleAck,error){
 	return nil,nil
 }
+
+func Logout_API(token string)error{
+	return nil
+}

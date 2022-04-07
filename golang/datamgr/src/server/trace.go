@@ -16,7 +16,7 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 		w.Header().Set("Content-Type","application/json")
 		var tbreq api.TraceBackReq
 		err:=json.NewDecoder(r.Body).Decode(&tbreq)
-		tback:=api.NewTraceBackAck(len(tbreq.Data))
+		tback:=api.NewTraceBackAck()
 		if err!=nil{
 			Debug("Decode json error:",err)
 			json.NewEncoder(w).Encode(tback)
@@ -36,16 +36,14 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
         }*/
 		tback.Code=0
 		tback.Msg="OK"
-		for _,v:=range tbreq.Data{
-			objs,err:=dbop.SingleTrace(&v)
+
+		objs,err:=dbop.SingleTrace(tbreq.Data)
 			//objs,err:=dbop.GetDataParent(&v)
-			if err!=nil{
-				tback.Code=3
-				tback.Msg=fmt.Sprintf("search uuid=%s error: %s",v.Obj,err.Error())
-				break
-			}else{
-				tback.Data=append(tback.Data,objs)
-			}
+		if err!=nil{
+			tback.Code=3
+			tback.Msg=fmt.Sprintf("search uuid=%s error: %s",tbreq.Data.Obj,err.Error())
+		}else{
+			tback.Data=objs
 		}
 		json.NewEncoder(w).Encode(tback)
 	}else{
@@ -86,7 +84,7 @@ func QueryObjsFunc(w http.ResponseWriter, r *http.Request){
 			var obj api.IFDataDesc=nil
 			var err error=nil
 			switch v.Type{
-			case core.RAWDATA:
+			case core.ENCDATA:
 				obj,err=dbop.GetEncDataInfo(v.Obj)
 			case core.CSDFILE:
 				obj,err=dbop.GetShareInfoData(v.Obj)

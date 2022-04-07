@@ -495,11 +495,11 @@ func LoadShareInfoHead(fname string)(*ShareInfoHeader_V2,error){
 	}
 
 }
-
+/*
 func (info *LoginInfo) Logout() error{ //  should be implemented later
 	// TODO invoke logout API
     return  nil
-}
+}*/
 
 /*
 func FillShareInfo(apidata *api.ShareInfoData,uuid string,isdir byte, ctype int, encryptedkey []byte)*ShareInfo{
