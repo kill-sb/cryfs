@@ -166,3 +166,29 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/traceforward
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1},{"obj":"eb60fafe-bac1-4343-b863-5c60ddd7e5b8","type":1}]}	
+
+21 trace
+	call (back one step):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":-1,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0}]}
+
+	call (back all):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":-2,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0},{"obj":"Makefile","type":-1}]}
+
+	call (forward one step):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":1,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1}]}
+	
+	call (forward all):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":2,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"eb60fafe-bac1-4343-b863-5c60ddd7e5b8","type":1},{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1}]}
+
+	call (0):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":0,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	return error:
+	{"code":3,"message":"trace datauuid=cd77acc1-3a40-4e02-8ddc-acc7a67474cc error: Incorrect trace level","data":[]}

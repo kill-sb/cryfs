@@ -119,6 +119,7 @@ func SetupHandler() error{
     routemap[prefix+"getshareinfo"]=GetShareInfoFunc
     routemap[prefix+"sharedata"]=ShareDataFunc
     routemap[prefix+"getdatainfo"]=GetDataInfoFunc
+    routemap[prefix+"trace"]=TraceFunc
     routemap[prefix+"traceback"]=TraceBackFunc
 //    routemap[prefix+"updatedata"]=UpdateDataFunc
     routemap[prefix+"traceforward"]=TraceForwardFunc

@@ -214,10 +214,17 @@ type DataObj struct{
 	Type int `json:"type"`
 }
 
+type CommonTraceReq struct{
+	Token string `json:"token"`
+	Level int `json:"level"`
+	Data *DataObj `json:"data"`
+}
+
 type TraceReq struct{
 	Token string `json:"token"`
 	Data *DataObj `json:"data"`
 }
+
 
 type ITraceAck struct{
 	RetStat
