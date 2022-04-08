@@ -149,10 +149,20 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call (encdata)
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}}' -k https://127.0.0.1:8080/api/v1/tracechildren
 	return ok:
-	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}]}
+	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1}]}
 
 	call (csdfile):
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/tracechildren
 	return ok:
-	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}]}
+	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1}]}
 
+20 traceforward
+	call (encdata):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}}' -k https://127.0.0.1:8080/api/v1/traceforward
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1},{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1}]}
+
+	call (csd file):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/traceforward
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1},{"obj":"eb60fafe-bac1-4343-b863-5c60ddd7e5b8","type":1}]}	

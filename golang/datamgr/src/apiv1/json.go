@@ -214,12 +214,12 @@ type DataObj struct{
 	Type int `json:"type"`
 }
 
-type TraceBackReq struct{
+type TraceReq struct{
 	Token string `json:"token"`
 	Data *DataObj `json:"data"`
 }
 
-type ITraceBackAck struct{
+type ITraceAck struct{
 	RetStat
 	Data []*DataObj `json:"data"`
 }

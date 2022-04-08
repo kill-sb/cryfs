@@ -49,9 +49,9 @@ func NewRCInfoAck() *IRCInfoAck{
 	return ria
 }
 
-func NewTraceBackAck()*ITraceBackAck{
+func NewTraceAck()*ITraceAck{
 	data:=make([]*DataObj,0,20)
-	tfa:=new (ITraceBackAck)
+	tfa:=new (ITraceAck)
 	tfa.Code=-1
 	tfa.Msg=INIT_MSG
 	tfa.Data=data

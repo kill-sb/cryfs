@@ -474,7 +474,7 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	return ret,nil
 }
 
-func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
+func TraceBack(obj *api.DataObj)([]*api.DataObj,error){
 	if obj.Type<0{
 		return nil,errors.New("wrong data type")
 	}
@@ -583,11 +583,58 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 	}
 }
 
+func TraceForward(obj *api.DataObj)([]*api.DataObj,error){
+	if obj.Type<0{
+		return nil,errors.New("wrong data type")
+	}
+	objmap:=make(map[string]*api.DataObj)
+
+	queue:=make([]*api.DataObj,1,100)
+	queue[0]=obj
+	cur:=0
+	for{
+		if cur==len(queue){
+			break
+		}
+		children,err:=GetDataChildren(queue[cur])
+		if err!=nil{
+			return nil,err
+		}
+		if children==nil{
+			cur++
+			continue
+		}
+		for _,v:=range children{
+			if _,ok:=objmap[v.Obj];ok{
+				continue // already found before
+			}else{
+				objmap[v.Obj]=v
+				if v.Type==core.ENCDATA || v.Type==core.CSDFILE{
+					queue=append(queue,v)
+				}else{
+					fmt.Println("Find invalid obj type in dbop.TraceForwrd:",*v)
+					return nil,errors.New("Invalid child data type");
+				}
+			}
+		}
+		cur++
+	}
+
+	retobj:=make([]*api.DataObj,len(objmap))
+	i:=0
+	for _,v:=range objmap{
+		retobj[i]=v
+		i++
+	}
+	return retobj,nil
+}
+
 func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
 	if obj.Type!=core.CSDFILE && obj.Type!=core.ENCDATA{
 		return nil,errors.New("Invalid data type")
 	}
 	db:=GetDB()
+	// search  generated encdata
 	query:=fmt.Sprintf("select efilemeta.uuid from efilemeta, rcinputdata  where rcinputdata.srcuuid='%s' and rcinputdata.srctype=%d and efilemeta.fromrcid=rcinputdata.rcid",obj.Obj,obj.Type)
 	res,err:=db.Query(query)
 	if err!=nil{
@@ -603,6 +650,22 @@ func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
 			return nil,err
 		}
 		nobj.Type=core.ENCDATA
+		retobj=append(retobj,nobj)
+	}
+
+	// search generated csd files
+	query=fmt.Sprintf("select uuid from sharetags where datauuid='%s' and fromtype=%d",obj.Obj,obj.Type)
+	res,err=db.Query(query)
+	if err!=nil{
+		return nil,err
+	}
+	for res.Next(){
+		nobj:=new (api.DataObj)
+		err=res.Scan(&nobj.Obj)
+		if err!=nil{
+			return nil,err
+		}
+		nobj.Type=core.CSDFILE
 		retobj=append(retobj,nobj)
 	}
 	return retobj,nil
