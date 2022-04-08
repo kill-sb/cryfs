@@ -123,6 +123,8 @@ func SetupHandler() error{
 //    routemap[prefix+"updatedata"]=UpdateDataFunc
     routemap[prefix+"traceforward"]=TraceForwardFunc
     routemap[prefix+"queryobjs"]=QueryObjsFunc
+	routemap[prefix+"traceparents"]=TraceParentsFunc
+	routemap[prefix+"tracechildren"]=TraceChildrenFunc
     routemap[prefix+"logout"]=LogoutFunc
     routemap[prefix+"refreshtoken"]=RefreshTokenFunc
 	routemap[prefix+"searchsharedata"]=SearchShareDataFunc

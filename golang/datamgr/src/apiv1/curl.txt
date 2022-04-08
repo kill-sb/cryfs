@@ -68,15 +68,14 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 9. traceback
 	call(csd file): 
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1}]}' -k https://127.0.0.1:8080/api/v1/traceback
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1}}' -k https://127.0.0.1:8080/api/v1/traceback
 	return ok:
-	{"code":0,"message":"OK","data":[{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0},{"obj":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0}]}
+	{"code":0,"message":"OK","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0},{"obj":"samplefs","type":-1}]}
 
 	call(encrypted data)
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}}' -k https://127.0.0.1:8080/api/v1/traceback
 	return ok:
-	{"code":0,"message":"OK","data":[{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0},{"obj":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0}]}
-
+	{"code":0,"message":"OK","data":[{"obj":"samplefs","type":-1},{"obj":"Makefile","type":-1},{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0},{"obj":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0}]}
 
 10. queryobjs
 	call:
@@ -134,4 +133,26 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","fromid":1,"startdate":"2022-02-01"}' -k https://127.0.0.1:8080/api/v1/searchsharedata
 	return ok:
 	{"code":0,"message":"OK","shareddata":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":2,"crtime":"2022-02-11 16:09:32"},{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":0,"crtime":"2022-02-11 16:09:32"}]}
+
+18. traceparents
+	call (encdata):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}}' -k https://127.0.0.1:8080/api/v1/traceparents
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}]}
+
+	call (csdfile):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":0}}' -k https://127.0.0.1:8080/api/v1/traceparents
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1}]}
+
+19 tracechildren
+	call (encdata)
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}}' -k https://127.0.0.1:8080/api/v1/tracechildren
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}]}
+
+	call (csdfile):
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/tracechildren
+	return ok:
+	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}]}
 

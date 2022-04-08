@@ -496,15 +496,13 @@ func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
 			continue
 		}
 		for _,v:=range parents{
-			if v.Type==core.ENCDATA || v.Type==core.CSDFILE{
-				if _,ok:=objmap[v.Obj];ok{
-					continue // already found before
-				}else{
-					objmap[v.Obj]=v
+			if _,ok:=objmap[v.Obj];ok{
+				continue // already found before
+			}else{
+				objmap[v.Obj]=v
+				if v.Type==core.ENCDATA || v.Type==core.CSDFILE{
 					queue=append(queue,v)
 				}
-			}else{
-				continue // plain text
 			}
 		}
 		cur++
@@ -519,46 +517,7 @@ func SingleTrace(obj *api.DataObj)([]*api.DataObj,error){
 	return retobj,nil
 }
 
-	// current only 1 parent, later will be multiple
-/*	curtype:=obj.Type
-	curobj:=obj.Obj
-	ptype:=-1
-	i:=0
-	for {
-	var query string
-	if curtype==core.RAWDATA{
-		query=fmt.Sprintf("select fromtype,fromobj from efilemeta where uuid='%s'",curobj)
-	}else if curtype==core.CSDFILE{
-		query=fmt.Sprintf("select fromtype,datauuid from sharetags where uuid='%s'",curobj)
-	}
-	res,err:=db.Query(query)
-	if err!=nil{
-		log.Println("select from db error:",err)
-		return nil,err
-	}
-	if res.Next(){
-		newobj:=new (api.DataObj)
-		err=res.Scan(&newobj.Type,&newobj.Obj)
-		if err!=nil{
-			return nil,err
-		}
-		retobj=append(retobj,newobj)
-		ptype=newobj.Type
-		i++
-		if curtype==core.RAWDATA && ptype==core.RAWDATA{
-			newobj.Type=-1
-			break
-		}
-		curtype=newobj.Type
-		curobj=newobj.Obj
-	}else{
-		log.Println("Can't find ",obj.Obj,"in db")
-		return nil,errors.New(fmt.Sprintf("Cant find %s with type %d in db",curobj,curtype))
-	}
-	}*/
-
 func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
-	// TODO: need to be reimplemented
 	db:=GetDB()
 	if obj.Type==core.CSDFILE{
 		cobj:=new (api.DataObj)
@@ -580,8 +539,32 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 			//return nil,errors.New("csd data not found")
 		}
 	}else if obj.Type==core.ENCDATA{
-		query:=fmt.Sprintf("select rcinputdata.srcuuid,rcinputdata.srctype from rcinputdata, efilemeta where efilemeta.uuid='%s' and rcinputdata.rcid=efilemeta.fromrcid", obj.Obj)
+		//query:=fmt.Sprintf("select rcinputdata.srcuuid,rcinputdata.srctype from rcinputdata, efilemeta where efilemeta.uuid='%s' and rcinputdata.rcid=efilemeta.fromrcid", obj.Obj)
+		query:=fmt.Sprintf("select fromrcid,orgname from efilemeta where uuid='%s'",obj.Obj)
 		res,err:=db.Query(query)
+		if err!=nil{
+			return nil,err
+		}
+		var rcid int64
+		var orgname string
+		if !res.Next(){
+			return nil, err
+		}
+		err=res.Scan(&rcid,&orgname)
+		if err!=nil{
+			return nil,err
+		}
+		if rcid<=0{ // root plain file
+			cobj:=new (api.DataObj)
+			retobj:=make([]*api.DataObj,1)
+			cobj.Type=-1
+			cobj.Obj=orgname
+			retobj[0]=cobj
+			return retobj,nil
+		}
+
+		query=fmt.Sprintf("select srcuuid,srctype from rcinputdata where rcid=%d", rcid)
+		res,err=db.Query(query)
 		if err!=nil{
 			return nil,err
 		}
@@ -599,30 +582,33 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 		return nil,errors.New("wrong data type")
 	}
 }
-/*
-	retobj:=make([]api.DataObj,1,10) // current only 1 parent, later will be multiple
-	var query string
-	if obj.Type==core.RAWDATA{
-		query=fmt.Sprintf("select fromtype,fromobj from efilemeta where uuid='%s'",obj.Obj)
-	}else if obj.Type==core.CSDFILE{
-		query=fmt.Sprintf("select fromtype,datauuid from sharetags where uuid='%s'",obj.Obj)
+
+func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
+	if obj.Type!=core.CSDFILE && obj.Type!=core.ENCDATA{
+		return nil,errors.New("Invalid data type")
 	}
+	db:=GetDB()
+	query:=fmt.Sprintf("select efilemeta.uuid from efilemeta, rcinputdata  where rcinputdata.srcuuid='%s' and rcinputdata.srctype=%d and efilemeta.fromrcid=rcinputdata.rcid",obj.Obj,obj.Type)
 	res,err:=db.Query(query)
 	if err!=nil{
-		fmt.Println("select from db error:",err)
 		return nil,err
 	}
-	if res.Next(){
-		err=res.Scan(&retobj[0].Type,&retobj[0].Obj)
+
+	retobj:=make([]*api.DataObj,0,20)
+	for res.Next(){
+		nobj:=new (api.DataObj)
+		err=res.Scan(&nobj.Obj)
 		if err!=nil{
+			fmt.Println("scan data error in dbop.GetDataChild")
 			return nil,err
 		}
-		return retobj,nil
-	}else{
-		fmt.Println("Can't find ",obj.Obj,"in db")
-		return nil,errors.New("Cant find"+obj.Obj+"data in db")
+		nobj.Type=core.ENCDATA
+		retobj=append(retobj,nobj)
 	}
-	*/
+	return retobj,nil
+}
+
+
 
 /*
 func DelSel(id int) bool {

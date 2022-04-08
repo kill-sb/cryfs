@@ -55,6 +55,87 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 func TraceForwardFunc(w http.ResponseWriter, r *http.Request){
 }
 
+func TraceParentsFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		w.Header().Set("Content-Type","application/json")
+		var tbreq api.TraceBackReq
+		err:=json.NewDecoder(r.Body).Decode(&tbreq)
+		tback:=api.NewTraceBackAck()
+		if err!=nil{
+			Debug("Decode json error:",err)
+			json.NewEncoder(w).Encode(tback)
+			return
+		}
+        if g_config.Debug{
+            DebugJson("Request:",&tbreq)
+            defer DebugJson("Response:",tback)
+        }
+		/*
+		_,err=GetLoginUserInfo(sifreq.Token)
+        if err!=nil{
+            sifack.Code=1
+            sifack.Msg="You should login first"
+            json.NewEncoder(w).Encode(sifack)
+            return
+        }*/
+		tback.Code=0
+		tback.Msg="OK"
+
+		objs,err:=dbop.GetDataParents(tbreq.Data)
+			//objs,err:=dbop.GetDataParent(&v)
+		if err!=nil{
+			tback.Code=3
+			tback.Msg=fmt.Sprintf("search uuid=%s error: %s",tbreq.Data.Obj,err.Error())
+		}else{
+			tback.Data=objs
+		}
+		json.NewEncoder(w).Encode(tback)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+
+func TraceChildrenFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		w.Header().Set("Content-Type","application/json")
+		var tbreq api.TraceBackReq
+		err:=json.NewDecoder(r.Body).Decode(&tbreq)
+		tback:=api.NewTraceBackAck()
+		if err!=nil{
+			Debug("Decode json error:",err)
+			json.NewEncoder(w).Encode(tback)
+			return
+		}
+        if g_config.Debug{
+            DebugJson("Request:",&tbreq)
+            defer DebugJson("Response:",tback)
+        }
+		/*
+		_,err=GetLoginUserInfo(sifreq.Token)
+        if err!=nil{
+            sifack.Code=1
+            sifack.Msg="You should login first"
+            json.NewEncoder(w).Encode(sifack)
+            return
+        }*/
+		tback.Code=0
+		tback.Msg="OK"
+
+		objs,err:=dbop.GetDataChildren(tbreq.Data)
+			//objs,err:=dbop.GetDataParent(&v)
+		if err!=nil{
+			tback.Code=3
+			tback.Msg=fmt.Sprintf("search uuid=%s error: %s",tbreq.Data.Obj,err.Error())
+		}else{
+			tback.Data=objs
+		}
+		json.NewEncoder(w).Encode(tback)
+	}else{
+		http.NotFound(w,r)
+	}
+
+}
+
 func QueryObjsFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		w.Header().Set("Content-Type","application/json")
