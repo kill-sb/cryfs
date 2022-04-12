@@ -357,6 +357,7 @@ func CreateRCFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(rcack)
 			return
 		}
+		rcreq.Data.IPAddr=GetClientPublicIP(r)
 		if err:=dbop.NewRunContext(rcreq.Data);err!=nil{
 			rcack.Code=2
 			rcack.Msg=err.Error()

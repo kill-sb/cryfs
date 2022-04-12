@@ -60,7 +60,7 @@ func ParseVisitors(recvlist string) ([]string,[]int32,error){
 
 func NewRunContext(rc *api.RCInfo) error{
 	db:=GetDB()
-	query:=fmt.Sprintf("insert into runcontext (userid,os,baseimg,crtime) values (%d,'%s','%s','%s')",rc.UserId,rc.OS,rc.BaseImg,rc.StartTime)
+	query:=fmt.Sprintf("insert into runcontext (userid,os,baseimg,crtime,ipaddr) values (%d,'%s','%s','%s','%s')",rc.UserId,rc.OS,rc.BaseImg,rc.StartTime,rc.IPAddr)
 	if result, err := db.Exec(query); err == nil {
         rc.RCId, _ = result.LastInsertId()
 		// create other info in rcinputdata & rcimport
@@ -109,14 +109,14 @@ func UpdateRunContext(userid int32, rcid int64, datauuid string, endtime string)
 
 func GetRCInfo(rcid int64)(*api.RCInfo,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select userid,os,baseimg,outputuuid,crtime,detime from runcontext where id=%d",rcid)
+	query:=fmt.Sprintf("select userid,os,baseimg,ipaddr,outputuuid,crtime,detime from runcontext where id=%d",rcid)
 	res,err:=db.Query(query)
 	if err!=nil{
 		return nil,err
 	}
 	info:=new (api.RCInfo)
 	if res.Next(){
-		err=res.Scan(&info.UserId,&info.OS,&info.BaseImg,&info.OutputUuid,&info.StartTime,&info.EndTime)
+		err=res.Scan(&info.UserId,&info.OS,&info.BaseImg,&info.IPAddr,&info.OutputUuid,&info.StartTime,&info.EndTime)
 		if err!=nil{
 			return nil,err
 		}

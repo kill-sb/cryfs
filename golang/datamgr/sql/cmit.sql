@@ -96,7 +96,7 @@ CREATE TABLE `rcimport` (
 
 LOCK TABLES `rcimport` WRITE;
 /*!40000 ALTER TABLE `rcimport` DISABLE KEYS */;
-INSERT INTO `rcimport` VALUES (1,'path/data1','data1','f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1',2048);
+INSERT INTO `rcimport` VALUES (1,'path/data1','data1','f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1',2048),(2,'path/data1','data1','f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1',2048);
 /*!40000 ALTER TABLE `rcimport` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -120,7 +120,7 @@ CREATE TABLE `rcinputdata` (
 
 LOCK TABLES `rcinputdata` WRITE;
 /*!40000 ALTER TABLE `rcinputdata` DISABLE KEYS */;
-INSERT INTO `rcinputdata` VALUES (1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1),(1,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0);
+INSERT INTO `rcinputdata` VALUES (1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1),(1,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0),(2,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1),(2,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0);
 /*!40000 ALTER TABLE `rcinputdata` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -161,13 +161,14 @@ DROP TABLE IF EXISTS `runcontext`;
 CREATE TABLE `runcontext` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `userid` int(11) NOT NULL,
-  `os` varchar(32) DEFAULT NULL,
-  `baseimg` varchar(128) DEFAULT NULL,
+  `os` varchar(32) DEFAULT '',
+  `baseimg` varchar(128) DEFAULT '',
   `outputuuid` char(36) DEFAULT '',
   `crtime` datetime DEFAULT '2022-01-01 00:00:00',
   `detime` datetime DEFAULT '2022-01-01 00:00:00',
+  `ipaddr` varchar(50) DEFAULT '',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -176,7 +177,7 @@ CREATE TABLE `runcontext` (
 
 LOCK TABLES `runcontext` WRITE;
 /*!40000 ALTER TABLE `runcontext` DISABLE KEYS */;
-INSERT INTO `runcontext` VALUES (1,1,'linux','centos8','e9002c53-3a67-4a5b-8010-89a9a8e6dc06','2022-04-06 00:00:00','2022-04-06 15:00:01');
+INSERT INTO `runcontext` VALUES (1,1,'linux','centos8','e9002c53-3a67-4a5b-8010-89a9a8e6dc06','2022-04-06 00:00:00','2022-04-06 15:00:01','192.168.80.138'),(2,1,'linux','centos8','','2022-04-06 00:00:00','2022-01-01 00:00:00','127.0.0.1');
 /*!40000 ALTER TABLE `runcontext` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -283,4 +284,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-04-07 16:03:53
+-- Dump completed on 2022-04-12 15:17:56

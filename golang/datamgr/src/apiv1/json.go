@@ -166,6 +166,7 @@ type RCInfo struct{
 	ImportPlain []*ImportFile `json:"imports"`
 	OS string `json:"os"`
 	BaseImg string `json:"baseimg"`
+	IPAddr string `json:"ipaddr"`
 	OutputUuid string `json:"output"`
 	StartTime string `json:"start"`
 	EndTime string `json:"end"`
