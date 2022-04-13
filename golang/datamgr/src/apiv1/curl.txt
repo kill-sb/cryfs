@@ -3,19 +3,19 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 1. login:
 	call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+		curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://apisvr:8080/api/v1/login
 	return ok: 
 		{"code":0,"message":"","data":{"id":1,"token":"64f0a69a0f66e2faf993f354e9190340","key":"f447b20a7fcbf53a5d5be013ea0b15af","timeout":900}}
 
 	call:
-		curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+		curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123","primask":0}' -k https://apisvr:8080/api/v1/login
 	return error: 
 		{"code":1,"message":"Invalid user/password","data":{"id":-1,"token":"nil","key":"nil","timeout":0}}
 
 
 2. newdata:
 	call: 
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"06ba920c033dabc7605ceea47c1b0435","uuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","descr":"test new data","isdir":0,"fromrcid":1,"ownerid":1,"orgname":"Makefile"}' -k https://127.0.0.1:8080/api/v1/newdata
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"06ba920c033dabc7605ceea47c1b0435","uuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","descr":"test new data","isdir":0,"fromrcid":1,"ownerid":1,"orgname":"Makefile"}' -k https://apisvr:8080/api/v1/newdata
 	return ok:
 	{"code":0,"message":"OK"}
 
@@ -23,13 +23,13 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 3. getshareinfo:
 	a) public(not return encrypted key)
 	call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":0}' -k https://127.0.0.1:8080/api/v1/getshareinfo
+		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3","needkey":0}' -k https://apisvr:8080/api/v1/getshareinfo
 	return ok: 
 		{"code":0,"message":"OK","data":{"uuid":"c38eb51b-fea0-4654-9bfc-b1d4c83125ff","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":-1,"enckey":"","fromtype":0,"fromuuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d","crtime":"2022-01-30 09:21:42","orgname":"TODO"}}  
  
 	b) user(return encrypted key)
     call: 
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"e838bf69cf4f6801211ed6705d6e3c2f","uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","needkey":1}' -k https://127.0.0.1:8080/api/v1/getshareinfo
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"e838bf69cf4f6801211ed6705d6e3c2f","uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","needkey":1}' -k https://apisvr:8080/api/v1/getshareinfo
 	return ok:
 	{"code":0,"message":"OK","data":{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","ownerid":1,"sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":1,"enckey":"3b7b57bef298969fcf272b8caa56d3d6","fromtype":0,"fromuuid":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","crtime":"2022-01-30 09:21:42","orgname":"TODO","isdir":0}}
 
@@ -38,65 +38,66 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 4. sharedata:
 	call: 
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","Data":{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","ownerid":1,"descr":"","perm":1,"receivers":["wang2","cmit"],"rcvrids":[3,4],"expire":"2999:12:31 0:00:00","maxuse":-1,"enckey":"3b7b57bef298969fcf272b8caa56d3d6","fromtype":0,"fromuuid":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","crtime":"2022-01-30 09:21:42","orgname":"TODO","isdir":0}}' -k https://127.0.0.1:8080/api/v1/sharedata
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","Data":{"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","ownerid":1,"descr":"","perm":1,"rcvrids":[3,4],"expire":"2999:12:31 0:00:00","maxuse":-1,"enckey":"3b7b57bef298969fcf272b8caa56d3d6","fromtype":0,"fromuuid":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","crtime":"2022-01-30 09:21:42","orgname":"TODO","isdir":0}}' -k https://apisvr:8080/api/v1/sharedata
 
 	return ok: 
 		{"code":0,"message":"OK"}
 
-5. getuser:
+5. finduserbyids:
 	call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2]}' -k https://127.0.0.1:8080/api/v1/getuser 
+		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2]}' -k https://apisvr:8080/api/v1/finduserbyids
 	return ok: 
 		{"code":0,"message":"OK","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}
 
 	call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2,100,3]}' -k https://127.0.0.1:8080/api/v1/getuser
+		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","ids":[1,2,100,3]}' -k https://apisvr:8080/api/v1/getuser
 	return error: 
 		{"code":3,"message":"search userid=100 error: No such user ","data":[]}
 
-6. findusername:
+6. finduserbynames:
 	call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","names":["zhang3","li4"]}' -k https://127.0.0.1:8080/api/v1/findusername
+		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","names":["zhang3","li4"]}' -k https://apisvr:8080/api/v1/finduserbynames
 	return ok: 
 		{"code":0,"message":"OK","data":[{"id":1,"descr":"zhang3","name":"zhang3","mobile":"139","email":"a@a.com"},{"id":2,"descr":"li 4","name":"li4","mobile":"13811111111","email":"li4@a.com"}]}
 
 7. getdatainfo:
 	call: 
-		curl -H "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"f4c7062d-6d3b-42de-b9bf-32e140c60d5d"}' -k https://127.0.0.1:8080/api/v1/getdatainfo
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","uuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06"}' -k https://apisvr:8080/api/v1/getdatainfo
+
 	return ok: 
 	{"code":0,"message":"OK","data":{"uuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","descr":"test new data","fromrcid":1,"srcobj":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"ownerid":1,"isdir":0,"orgname":"Makefile","crtime":"2022-04-06 15:25:25"}}
 
 9. traceback
 	call(csd file): 
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1}}' -k https://127.0.0.1:8080/api/v1/traceback
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1}}' -k https://apisvr:8080/api/v1/traceback
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0},{"obj":"samplefs","type":-1}]}
 
 	call(encrypted data)
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}}' -k https://127.0.0.1:8080/api/v1/traceback
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}}' -k https://apisvr:8080/api/v1/traceback
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"samplefs","type":-1},{"obj":"Makefile","type":-1},{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0},{"obj":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0}]}
 
 10. queryobjs
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}]}' -k https://127.0.0.1:8080/api/v1/queryobjs
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}]}' -k https://apisvr:8080/api/v1/queryobjs
 	return ok:
 	{"code":0,"message":"OK","dataobj":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","ownerid":1,"sha256":"","descr":"","perm":1,"receivers":["li4","wang2"],"rcvrids":[2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":0,"enckey":"","fromtype":0,"fromuuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","crtime":"2022-02-11 16:09:32","orgname":"","isdir":0},{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","descr":"cmit encrypted dir","fromrcid":0,"srcobj":[],"ownerid":1,"isdir":1,"orgname":"samplefs","crtime":"2022-02-11 16:08:59"}]}
 
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":1}]}' -k https://127.0.0.1:8080/api/v1/queryobjs
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":1}]}' -k https://apisvr:8080/api/v1/queryobjs
 	return error:
 	{"code":3,"message":"query obj 'ac1ada36-c79e-4951-bb6a-c37cca8952c0' error:No shared info found in server","dataobj":[]}	
 
 11. logout
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"9f7e6adf87546d1acfdb796e85bf4e60"}' -k https://127.0.0.1:8080/api/v1/logout
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"9f7e6adf87546d1acfdb796e85bf4e60"}' -k https://apisvr:8080/api/v1/logout
 	return ok:
 	{"code":0,"message":"OK","data":{"timeout":0}}
 
 12. refreshtoken
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"9f7e6adf87546d1acfdb796e85bf4e60"}' -k https://127.0.0.1:8080/api/v1/refreshtoken
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"9f7e6adf87546d1acfdb796e85bf4e60"}' -k https://apisvr:8080/api/v1/refreshtoken
 	return OK:
 	{"code":0,"message":"OK","data":{"timeout":900}}
 	return error:
@@ -105,90 +106,90 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 14. createrc
     login first:
-	curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://apisvr:8080/api/v1/login
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"a83efc49ef6ef69b12be3e5260cd4da3","data":{"rcid":0,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"","start":"2022-04-06", "end":""}}' -k https://127.0.0.1:8080/api/v1/createrc
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"a83efc49ef6ef69b12be3e5260cd4da3","data":{"rcid":0,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"","start":"2022-04-06", "end":""}}' -k https://apisvr:8080/api/v1/createrc
 	return ok:
 	{"code":0,"message":"OK","data":{"rcid":1,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"","start":"2022-04-06","end":""}}
 
 15. updaterc:
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"2d7ced467acba4f973099b7a145f7621","rcid":1,"datauuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","endtime":"2022-04-06 15:00:01"}' -k https://127.0.0.1:8080/api/v1/updaterc
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"2d7ced467acba4f973099b7a145f7621","rcid":1,"datauuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","endtime":"2022-04-06 15:00:01"}' -k https://apisvr:8080/api/v1/updaterc
 	return ok:
 	{"code":0,"message":"OK"}
 
 16. getrcinfo:
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"2d7ced467acba4f973099b7a145f7621","rcid":1}' -k https://127.0.0.1:8080/api/v1/getrcinfo
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"2d7ced467acba4f973099b7a145f7621","rcid":1}' -k https://apisvr:8080/api/v1/getrcinfo
 	return ok:
 	{"code":0,"message":"OK","data":{"rcid":1,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","ipaddr":"192.168.80.138","output":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","start":"2022-04-06 00:00:00","end":"2022-04-06 15:00:01"}}
 
 17. searchsharedata
 	login:
-	curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://127.0.0.1:8080/api/v1/login
+	curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://apisvr:8080/api/v1/login
 	return:
 	{"code":0,"message":"OK","data":{"id":1,"token":"e20cecb76cfea4661dfd7fc5a9c1008d","key":"f447b20a7fcbf53a5d5be013ea0b15af","timeout":900}}
 
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","fromid":1,"startdate":"2022-02-01"}' -k https://127.0.0.1:8080/api/v1/searchsharedata
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","fromid":1,"startdate":"2022-02-01"}' -k https://apisvr:8080/api/v1/searchsharedata
 	return ok:
 	{"code":0,"message":"OK","shareddata":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":2,"crtime":"2022-02-11 16:09:32"},{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":0,"crtime":"2022-02-11 16:09:32"}]}
 
 18. traceparents
 	call (encdata):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}}' -k https://127.0.0.1:8080/api/v1/traceparents
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0}}' -k https://apisvr:8080/api/v1/traceparents
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}]}
 
 	call (csdfile):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":0}}' -k https://127.0.0.1:8080/api/v1/traceparents
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":0}}' -k https://apisvr:8080/api/v1/traceparents
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1}]}
 
 19 tracechildren
 	call (encdata)
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}}' -k https://127.0.0.1:8080/api/v1/tracechildren
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}}' -k https://apisvr:8080/api/v1/tracechildren
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1}]}
 
 	call (csdfile):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/tracechildren
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://apisvr:8080/api/v1/tracechildren
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1}]}
 
 20 traceforward
 	call (encdata):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}}' -k https://127.0.0.1:8080/api/v1/traceforward
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}}' -k https://apisvr:8080/api/v1/traceforward
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1},{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1}]}
 
 	call (csd file):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/traceforward
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://apisvr:8080/api/v1/traceforward
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1},{"obj":"eb60fafe-bac1-4343-b863-5c60ddd7e5b8","type":1}]}	
 
 21 trace
 	call (back one step):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":-1,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":-1,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://apisvr:8080/api/v1/trace
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0}]}
 
 	call (back all):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":-2,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":-2,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://apisvr:8080/api/v1/trace
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0},{"obj":"Makefile","type":-1}]}
 
 	call (forward one step):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":1,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":1,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://apisvr:8080/api/v1/trace
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1}]}
 	
 	call (forward all):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":2,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":2,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://apisvr:8080/api/v1/trace
 	return ok:
 	{"code":0,"message":"OK","data":[{"obj":"eb60fafe-bac1-4343-b863-5c60ddd7e5b8","type":1},{"obj":"02c4c033-5ab0-4aa0-8edc-bd4590b9056e","type":0},{"obj":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","type":0},{"obj":"b178ea6d-877d-405e-a440-35ba705773d1","type":1}]}
 
 	call (0):
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":0,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://127.0.0.1:8080/api/v1/trace
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":0,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://apisvr:8080/api/v1/trace
 	return error:
 	{"code":3,"message":"trace datauuid=cd77acc1-3a40-4e02-8ddc-acc7a67474cc error: Incorrect trace level","data":[]}

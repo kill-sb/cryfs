@@ -113,8 +113,8 @@ func SetupHandler() error{
 	prefix:="/api/"+g_config.Version+"/"
 	routemap=make(map[string]func(w http.ResponseWriter, r *http.Request))
 	routemap[prefix+"login"]=LoginFunc
-	routemap[prefix+"getuser"]=GetUserFunc
-    routemap[prefix+"findusername"]=FindUserNameFunc
+	routemap[prefix+"finduserbyids"]=GetUserFunc
+    routemap[prefix+"finduserbynames"]=FindUserNameFunc
     routemap[prefix+"newdata"]=NewDataFunc
     routemap[prefix+"getshareinfo"]=GetShareInfoFunc
     routemap[prefix+"sharedata"]=ShareDataFunc

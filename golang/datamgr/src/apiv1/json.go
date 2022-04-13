@@ -83,7 +83,7 @@ type ShareInfoData struct{
 	CrTime  string `json:"crtime"`
 //	FileUri string `json:"fileuri"`
 	OrgName string `json:"orgname"`
-	IsDir int `json:"isdir"`
+	IsDir byte `json:"isdir"`
 }
 
 type IShareInfoAck struct{

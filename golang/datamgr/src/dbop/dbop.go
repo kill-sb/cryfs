@@ -309,13 +309,18 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 	db:=GetDB()
 	recvlist:=""
 	query:=""
+	var err error
+	sinfo.Receivers,err=GetUserNames(sinfo.RcvrIds)
+	if err!=nil{
+		return err
+	}
 	for i,user:=range sinfo.Receivers{
 		if recvlist!=""{
 			recvlist+=","
 		}
 		recvlist+=user
 		query=fmt.Sprintf("insert into shareusers (taguuid,userid,leftuse) values ('%s',%d,%d)",sinfo.Uuid,sinfo.RcvrIds[i],sinfo.MaxUse)
-		if _,err:=db.Exec(query);err!=nil{
+		if _,err=db.Exec(query);err!=nil{
 			fmt.Println("Insert into shareusers error",err)
 			return err
 		}
@@ -323,36 +328,45 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 	recvlist=strings.TrimSpace(recvlist)
 	keystr:=sinfo.EncKey
 	query=fmt.Sprintf("insert into sharetags (uuid,sha256,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname,isdir) values ('%s','%s',%d,'%s','%s','%s',%d,'%s','%s',%d,%d,'%s','%s',%d)",sinfo.Uuid,sinfo.Sha256,sinfo.OwnerId,sinfo.Descr,recvlist,sinfo.Expire,sinfo.MaxUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName,sinfo.IsDir)
-	if _, err := db.Exec(query); err != nil {
+	if _, err= db.Exec(query); err != nil {
 		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
 		return err
 	}
 
 	return nil
 }
-/*
-func GetUserName(uid int32)(string,error){
-	ret,ok:=useridcache[uid]
-	if ok{
-		return ret,nil
+
+func GetUserNames(uids []int32)([]string,error){
+	n:=len(uids)
+	if n<1{
+		return nil,errors.New("empty user list in GetUserNames")
 	}
 	db:=GetDB()
-	query:=fmt.Sprintf("select name from users where id='%d'",uid)
+
+	ret:=make([]string,n)
+	query:=fmt.Sprintf("select name from users where id='%d'",uids[0])
+	for i:=1;i<n;i++{
+		query+=fmt.Sprintf(" or id='%d'",uids[i])
+	}
 	res,err:=db.Query(query)
 	if err!=nil{
 		return ret,err
 	}
-	if !res.Next(){
-		return ret,errors.New("No such user ")
-	}else{
-		res.Scan(&ret)
+	i:=0
+	for res.Next(){
+		err=res.Scan(&ret[i])
+		if err!=nil{
+			return nil,err
+		}
+		i++
 	}
-	useridcache[uid]=ret
-	usernamecache[ret]=uid
+	if i!=n{
+		return nil,errors.New("GetUserNames error in dbop, check your id list")
+	}
 	return ret,nil
 
 }
-*/
+
 func IsValidUser(user string)(int32,error){
 	var ret int32 =-1
 	db:=GetDB()
