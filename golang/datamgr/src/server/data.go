@@ -351,12 +351,13 @@ func CreateRCFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(rcack)
 			return
 		}
-		if luinfo.Id!=rcreq.Data.UserId{
+/*		if luinfo.Id!=rcreq.Data.UserId{
 			rcack.Code=2
 			rcack.Msg="Invalid user"
 			json.NewEncoder(w).Encode(rcack)
 			return
-		}
+		}*/
+		rcreq.Data.UserId=luinfo.Id
 		rcreq.Data.IPAddr=GetClientPublicIP(r)
 		if err:=dbop.NewRunContext(rcreq.Data);err!=nil{
 			rcack.Code=2
