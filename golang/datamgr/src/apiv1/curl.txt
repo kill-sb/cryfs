@@ -109,7 +109,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
     login first:
 	curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://apisvr:8080/api/v1/login
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"a83efc49ef6ef69b12be3e5260cd4da3","data":{"rcid":0,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"","start":"2022-04-06", "end":""}}' -k https://apisvr:8080/api/v1/createrc
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"a83efc49ef6ef69b12be3e5260cd4da3","data":{"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","start":"2022-04-06"}}' -k https://apisvr:8080/api/v1/createrc
 	return ok:
 	{"code":0,"message":"OK","data":{"rcid":1,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","output":"","start":"2022-04-06","end":""}}
 
@@ -121,7 +121,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 16. getrcinfo:
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"2d7ced467acba4f973099b7a145f7621","rcid":1}' -k https://apisvr:8080/api/v1/getrcinfo
+	curl -H "Content-Type: application/json" -X POST -d '{"rcid":1}' -k https://apisvr:8080/api/v1/getrcinfo
 	return ok:
 	{"code":0,"message":"OK","data":{"rcid":1,"userid":1,"sources":[{"type":1,"uuid":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc"},{"type":0,"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0"}],"imports":[{"relname":"path/data1","desc":"data1","sha256":"f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1","size":2048}],"os":"linux","baseimg":"centos8","ipaddr":"192.168.80.138","output":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","start":"2022-04-06 00:00:00","end":"2022-04-06 15:00:01"}}
 

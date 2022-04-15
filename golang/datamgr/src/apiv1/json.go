@@ -44,7 +44,7 @@ type EncDataReq struct{
 	Uuid string `json:"uuid"`
 	Descr string `json:"descr"`
 	IsDir   byte `json:"isdir"`
-	FromRCId int `json:"fromrcid"`
+	FromRCId int64 `json:"fromrcid"`
 	OwnerId int32 `json:"ownerid"`
 	OrgName string `json:"orgname"`
 }
