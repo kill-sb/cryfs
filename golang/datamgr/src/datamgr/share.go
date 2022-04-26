@@ -211,7 +211,7 @@ func GetVisitors(recvlist string) ([]string,[]int32,error){
 		return nil,nil,err
 	}
 	intret:=make([]int32,0,len(strret))
-	for  _,v:=range uinfo.Data{
+	for  _,v:=range uinfo{
 		if v.Id!=-1{
 			intret=append(intret,v.Id)
 		}else{
@@ -323,34 +323,30 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader,linfo* core.LoginInfo)(*cor
 	uuid:=string(head.Uuid[:])
 //	enckey:=head.EncryptedKey[:]
 	var err error
-	var apiack *api.IShareInfoAck
+//	var apiack *api.IShareInfoAck
+	var asinfo *api.ShareInfoData
 	if linfo==nil{
-		apiack,err=GetShareInfo_Public_API(uuid)
+		asinfo,err=GetShareInfo_Public_API(uuid)
 	}else{
-		apiack,err=GetShareInfo_User_API(linfo.Token,uuid)
+		asinfo,err=GetShareInfo_User_API(linfo.Token,uuid)
 	}
 	if err!=nil{
         fmt.Println("GetShareInfo_API error:",err)
         return nil,err
 	}
-    if apiack.Code!=0{
-        return nil,errors.New(apiack.Msg)
-    }
 	// TODO: Fill IsDir from remove server, remove ContentType
-	sinfo:=FillShareInfo(apiack.Data,head.EncryptedKey[:])
+	sinfo:=FillShareInfo(asinfo,head.EncryptedKey[:])
 	//sinfo:=FillShareInfo(apiack.Data,uuid,head.IsDir,int(head.ContentType),enckey)
 	return sinfo,nil
 }
 
-func WriteShareInfo(token string, sinfo* core.ShareInfo)([]byte,error){
-	ack,err:=ShareData_API(token,sinfo)
+//func WriteShareInfo(token string, sinfo* core.ShareInfo)([]byte,error){
+func WriteShareInfo(token string, sinfo* core.ShareInfo)(error){
+	err:=ShareData_API(token,sinfo)
 	if err!=nil{
-		return nil,err
+		return err
 	}
-	if ack!=nil && ack.Code!=0{
-		return errors.New(ack.Msg)
-	}
-	return nil,nil // TODO: sign will be filled in ack.Msg
+	return nil // TODO: sign
 }
 
 func FillShareInfo(apidata *api.ShareInfoData, encryptedkey []byte)*core.ShareInfo{

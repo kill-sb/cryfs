@@ -503,7 +503,7 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 
 
 // TODO  the function should be removed, since modify an encrypted file will create a new encrypted file, instead of update the original one
-func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, linfo *core.LoginInfo)error{
+/*func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, linfo *core.LoginInfo)error{
 	dinfo.HashMd5,_=GetFileMd5(ipath)
     for i,j:=range []byte(dinfo.HashMd5){
         tag.Md5Sum[i]=j
@@ -512,23 +512,23 @@ func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, 
 	tag.SaveTagToDisk(strings.TrimSuffix(ipath,".tag")+".tag")
 	return UpdateDataInfo_API(dinfo,linfo)
 	//return dbop.UpdateMeta(dinfo)
-}
+}*/
 
-func CreateRunContext(baseimg string,srcobj []core.SourceObj, tools []core.ImportFile)(*core.RunContext,error){
+func CreateRunContext(baseimg string,srcobj []core.SourceObj, tools []core.ImportFile)(*api.RCInfo,error){
 	rc:=new (core.RunContext)
 	rc.BaseImg=baseimg
 	rc.OS="Linux"
 	rc.InputData=srcobj
 	rc.ImportPlain=tools
 	rc.StartTime=core.GetCurTime()
-	err:=CreateContext_API(rc)
+	ret,err:=CreateContext_API(rc)
 	if err!=nil{
 		return nil,err
 	}
-	return rc,nil
+	return ret,nil
 }
 
-func UpdateRunContext(rc *core.RunContext, datauuid string) error{
+func UpdateRunContext(token string, rc *core.RunContext, datauuid string) error{
 // add datauuid, EndTime
 	rc.EndTime=core.GetCurTime()
 	rc.OutputUuid=datauuid

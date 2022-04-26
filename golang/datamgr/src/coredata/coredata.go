@@ -12,7 +12,7 @@ import (
 	"strings"
 	"fmt"
 	"os"
-//	api "apiv1"
+	api "apiv1"
 )
 
 const (
@@ -68,7 +68,7 @@ type EncDataTag struct{
 	Uuid	[36] byte
 	EKey	[16] byte
 }
-
+/*
 type SourceObj struct{
 	DataType int
 	DataUuid string
@@ -91,7 +91,7 @@ type RunContext struct{
 	OutputUuid string
 	StartTime string
 	EndTime string
-}
+}*/
 
 type EncryptedData struct{
     Uuid string
@@ -103,7 +103,7 @@ type EncryptedData struct{
 
 	// if FromRCId==-1, OrgName is plain data filename/dirname; otherwize, it comes from a mount operation, and a new name(with -dataname cmdline parameter should be set as OrgName)
 	OrgName string
-	FromContext *RunContext
+	FromContext *api.RCInfo
 
     OwnerId int32
     EncryptingKey []byte

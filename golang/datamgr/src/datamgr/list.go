@@ -166,18 +166,20 @@ func GetDataInfo_API(uuid string)(*api.IDataInfoAck,error){
 	return ack,nil
 }
 */
+
 func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
     info:=new (core.EncryptedData)
     info.Uuid=adata.Uuid
-    info.OwnerId=adata.OwnerId
     info.Descr=adata.Descr
-    info.FromType=adata.FromType
-    info.FromObj=adata.FromObj
-    info.HashMd5=adata.Hash256
     info.IsDir=adata.IsDir
-    info.CrTime=adata.CrTime
-    info.OrgName=adata.OrgName
+    info.OwnerId=adata.OwnerId
 	info.OwnerName,_=GetUserName(info.OwnerId)
+    info.FromRCId=adata.FromRCId
+    info.OrgName=adata.OrgName
+    info.CrTime=adata.CrTime
+	if info.FromRCId!>0{
+		info.RunContext,_=GetRCInfo_API(info.FromRCId)
+	}
     return info
 }
 
@@ -186,10 +188,8 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 	if err!=nil{
 		return nil,err
 	}
-	if ainfo.Code!=0{
-		return nil,errors.New(ainfo.Msg)
-	}
-	return FillEncDataInfo(ainfo.Data),nil
+
+	return FillEncDataInfo(ainfo),nil
 }
 
 func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error){
@@ -215,16 +215,12 @@ func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error)
 
 
 func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
-	sifack,err:=GetShareInfo_Public_API(uuid)
+	data,err:=GetShareInfo_Public_API(uuid)
 	if err!=nil{
 		fmt.Println("GetShareInfo_Public_API error in traceCSDFile:",err)
 		return nil,err
 	}
-	if sifack.Code!=0{
-//		fmt.Println("error return value--msg:",sinfo.Msg)
-		return nil,errors.New(sifack.Msg)
-	}
-	sinfo:=FillShareInfo(sifack.Data,uuid,0,0,nil)
+	sinfo:=FillShareInfo(data,uuid,0,0,nil)
 	tracer=append(tracer,sinfo)
 
     // should be replaced later because of multi-source processing
@@ -339,7 +335,7 @@ func GetUserName(id int32)(ret string,err error){
 	if err!=nil{
 		return "",err
 	}
-	ret=ud.Data[0].Name
+	ret=ud[0].Name
 	idmap[id]=ret
 	namemap[ret]=id
 	return ret,nil
