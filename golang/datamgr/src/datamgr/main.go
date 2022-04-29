@@ -129,18 +129,19 @@ func main(){
 		testlogin()
 	case core.ENCODE:
 		doEncode()
-	case core.DISTRIBUTE:
+/*	case core.DISTRIBUTE:
 		doShare()
 	case core.MOUNT:
 		doMount()
-	case core.DECODE:
-		doDecode()
 	case core.TRACE:
 		doTraceAll()
 	case core.LIST:
 		doList()
 	case core.SEPERATE:
-		doSep()
+		doSep()*/
+
+	case core.DECODE:
+		doDecode()
 	default:
 		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
 	}

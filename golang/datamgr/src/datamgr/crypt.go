@@ -2,8 +2,8 @@ package main
 
 import(
 	"fmt"
-	"io"
-	"time"
+	//"io"
+	//"time"
 	"os"
 	"unsafe"
 	"errors"
@@ -219,8 +219,10 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.EncDataT
 	tag:=new (core.EncDataTag)
 	copy(tag.Uuid[:],[]byte(pdata.Uuid))
 	copy(tag.EKey[:],savedkey)
+	tag.SaveTagToDisk(pdata.Path+"/"+pdata.Uuid+".tag")
 	return tag,nil
 }
+
 /*
 func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFile,error){
 	tag:=new (core.TagInFile)
@@ -317,17 +319,17 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	if err!=nil{
 		return "",err
 	}
+
 	pdata:=new(core.EncryptedData)
 	pdata.Uuid,_=core.GetUuid()
 	pdata.Descr="cmit encrypted data"
-	pdata.FromType=core.RAWDATA
-	pdata.FromObj=fname
 	pdata.OrgName=fname
 	pdata.OwnerId=linfo.Id
 	pdata.EncryptingKey=passwd
 	pdata.Path=opath
 	pdata.IsDir=0
-
+	pdata.FromRCId=0
+	pdata.FromContext=nil
 	ofile:=opath+"/"+pdata.Uuid
 /*	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
 	cipath:=C.CString(ipath)
@@ -337,7 +339,7 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	C.do_encodefile(cipath,cofile,cpasswd)
 	*/
 	DoEncodeFileInC(ipath,ofile,passwd)
-	pdata.HashMd5,_=GetFileMd5(ofile)
+//	pdata.HashMd5,_=GetFileMd5(ofile)
 	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
 	return pdata.Uuid,nil
 }
@@ -548,6 +550,7 @@ func ValidSepPath(ipath,opath string)(os.FileInfo,string,string,error){
 	return finfo,relstr,basedir,nil
 }
 
+/*
 func doSep(){
 	if inpath=="" || outpath==""{
 		fmt.Println("You should set inpath end outpath explicitly")
@@ -606,3 +609,4 @@ func doSep(){
 
 	fmt.Println(dst.Uuid,"seperated ok")
 }
+*/

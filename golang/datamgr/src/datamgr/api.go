@@ -128,24 +128,37 @@ func ShareData_API(token string,sinfo *core.ShareInfo)(error){
     return nil
 }
 
-func CreateRunContext_APICreateRunContext(baseimg string,srcobj []core.SourceObj, tools []core.ImportFile)(*api.RCInfo,error)
-	return nil,nil
+func CreateRunContext_API(token string, rc *api.RCInfo)(error){
+	req:=&api.CreateRCReq{Token:token,Data:rc}
+	ack:=api.NewRCInfoAck()
+	err:=HttpAPIPost(req,ack,"createrc")
+    if err!=nil{
+        fmt.Println("call updaterc error:",err)
+        return err
+    }
+    if ack.Code!=0{
+        return errors.New(ack.Msg)
+    }
+	return nil
 }
 
-func UpdateRunContext_API(token* string, rc *api.RCInfo) error{
+func UpdateRunContext_API(token string, rc *api.RCInfo) error{
 	//ack= new (api.ISimpleAck)
-	req:=&api.UpdateRCReq{Token:token,RCId:rc.RCId,OutputUuid:datauuid,EndTime:rc.EndTime}
+	req:=&api.UpdateRCReq{Token:token,RCId:rc.RCId,OutputUuid:rc.OutputUuid,EndTime:rc.EndTime}
     ack:=new (api.ISimpleAck)
     err:=HttpAPIPost(req,ack,"updaterc")
     if err!=nil{
         fmt.Println("call updaterc error:",err)
         return err
     }
+	if ack.Code!=0{
+		return errors.New(ack.Msg)
+	}
 	return nil
 }
 
 func GetRCInfo_API(rcid int64)(*api.RCInfo,error){
-    req:=&api.GetRCInfoReq{Token:0,RCId:rcid}
+    req:=&api.GetRCInfoReq{Token:"0",RCId:rcid}
     ack:=api.NewRCInfoAck()
     err:=HttpAPIPost(req,ack,"getrcinfo")
     if err!=nil{
@@ -153,7 +166,7 @@ func GetRCInfo_API(rcid int64)(*api.RCInfo,error){
         return nil,err
     }
 	if ack.Code!=0{
-		return errors.New(ack.Msg)
+		return nil,errors.New(ack.Msg)
 	}
     return ack.Data,nil
 }

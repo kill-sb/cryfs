@@ -73,6 +73,9 @@ func doAuth(user string)(*api.ITokenInfo,error){
 	err:=HttpAPIPost(&ainfo,token,"login")
 	if err==nil{
 //		fmt.Println("call api ok:",token,",data:",token.Data)
+		if token.Code!=0{
+			return nil,errors.New(token.Msg)
+		}
 		return token,nil
 	}else{
 		fmt.Println("call api error:",err)
@@ -94,20 +97,6 @@ func Login(user string)(*core.LoginInfo, error){
 	linfo.Token=token.Data.Token
 	linfo.Keylocalkey=core.StringToBinkey(token.Data.Key)
 	return linfo,nil
-//	linfo:=new (LoginInfo)
-//	linfo.Name=user
-/*	passwd:=make([]byte,16) // max 16 bytes password
-	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
-	length:=C.get_passwd(cpasswd,16)
-	passwd=passwd[:length]
-	//if linfo,err:=do_login(user,passwd);err!=nil{
-	if linfo,err:=do_api_login(user,passwd);err!=nil{
-		fmt.Println("Login error:",err)
-		return nil,err
-	}else{
-	//	linfo.Keylocalkey=string(passwd) // just for test, Keylocalkey is used to encrypt random key
-		return linfo,nil
-	}*/
 }
 
 func Logout(linfo *core.LoginInfo) error{

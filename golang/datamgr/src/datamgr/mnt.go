@@ -35,6 +35,7 @@ import(
 	"strings"
 	"errors"
 	core "coredata"
+	api  "apiv1"
 )
 
 type MountOpt struct{
@@ -141,10 +142,12 @@ func MountDir(ipath string, linfo *core.LoginInfo)error{
 		fmt.Println("LoadTagFromDisk error in MountDir:",err)
 		return err
 	}
+	// TODO : OwnerId need be gotten from server
+	/*
 	if tag.OwnerId!=linfo.Id{
 		fmt.Println("The data does not belong to",linfo.Name)
 		return errors.New("Invalid user")
-	}
+	}*/
 /*	
 	process:
 	0. get enc passwd
@@ -262,16 +265,14 @@ func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInf
     pdata.Descr="cmit encrypted dir"
 	// FIXME: should be replaced later because of multi-source processing
     //pdata.FromType=core.CSDFILE
-    pdata.FromPlain=0
-    pdata.FromObj=sinfo.Uuid
+//    pdata.FromPlain=0
+//    pdata.FromObj=sinfo.Uuid
 	finfo,_:=os.Stat(sinfo.FileUri)
 	pdata.OrgName=finfo.Name()+".outdata" //FIXME: modified to parameter: newname
     pdata.OwnerId=linfo.Id
     pdata.EncryptingKey=passwd
     pdata.Path=opath
     pdata.IsDir=1
-
-    pdata.HashMd5=""
 
 
 	if dataname,single:=SingleFileInDir(opath+"/"+datauuid);single{
@@ -493,11 +494,13 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 		fmt.Println("Create pod error:",err)
 		return err
 	}
+	/*
 	err=UpdateMetaInfo(ipath,tag,dinfo,linfo)
 	if err!=nil{
 		fmt.Println("UpdateMetaInfo error:",err)
 //		return err
 	}
+	*/
 	return err
 }
 
@@ -514,25 +517,26 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 	//return dbop.UpdateMeta(dinfo)
 }*/
 
-func CreateRunContext(baseimg string,srcobj []core.SourceObj, tools []core.ImportFile)(*api.RCInfo,error){
-	rc:=new (core.RunContext)
+func CreateRunContext(token string,baseimg string,srcobj []*api.SourceObj, tools []*api.ImportFile)(*api.RCInfo,error){
+//	rc:=new (core.RunContext)
+	rc:=new (api.RCInfo)
 	rc.BaseImg=baseimg
 	rc.OS="Linux"
 	rc.InputData=srcobj
 	rc.ImportPlain=tools
 	rc.StartTime=core.GetCurTime()
-	ret,err:=CreateContext_API(rc)
+	err:=CreateRunContext_API(token,rc)
 	if err!=nil{
 		return nil,err
 	}
-	return ret,nil
+	return rc,nil
 }
 
-func UpdateRunContext(token string, rc *core.RunContext, datauuid string) error{
+func UpdateRunContext(token string, rc *api.RCInfo, datauuid string) error{
 // add datauuid, EndTime
 	rc.EndTime=core.GetCurTime()
 	rc.OutputUuid=datauuid
-	if err:=UpdateContext_API(rc);err!=nil{
+	if err:=UpdateRunContext_API(token,rc);err!=nil{
 		return err
 	}
 	return nil

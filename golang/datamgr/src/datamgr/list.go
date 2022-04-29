@@ -81,7 +81,7 @@ func ListTags(tags[]string){
 	for _,tag:=range tags{
 		tinfo,err:=core.LoadTagFromDisk(tag)
 		if err==nil{
-			edata,err:=GetDataInfo(tag)
+			edata,err:=GetDataInfo(tinfo)
 			if err==nil{
 		//		fmt.Printf("\t%d\n",i+1)
 				if PrintEncDataInfo(edata,i){
@@ -105,13 +105,13 @@ func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
 	}
 
     // should be replaced later because of multi-source processing
-	if data.FromType==core.RAWDATA{
+/*	if data.FromType==core.RAWDATA{
 		result+=fmt.Sprintf("\tFrom Type: Plain Local File\n")
 		result+=fmt.Sprintf("\tOrginal filename :%s\n",data.OrgName)
 	}else{
 		result+=fmt.Sprintf("\tFrom Type: Shared Data\n")
 		result+=fmt.Sprintf("\tFrom Shared Data Infomation :\n\t\tUuid :%s\n\t\tFileName:%s\n",data.FromObj,strings.TrimSuffix(data.OrgName,".outdata"))
-	}
+	}*/
 	result+=fmt.Sprintf("\tDescription :%s\n",data.Descr)
 	if data.IsDir==1{
 		result+=fmt.Sprintf("\tIs Directory :yes\n")
@@ -177,8 +177,8 @@ func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
     info.FromRCId=adata.FromRCId
     info.OrgName=adata.OrgName
     info.CrTime=adata.CrTime
-	if info.FromRCId!>0{
-		info.RunContext,_=GetRCInfo_API(info.FromRCId)
+	if info.FromRCId>0{
+		info.FromContext,_=GetRCInfo_API(info.FromRCId)
 	}
     return info
 }
@@ -193,8 +193,9 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 }
 
 func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error){
+	return nil,errors.New("Empty implement in traceRawData")
 	// RAW DATA
-	dinfo,err:=GetEncDataInfo(uuid)
+/*	dinfo,err:=GetEncDataInfo(uuid)
 	if err!=nil{
 		fmt.Println("GetEncDataInfo error in traceRAWDATA:",err)
 		return nil,err
@@ -210,11 +211,13 @@ func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error)
 	}else{
 		fmt.Println("Get unknown 'FromType' during tracing:",uuid,":",dinfo.FromType)
 		return nil,errors.New("Unknown FromType")
-	}
+	}*/
 }
 
 
 func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
+	return nil,errors.New("Empty implement in traceCSDFile")
+	/*
 	data,err:=GetShareInfo_Public_API(uuid)
 	if err!=nil{
 		fmt.Println("GetShareInfo_Public_API error in traceCSDFile:",err)
@@ -231,7 +234,7 @@ func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error
 	}else{
 		fmt.Println("Get unknown 'FromType' during tracing:",uuid,":",sinfo.FromType)
 		return nil,errors.New("Unknown FromType")
-	}
+	}*/
 }
 
 func doTraceAll(){

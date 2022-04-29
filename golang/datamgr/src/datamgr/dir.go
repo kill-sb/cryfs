@@ -23,9 +23,9 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
     }
     pdata:=new(core.EncryptedData)
     pdata.Uuid,_=core.GetUuid()
+	pdata.FromRCId=0
+	pdata.FromContext=nil
     pdata.Descr="cmit encrypted dir"
-    pdata.FromType=core.RAWDATA
-    pdata.FromObj=fname
     pdata.OrgName=fname
     pdata.OwnerId=linfo.Id
     pdata.EncryptingKey=passwd
@@ -35,8 +35,6 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
     ofile:=opath+"/"+pdata.Uuid
 	finfo,_:=os.Stat(ipath)
 	os.MkdirAll(ofile,finfo.Mode())
-//    pdata.HashMd5,_=GetFileMd5(ofile)
-    pdata.HashMd5=""
     RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
 
 	filepath.Walk(ipath, func (pathname string,info os.FileInfo, err error) error{
