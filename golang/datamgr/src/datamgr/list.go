@@ -180,6 +180,7 @@ func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
 	if info.FromRCId>0{
 		info.FromContext,_=GetRCInfo_API(info.FromRCId)
 	}
+	info.EncryptingKey=make([]byte,16)
     return info
 }
 
@@ -247,7 +248,7 @@ func doTraceAll(){
 	switch ftype{
 // should be replaced later because of multi-source processing, more cases like  core.ENCDATA
 
-	case core.RAWDATA:
+	case core.ENCDATA:
 	    if tag,err:=core.LoadTagFromDisk(inpath);err!=nil{
 			fmt.Println("Load tag info error in traceAll:",err)
 			return

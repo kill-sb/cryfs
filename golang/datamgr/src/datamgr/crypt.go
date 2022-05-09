@@ -389,7 +389,7 @@ func DecodeFile(ipath,opath string,linfo *core.LoginInfo,finfo os.FileInfo)error
 		return err
 	}
 	switch ftype{
-	case core.RAWDATA:
+	case core.ENCDATA:
 		return DecodeRawData(finfo,linfo,ipath,opath)
 	case core.CSDFILE:
 		return DecodeCSDFile(linfo,ipath,opath)
@@ -473,7 +473,6 @@ func DecodeRawData(finfo os.FileInfo,linfo *core.LoginInfo,ipath,opath string)er
 		return errors.New("Invalid user")
 	}
 	pdata.Path=ipath
-
 	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,pdata.EncryptingKey,16)
 	ofile:=opath+"/"+pdata.OrgName
 	if pdata.IsDir==0{

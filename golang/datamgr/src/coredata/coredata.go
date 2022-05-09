@@ -171,7 +171,7 @@ func (sinfo*ShareInfo)PrintTraceInfo(level int,keyword string) error{
 		result+=fmt.Sprintf(", Perm->Resharable")
 	}
 
-	if sinfo.FromType==RAWDATA{		result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
+	if sinfo.FromType==ENCDATA{		result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
 	}else{
 		result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
 	}

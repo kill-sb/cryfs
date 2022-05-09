@@ -25,7 +25,7 @@ func GetDataInfo_API(uuid string)(*api.EncDataInfo,error){
 func GetUserInfo_API(ids []int32)([]api.UserInfoData,error){
     req:=&api.GetUserReq{Token:"0",Id:ids}
     ack:=api.NewUserInfoAck()
-    err:=HttpAPIPost(req,ack,"getuser")
+    err:=HttpAPIPost(req,ack,"finduserbyids")
     if err!=nil{
         fmt.Println("call api info error:",err)
         return nil,err
