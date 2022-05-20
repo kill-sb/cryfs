@@ -128,6 +128,28 @@ func NewSearchDataAck(result []*ShareDataNode) *ISearchDataAck{
 	return sda
 }
 
+func NewSendNotifyAck()*ISendNotifyAck{
+	sna:=new (ISendNotifyAck)
+	sna.Code=-1
+	sna.Msg=INIT_MSG
+	return sna
+}
+
+func NewSearchNotifiesAck() *ISearchUserNotifiesAck{
+	sna:=new (ISearchUserNotifiesAck)
+	sna.Code=-1
+	sna.Msg=INIT_MSG
+	sna.Data=make([]*NotifyInfo,0,50)
+	return sna
+}
+
+func NewQueryNotifyAck() *IQueryNotifyAck{
+	qna:=new (IQueryNotifyAck)
+	qna.Code=-1
+	qna.Msg=INIT_MSG
+	return qna
+}
+
 func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (int32)string)error{
     for i:=0;i<level;i++{
         fmt.Print("\t")

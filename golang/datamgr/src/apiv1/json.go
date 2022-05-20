@@ -239,7 +239,7 @@ type QueryObjsReq struct{
 
 type IQueryObjsAck struct{
 	RetStat
-	Data []IFDataDesc `json:"dataobj"`
+	Data []IFDataDesc `json:"data"`
 }
 
 type IFDataDesc interface{
@@ -265,5 +265,83 @@ type ShareDataNode struct{
 
 type ISearchDataAck struct{
 	RetStat
-	Data []*ShareDataNode `json:"shareddata"`
+	Data []*ShareDataNode `json:"data"`
+}
+
+type NewExportReq struct{
+	Token string `json:"token"`
+	Data *DataObj `json:"data"`
+}
+
+type ExProcNode struct{
+	Expid int64 `json:"expid"`
+	ProcUid int32 `json:"procuid"`
+	Status int32	`json:"status"`
+	Comment string `json:"comment"`
+	ProcTime string `json:"proctime"`
+}
+
+type ExportProcInfo struct{
+	ExpId int64 `json:"expid"`
+	Status int32 `json:"status"`
+	LastProcTime string `json:"lasttime"`
+	ProcQueue []*ExProcNode `json:"procqueue"`
+}
+
+type IExProcAck struct{
+	RetStat
+	Data *ExportProcInfo `json:"data"`
+}
+
+type QueryExProcReq struct{
+	Token string `json:"token"`
+	ExpId int64 `json:"expid"`
+}  // response use IExProcAck
+
+
+type NotifyInfo struct{
+	Id int64 `json:"id"`
+	Type int32 `json:"type"`
+	FromUid int32 `json:"fromuid"`
+	ToUid int32 `json:"touid"`
+	Content string `json:"content"`
+	Comment string `json:"comment"`
+}
+
+type SendNotifyReq struct{
+	Token string `json:"token"`
+	Data *NotifyInfo `json:"data"`
+}
+
+type ISendNotifyAck struct{
+	RetStat
+	Data int64 `json:"data"`
+}
+
+type QueryUserNotifiesReq struct{
+	Token string `json:"token"`
+	ToUid int32 `json:"touid"`
+	FromUid int32 `json:"fromuid"`
+}
+
+type ISearchUserNotifiesAck struct{
+	RetStat
+	Data []*NotifyInfo `json:"data"`
+}
+
+type RemoveNotifyReq struct{
+	Token string `json:"token"`
+	Id int64 `json:"notifyid"`
+}
+
+//type IRemoveNotifyAck-> ISimpleAck
+
+type QueryNotifyReq struct{
+	Token string `json:"token"`
+	Id int64 `json:"notifyid"`
+}
+
+type IQueryNotifyAck struct{
+	RetStat
+	Data *NotifyInfo `json:"data"`
 }

@@ -132,6 +132,7 @@ func SetupHandler() error{
 	routemap[prefix+"createrc"]=CreateRCFunc
 	routemap[prefix+"updaterc"]=UpdateRCFunc
 	routemap[prefix+"getrcinfo"]=GetRCInfoFunc
+	routemap[prefix+"createnotify"]=CreateNotifyFunc
 	http.HandleFunc(prefix,DistroFunc)
 	/*
 	http.HandleFunc(prefix+"login",LoginFunc) // POST

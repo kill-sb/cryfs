@@ -1,13 +1,13 @@
--- MySQL dump 10.19  Distrib 10.3.28-MariaDB, for Linux (x86_64)
+-- MySQL dump 10.14  Distrib 5.5.60-MariaDB, for Linux (x86_64)
 --
 -- Host: localhost    Database: cmit
 -- ------------------------------------------------------
--- Server version	10.3.28-MariaDB
+-- Server version	5.5.60-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+/*!40101 SET NAMES utf8 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -26,7 +26,7 @@ CREATE TABLE `contacts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `userid` int(11) NOT NULL,
   `contactuserid` int(11) NOT NULL,
-  `crtime` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `crtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `userid` (`userid`) USING BTREE,
   KEY `contactuserid` (`contactuserid`) USING BTREE
@@ -54,12 +54,12 @@ CREATE TABLE `efilemeta` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `uuid` char(36) DEFAULT NULL,
   `descr` varchar(100) DEFAULT '',
-  `fromrcid` int(11) NOT NULL DEFAULT -1,
+  `fromrcid` int(11) NOT NULL DEFAULT '-1',
   `ownerid` int(11) DEFAULT NULL,
-  `crtime` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `isdir` int(11) DEFAULT 0,
+  `crtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `isdir` int(11) DEFAULT '0',
   `orgname` varchar(255) DEFAULT NULL,
-  `multisrc` int(11) NOT NULL DEFAULT 0,
+  `multisrc` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -72,6 +72,87 @@ LOCK TABLES `efilemeta` WRITE;
 /*!40000 ALTER TABLE `efilemeta` DISABLE KEYS */;
 INSERT INTO `efilemeta` VALUES (53,'cb2d7086-ff7d-4a2e-aed7-d545d27f5dce','cmit encrypted data',0,1,'2022-01-25 08:09:52',0,'Makefile',0),(54,'5a74f943-bbf8-475d-9135-434892b8970e','cmit encrypted data',0,1,'2022-01-25 09:20:10',0,'Makefile',0),(55,'78a24e23-86a9-4314-acfb-55400b196fcf','cmit encrypted data',0,1,'2022-01-26 07:19:15',0,'Makefile',0),(56,'9673841d-b1e7-4395-84c9-2c7ab97be635','cmit encrypted data',0,1,'2022-01-27 09:15:37',0,'TODO',0),(57,'6129b420-59e3-4e87-b449-d95426938b48','cmit encrypted data',0,1,'2022-01-27 09:20:54',0,'TODO',0),(58,'a7f014d9-73fe-44e5-82a3-d8f76ebf7529','cmit encrypted data',0,1,'2022-01-27 09:22:53',0,'TODO',0),(59,'a660fbb8-35ef-4470-ac76-3a3550776b02','cmit encrypted data',0,1,'2022-01-27 09:23:55',0,'TODO',0),(60,'dc082df5-c36d-4044-bc9f-011c13e41e4f','cmit encrypted data',0,1,'2022-01-28 04:20:21',0,'TODO',0),(61,'ef5e29c3-0b0b-4c49-a157-c81d836e7571','cmit encrypted data',0,1,'2022-01-28 04:23:06',0,'TODO',0),(62,'ef5e29c3-0b0b-4c49-a157-c81d836e7571','cmit encrypted data',0,1,'2022-01-28 04:28:15',0,'TODO',0),(63,'1ca01ce0-5243-488c-bcd2-a0c0409e9153','cmit encrypted dir',0,1,'2022-01-28 04:38:05',1,'nls',0),(64,'1a45df84-c3c8-47ff-a34b-128f4806ec7f','cmit encrypted data',0,1,'2022-01-28 04:40:39',0,'TODO',0),(65,'de97f6fc-1d5d-420a-8b2a-8261329ff041','cmit encrypted dir',0,1,'2022-01-28 04:51:35',1,'nls',0),(66,'b4f620ac-065b-4a4b-8a99-e2b68fe3953f','cmit encrypted data',0,1,'2022-02-11 08:08:00',0,'Makefile',0),(67,'ac1ada36-c79e-4951-bb6a-c37cca8952c0','cmit encrypted dir',0,1,'2022-02-11 08:08:59',1,'samplefs',0),(68,'f6e63544-ebe2-4c83-bdc9-9a10baf2438e','cmit encrypted data',0,1,'2022-03-04 02:38:55',0,'Makefile',0),(69,'02c4c033-5ab0-4aa0-8edc-bd4590b9056e','cmit encrypted dir',1,2,'2022-03-01 08:12:04',1,'1.csd.outdata',0),(71,'e9002c53-3a67-4a5b-8010-89a9a8e6dc06','test new data',1,1,'2022-04-06 07:25:25',0,'Makefile',0);
 /*!40000 ALTER TABLE `efilemeta` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `exports`
+--
+
+DROP TABLE IF EXISTS `exports`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exports` (
+  `expid` int(11) NOT NULL AUTO_INCREMENT,
+  `requid` int(11) NOT NULL,
+  `status` int(11) NOT NULL,
+  `datatype` int(11) NOT NULL,
+  `datauuid` char(36) DEFAULT NULL,
+  `latestchange` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`expid`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `exports`
+--
+
+LOCK TABLES `exports` WRITE;
+/*!40000 ALTER TABLE `exports` DISABLE KEYS */;
+/*!40000 ALTER TABLE `exports` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `exprocque`
+--
+
+DROP TABLE IF EXISTS `exprocque`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `exprocque` (
+  `expid` int(11) NOT NULL,
+  `procuid` int(11) NOT NULL,
+  `status` int(11) NOT NULL,
+  `comment` varchar(200) DEFAULT '',
+  `proctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `exprocque`
+--
+
+LOCK TABLES `exprocque` WRITE;
+/*!40000 ALTER TABLE `exprocque` DISABLE KEYS */;
+/*!40000 ALTER TABLE `exprocque` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifies`
+--
+
+DROP TABLE IF EXISTS `notifies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `notifies` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` int(11) NOT NULL,
+  `content` varchar(4096) DEFAULT NULL,
+  `descr` varchar(4096) DEFAULT '',
+  `crtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `fromuid` int(11) DEFAULT NULL,
+  `touid` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifies`
+--
+
+LOCK TABLES `notifies` WRITE;
+/*!40000 ALTER TABLE `notifies` DISABLE KEYS */;
+INSERT INTO `notifies` VALUES (1,0,'test a plain text','','2022-05-20 08:34:25',1,2);
+/*!40000 ALTER TABLE `notifies` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -135,7 +216,7 @@ CREATE TABLE `resetpasswordtokens` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `userid` int(11) NOT NULL,
   `tokensha256` char(64) DEFAULT NULL,
-  `crtime` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `crtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `userid` (`userid`) USING BTREE,
   KEY `token` (`tokensha256`) USING BTREE
@@ -192,7 +273,7 @@ CREATE TABLE `sharetags` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `uuid` char(36) DEFAULT NULL,
   `ownerid` int(11) DEFAULT NULL,
-  `receivers` text DEFAULT NULL,
+  `receivers` text,
   `expire` datetime DEFAULT NULL,
   `maxuse` int(11) DEFAULT NULL,
   `keycryptkey` char(32) DEFAULT NULL,
@@ -202,8 +283,8 @@ CREATE TABLE `sharetags` (
   `sha256` char(64) NOT NULL DEFAULT '',
   `crtime` datetime DEFAULT NULL,
   `orgname` varchar(255) DEFAULT '',
-  `isdir` int(11) NOT NULL DEFAULT 0,
-  `content` int(11) NOT NULL DEFAULT 0,
+  `isdir` int(11) NOT NULL DEFAULT '0',
+  `content` int(11) NOT NULL DEFAULT '0',
   `descr` varchar(255) DEFAULT '',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8;
@@ -229,7 +310,7 @@ DROP TABLE IF EXISTS `shareusers`;
 CREATE TABLE `shareusers` (
   `taguuid` char(36) NOT NULL,
   `userid` int(11) NOT NULL,
-  `leftuse` int(11) DEFAULT -1
+  `leftuse` int(11) DEFAULT '-1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -284,4 +365,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-04-12 15:17:56
+-- Dump completed on 2022-05-20 16:39:03

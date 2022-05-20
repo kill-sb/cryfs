@@ -685,7 +685,16 @@ func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
 	return retobj,nil
 }
 
-
+func NewNotify(info *api.NotifyInfo)error{
+    db:=GetDB()
+    query:=fmt.Sprintf("insert into notifies (type,content,descr,fromuid,touid) values (%d,'%s','%s',%d,%d)",info.Type,info.Content,info.Comment,info.FromUid,info.ToUid)
+    if result, err := db.Exec(query); err == nil {
+		info.Id, _ = result.LastInsertId()
+		return nil
+	}else{
+		return err
+	}
+}
 
 /*
 func DelSel(id int) bool {

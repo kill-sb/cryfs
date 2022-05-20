@@ -83,7 +83,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0}]}' -k https://apisvr:8080/api/v1/queryobjs
 	return ok:
-	{"code":0,"message":"OK","dataobj":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","ownerid":1,"sha256":"","descr":"","perm":1,"receivers":["li4","wang2"],"rcvrids":[2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":0,"enckey":"","fromtype":0,"fromuuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","crtime":"2022-02-11 16:09:32","orgname":"","isdir":0},{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","descr":"cmit encrypted dir","fromrcid":0,"srcobj":[],"ownerid":1,"isdir":1,"orgname":"samplefs","crtime":"2022-02-11 16:08:59"}]}
+	{"code":0,"message":"OK","data":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","ownerid":1,"sha256":"","descr":"","perm":1,"receivers":["li4","wang2"],"rcvrids":[2,3],"expire":"2999-12-31 00:00:00","maxuse":-1,"leftuse":0,"enckey":"","fromtype":0,"fromuuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","crtime":"2022-02-11 16:09:32","orgname":"","isdir":0},{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","descr":"cmit encrypted dir","fromrcid":0,"srcobj":[],"ownerid":1,"isdir":1,"orgname":"samplefs","crtime":"2022-02-11 16:08:59"}]}
 
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","data":[{"obj":"44acb473-1aa1-455f-b8a8-765d8d250d48","type":1},{"obj":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":1}]}' -k https://apisvr:8080/api/v1/queryobjs
@@ -134,7 +134,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","fromid":1,"startdate":"2022-02-01"}' -k https://apisvr:8080/api/v1/searchsharedata
 	return ok:
-	{"code":0,"message":"OK","shareddata":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":2,"crtime":"2022-02-11 16:09:32"},{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":0,"crtime":"2022-02-11 16:09:32"}]}
+	{"code":0,"message":"OK","data":[{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":2,"crtime":"2022-02-11 16:09:32"},{"uuid":"44acb473-1aa1-455f-b8a8-765d8d250d48","lefttimes":-1,"fromid":1,"toid":0,"crtime":"2022-02-11 16:09:32"}]}
 
 18. traceparents
 	call (encdata):
@@ -194,3 +194,6 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"0","level":0,"data":{"obj":"cd77acc1-3a40-4e02-8ddc-acc7a67474cc","type":1}}' -k https://apisvr:8080/api/v1/trace
 	return error:
 	{"code":3,"message":"trace datauuid=cd77acc1-3a40-4e02-8ddc-acc7a67474cc error: Incorrect trace level","data":[]}
+
+
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"f06e795ef8119cab70fecb744a975d4d","data":{"type":0,"fromuid":1,"touid":2,"content":"test a plain text"}}' -k https://apisvr:8080/api/v1/createnotify
