@@ -696,6 +696,79 @@ func NewNotify(info *api.NotifyInfo)error{
 	}
 }
 
+func DelNotifies(ids []int64)error{
+	if len(ids)<1{
+		return nil
+	}
+	db:=GetDB()
+	query:=fmt.Sprintf("delete from notifies where id=%d",ids[0])
+	for _,v:=range ids[1:]{
+		query+=fmt.Sprintf(" or id=%d",v)
+	}
+	if _, err := db.Exec(query); err != nil {
+		fmt.Println("query:",query)
+		return err
+	} /*else {
+		if row, _ := res.RowsAffected(); row ==l {
+			full=true
+		}
+	}*/
+	return nil
+}
+
+func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
+	db:=GetDB()
+	ninfo:=new (api.NotifyInfo)
+	ninfo.Id=id
+	query:=fmt.Sprintf("select type,content,descr,crtime,fromuid,touid from notifies where id=%d",id)
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("select from notifies error:",err)
+		return nil,err
+	}
+	if res.Next(){
+		ninfo:=new (api.NotifyInfo)
+		err=res.Scan(&ninfo.Type,&ninfo.Content,&ninfo.Comment,&ninfo.CrTime,&ninfo.FromUid,&ninfo.ToUid)
+		if err!=nil{
+			return nil,err
+		}
+		return ninfo,nil
+	}else{
+		fmt.Println("Can't find ",id,"in db")
+		return nil,errors.New("Cant find notify data in db")
+	}
+}
+
+func SearchNotifies(fromuid,touid int32)([]*api.NotifyInfo,error){
+	if fromuid==0 && touid==0{
+		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
+	}
+	db:=GetDB()
+	query:="select id,type,content,descr,crtime,fromuid,touid from notifies "
+	if fromuid!=0 && touid!=0{
+		query+=fmt.Sprintf("where fromuid=%d and touid=%d ",fromuid,touid)
+	}else if fromuid!=0{
+		query+=fmt.Sprintf("where  fromuid=%d",fromuid)
+	}else{
+		query+=fmt.Sprintf("where touid=%d ",touid)
+	}
+	query+=" order by crtime"
+	res,err:=db.Query(query)
+	if err!=nil{
+		log.Println("select from db error:",err)
+		return nil,err
+	}
+	ret:=make([]*api.NotifyInfo,0,50)
+	for res.Next(){
+		node:=new(api.NotifyInfo)
+		err=res.Scan(&node.Id,&node.Type,&node.Content,&node.Comment,&node.CrTime,&node.FromUid,&node.ToUid)
+		if err!=nil{
+			return nil,err
+		}
+		ret=append(ret,node)
+	}
+	return ret,nil
+}
 /*
 func DelSel(id int) bool {
 	db := GetDB()

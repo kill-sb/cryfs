@@ -135,11 +135,11 @@ func NewSendNotifyAck()*ISendNotifyAck{
 	return sna
 }
 
-func NewSearchNotifiesAck() *ISearchUserNotifiesAck{
-	sna:=new (ISearchUserNotifiesAck)
+func NewSearchNotifiesAck() *ISearchNotifiesAck{
+	sna:=new (ISearchNotifiesAck)
 	sna.Code=-1
 	sna.Msg=INIT_MSG
-	sna.Data=make([]*NotifyInfo,0,50)
+//	sna.Data=make([]*NotifyInfo,0,50)
 	return sna
 }
 

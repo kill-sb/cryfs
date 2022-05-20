@@ -196,4 +196,15 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	{"code":3,"message":"trace datauuid=cd77acc1-3a40-4e02-8ddc-acc7a67474cc error: Incorrect trace level","data":[]}
 
 
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"f06e795ef8119cab70fecb744a975d4d","data":{"type":0,"fromuid":1,"touid":2,"content":"test a plain text"}}' -k https://apisvr:8080/api/v1/createnotify
+22. createnotify
+	login: 
+		curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://apisvr:8080/api/v1/login
+	call:
+		curl -H "Content-Type: application/json" -X POST -d '{"token":"f06e795ef8119cab70fecb744a975d4d","data":{"type":0,"fromuid":1,"touid":2,"content":"test a plain text"}}' -k https://apisvr:8080/api/v1/createnotify
+
+23. searchnotifies
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","fromuid":1}' -k https://apisvr:8080/api/v1/searchnotifies
+
+24. delnotify
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","ids":[2,3]}' -k https://apisvr:8080/api/v1/delnotify

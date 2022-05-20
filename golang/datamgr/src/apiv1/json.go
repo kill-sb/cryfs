@@ -306,6 +306,7 @@ type NotifyInfo struct{
 	ToUid int32 `json:"touid"`
 	Content string `json:"content"`
 	Comment string `json:"comment"`
+	CrTime string `json:crtime"`
 }
 
 type SendNotifyReq struct{
@@ -318,20 +319,20 @@ type ISendNotifyAck struct{
 	Data int64 `json:"data"`
 }
 
-type QueryUserNotifiesReq struct{
+type SearchNotifiesReq struct{
 	Token string `json:"token"`
 	ToUid int32 `json:"touid"`
 	FromUid int32 `json:"fromuid"`
 }
 
-type ISearchUserNotifiesAck struct{
+type ISearchNotifiesAck struct{
 	RetStat
 	Data []*NotifyInfo `json:"data"`
 }
 
-type RemoveNotifyReq struct{
+type DelNotifyReq struct{
 	Token string `json:"token"`
-	Id int64 `json:"notifyid"`
+	Ids []int64 `json:"ids"`
 }
 
 //type IRemoveNotifyAck-> ISimpleAck

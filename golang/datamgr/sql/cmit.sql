@@ -142,7 +142,7 @@ CREATE TABLE `notifies` (
   `fromuid` int(11) DEFAULT NULL,
   `touid` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -151,7 +151,7 @@ CREATE TABLE `notifies` (
 
 LOCK TABLES `notifies` WRITE;
 /*!40000 ALTER TABLE `notifies` DISABLE KEYS */;
-INSERT INTO `notifies` VALUES (1,0,'test a plain text','','2022-05-20 08:34:25',1,2);
+INSERT INTO `notifies` VALUES (6,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:21:49',1,2),(7,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:21:58',1,3),(8,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:22:20',1,2);
 /*!40000 ALTER TABLE `notifies` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -365,4 +365,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-05-20 16:39:03
+-- Dump completed on 2022-05-20 21:32:27
