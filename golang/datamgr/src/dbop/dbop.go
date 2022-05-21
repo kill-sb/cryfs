@@ -192,6 +192,37 @@ func GetImportInfo(rcid int64)([]*api.ImportFile,error){
     return objs,nil
 }
 
+func GetDataOwner(obj *api.DataObj)(int32,error){
+	if obj==nil{
+		return -1,errors.New("Null DataObj pointer")
+	}
+	tbname:=""
+	var ownerid int32=-1
+	switch obj.Type{
+	case core.ENCDATA:
+		tbname="efilemeta"
+	case core.CSDFILE:
+		tbname="sharetags"
+	default:
+		return ownerid,errors.New("Invalid Data type")
+	}
+	db:=GetDB()
+	query:=fmt.Sprintf("select ownerid from %s where uuid='%s'",tbname,obj.Obj)
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Printf("select from %s error: %s\n",tbname,err.Error())
+		return ownerid,err
+	}
+	if res.Next(){
+		err=res.Scan(&ownerid)
+		if err!=nil{
+			return ownerid,err
+		}
+		return ownerid,nil
+	}
+	return ownerid,errors.New("Data not found")
+}
+
 func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
 	db:=GetDB()
 	data:=new (api.EncDataInfo)
@@ -769,17 +800,67 @@ func SearchNotifies(fromuid,touid int32)([]*api.NotifyInfo,error){
 	}
 	return ret,nil
 }
-/*
-func DelSel(id int) bool {
-	db := GetDB()
-	query := fmt.Sprintf("delete from mysel where id=%d", id)
-	if res, err := db.Exec(query); err != nil {
-		fmt.Println("db exec error:", err.Error())
-	} else {
-		if row, _ := res.RowsAffected(); row > 0 {
-			return true
+
+func RecordProcQueue(expid int64, queue []*api.ExProcNode,comment *string) error{
+	var err error=nil
+	if len(queue)==0{
+		return err
+	}
+	db:=GetDB()
+	defer func(){
+		if err!=nil{
+			db.Exec(fmt.Sprintf("delete from exprocque where expid=%d",expid))
+			db.Exec(fmt.Sprintf("delete from expinvolvedata where expid=%d",expid))
+		}
+	}()
+	for _,v:=range queue{
+		query:=fmt.Sprintf("insert into exprocque (expid,procuid,status,comment) values (%d,%d,%d,%s)",v.ExpId,v.ProcUid,v.Status,*comment)
+		var result sql.Result
+	    if result, err = db.Exec(query); err == nil{
+			nodeid, _:= result.LastInsertId()
+			for _,usrdata:=range v.SrcData{
+				_,err=db.Exec(fmt.Sprintf("insert into expinvolvedata (expid,nodeid,datauuid,datatype,dataowner) values (%d,%d,'%s',%d,%d)",expid,nodeid,usrdata.Uuid,usrdata.Type,usrdata.OwnerId))
+				if err!=nil{
+					return err
+				}
+			}
+		}else{
+			return err
 		}
 	}
-	return false
+	return nil
 }
-*/
+
+func CreateProcQueue(data *api.DataObj)([]*api.ExProcNode,error){
+	return nil,nil
+}
+
+func NewExport(data *api.DataObj,ownerid int32, comment *string)(*api.ExportProcInfo,error){
+	if data==nil{
+		return nil,errors.New("Empty DataObj pointer")
+	}
+	epinfo:=new (api.ExportProcInfo)
+	epinfo.DstData=&api.ProcDataObj{Uuid:data.Obj,Type:data.Type,OwnerId:ownerid}
+	var err error
+	epinfo.ProcQueue,err=CreateProcQueue(data)
+	if err!=nil || epinfo.ProcQueue==nil{
+		return nil,err
+	}
+	if len(epinfo.ProcQueue)==0{ // from raw data or from data ownered by self
+		epinfo.Status=api.AGREE
+	}
+	epinfo.Status=api.WAITING
+	db:=GetDB()
+	query:=fmt.Sprintf("insert into exports (requid,status,datatype,datauuid) values (%d,%d,%d,'%s')",ownerid,epinfo.Status,epinfo.DstData.Type,epinfo.DstData.Uuid)
+    if result, err := db.Exec(query); err == nil{
+		epinfo.ExpId, _ = result.LastInsertId()
+		epinfo.LastProcTime=core.GetCurTime()
+		if err=RecordProcQueue(epinfo.ExpId,epinfo.ProcQueue,comment);err!=nil{
+			db.Exec(fmt.Sprintf("delete from exports where expid=%d",epinfo.ExpId))
+			return nil,err
+		}
+		return epinfo,nil
+	}else{
+		return nil,err
+	}
+}

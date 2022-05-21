@@ -11,7 +11,7 @@ import (
 )
 
 func ExportDataFunc(w http.ResponseWriter, r *http.Request){
-/*	if r.Method=="POST"{
+	if r.Method=="POST"{
 		epack:=api.NewExProcAck()
 		w.Header().Set("Content-Type","application/json")
 		var epreq api.NewExportReq
@@ -33,26 +33,33 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(epack)
 			return
 		}
-		if luinfo.Id!=encreq.OwnerId{
-			encack.Code=2
-			encack.Msg="Invalid user"
-			json.NewEncoder(w).Encode(encack)
+		ownerid,err:=dbop.GetDataOwner(epreq.Data)
+		if err!=nil{
+            epack.Code=1
+            epack.Msg=err.Error()
+            json.NewEncoder(w).Encode(epack)
+            return
+        }
+
+		if luinfo.Id!=ownerid{
+			epack.Code=2
+			epack.Msg="Invalid user"
+			json.NewEncoder(w).Encode(epack)
 			return
 		}
 		// user info checked ok
-		// reference crypt.go:dbop.SaveMeta
-		log.Println("newdata:",encreq)
-		if err:=dbop.SaveEncMeta(&encreq);err!=nil{
-			encack.Code=2
-			encack.Msg=err.Error()
+		if epack.Data,err=dbop.NewExport(epreq.Data,ownerid,&epreq.Comment);err!=nil{
+			epack.Code=1
+			epack.Msg=err.Error()
+			epack.Data=nil
 		}else{
-			encack.Code=0
-			encack.Msg="OK"
+			epack.Code=0
+			epack.Msg="OK"
 		}
-		json.NewEncoder(w).Encode(encack)
+		json.NewEncoder(w).Encode(epack)
 	}else{
 		http.NotFound(w,r)
-	}*/
+	}
 }
 
 func GetExProgressFunc(w http.ResponseWriter, r *http.Request){

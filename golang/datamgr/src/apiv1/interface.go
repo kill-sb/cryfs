@@ -14,6 +14,11 @@ const (
     UNKNOWN=0xff
 )
 
+const (
+	REFUSE=iota-1
+	WAITING
+	AGREE
+)
 
 func NewSimpleAck() *ISimpleAck{
 	sa:=new (ISimpleAck)

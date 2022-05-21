@@ -271,17 +271,18 @@ type ISearchDataAck struct{
 type NewExportReq struct{
 	Token string `json:"token"`
 	Data *DataObj `json:"data"`
+	Comment string `json:"comment"`
 }
 
 
 type ProcDataObj struct{
 	Uuid string `json:"uuid"`
-	Type int32 `json:"type"`
-	Ownerid int32 `json:"ownerid"`
+	Type int `json:"type"`
+	OwnerId int32 `json:"ownerid"`
 }
 
 type ExProcNode struct{
-	Expid int64 `json:"expid"`
+	ExpId int64 `json:"expid"`
 	ProcUid int32 `json:"procuid"`
 	SrcData []*ProcDataObj `json:"srcdata"`
 	Status int32	`json:"status"`
