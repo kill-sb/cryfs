@@ -150,6 +150,16 @@ func NewQueryNotifyAck() *IQueryNotifyAck{
 	return qna
 }
 
+func NewExProcAck() *IExProcAck{
+	epa:=new (IExProcAck)
+	epinfo:=new (ExportProcInfo)
+	epa.Data=epinfo
+	epa.Code=-1
+	epa.Msg=INIT_MSG
+	return epa
+}
+
+
 func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (int32)string)error{
     for i:=0;i<level;i++{
         fmt.Print("\t")

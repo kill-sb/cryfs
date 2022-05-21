@@ -273,9 +273,17 @@ type NewExportReq struct{
 	Data *DataObj `json:"data"`
 }
 
+
+type ProcDataObj struct{
+	Uuid string `json:"uuid"`
+	Type int32 `json:"type"`
+	Ownerid int32 `json:"ownerid"`
+}
+
 type ExProcNode struct{
 	Expid int64 `json:"expid"`
 	ProcUid int32 `json:"procuid"`
+	SrcData []*ProcDataObj `json:"srcdata"`
 	Status int32	`json:"status"`
 	Comment string `json:"comment"`
 	ProcTime string `json:"proctime"`
@@ -284,6 +292,7 @@ type ExProcNode struct{
 type ExportProcInfo struct{
 	ExpId int64 `json:"expid"`
 	Status int32 `json:"status"`
+	DstData *ProcDataObj `json:"dataobj"`
 	LastProcTime string `json:"lasttime"`
 	ProcQueue []*ExProcNode `json:"procqueue"`
 }
