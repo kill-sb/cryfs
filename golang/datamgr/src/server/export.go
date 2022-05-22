@@ -62,7 +62,7 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
-func GetExProgressFunc(w http.ResponseWriter, r *http.Request){
+func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		ifack:=api.NewDataInfoAck()
 		w.Header().Set("Content-Type","application/json")
@@ -101,7 +101,7 @@ func GetExProgressFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
-// check token/ownerid later, valid only when ownerid==fromid || owner==toid
+// from/to uid, start/end time
 func SearchExpReqFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		w.Header().Set("Content-Type","application/json")

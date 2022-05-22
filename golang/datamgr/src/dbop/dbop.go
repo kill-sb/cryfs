@@ -886,19 +886,19 @@ func NewExport(data *api.DataObj,userid int32, comment *string)(*api.ExportProcI
 	epinfo.DstData=&api.ProcDataObj{Uuid:data.Obj,Type:data.Type,OwnerId:userid}
 	var err error
 	epinfo.ProcQueue,err=CreateProcQueue(userid,data)
-	fmt.Println("procque:",epinfo.ProcQueue)
 	if err!=nil || epinfo.ProcQueue==nil{
 		return nil,err
 	}
+
+	epinfo.CrTime=core.GetCurTime()
 	if len(epinfo.ProcQueue)==0{ // from raw data or from data ownered by self
 		epinfo.Status=api.AGREE
 	}
 	epinfo.Status=api.WAITING
 	db:=GetDB()
-	query:=fmt.Sprintf("insert into exports (requid,status,datatype,datauuid) values (%d,%d,%d,'%s')",userid,epinfo.Status,epinfo.DstData.Type,epinfo.DstData.Uuid)
+	query:=fmt.Sprintf("insert into exports (requid,status,datatype,datauuid,crtime) values (%d,%d,%d,'%s','%s')",userid,epinfo.Status,epinfo.DstData.Type,epinfo.DstData.Uuid,epinfo.CrTime)
     if result, err := db.Exec(query); err == nil{
 		epinfo.ExpId, _ = result.LastInsertId()
-		epinfo.LastProcTime=core.GetCurTime()
 		if err=RecordProcQueue(epinfo.ExpId,epinfo.ProcQueue,comment);err!=nil{
 			db.Exec(fmt.Sprintf("delete from exports where expid=%d",epinfo.ExpId))
 			return nil,err
@@ -906,7 +906,6 @@ func NewExport(data *api.DataObj,userid int32, comment *string)(*api.ExportProcI
 		NotifyExportReq(userid, epinfo.ExpId,epinfo.ProcQueue,comment)
 		return epinfo,nil
 	}else{
-	fmt.Println(query,"error")
 		return nil,err
 	}
 }

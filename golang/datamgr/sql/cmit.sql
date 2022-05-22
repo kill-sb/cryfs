@@ -75,6 +75,32 @@ INSERT INTO `efilemeta` VALUES (53,'cb2d7086-ff7d-4a2e-aed7-d545d27f5dce','cmit 
 UNLOCK TABLES;
 
 --
+-- Table structure for table `expinvolvedata`
+--
+
+DROP TABLE IF EXISTS `expinvolvedata`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `expinvolvedata` (
+  `expid` int(11) NOT NULL,
+  `datauuid` char(36) NOT NULL,
+  `datatype` int(11) NOT NULL,
+  `dataowner` int(11) NOT NULL,
+  `nodeid` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `expinvolvedata`
+--
+
+LOCK TABLES `expinvolvedata` WRITE;
+/*!40000 ALTER TABLE `expinvolvedata` DISABLE KEYS */;
+INSERT INTO `expinvolvedata` VALUES (8,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,1),(9,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,2),(11,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,3);
+/*!40000 ALTER TABLE `expinvolvedata` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `exports`
 --
 
@@ -86,10 +112,10 @@ CREATE TABLE `exports` (
   `requid` int(11) NOT NULL,
   `status` int(11) NOT NULL,
   `datatype` int(11) NOT NULL,
-  `datauuid` char(36) DEFAULT NULL,
-  `latestchange` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `datauuid` char(36) NOT NULL,
+  `crtime` datetime NOT NULL,
   PRIMARY KEY (`expid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -98,6 +124,7 @@ CREATE TABLE `exports` (
 
 LOCK TABLES `exports` WRITE;
 /*!40000 ALTER TABLE `exports` DISABLE KEYS */;
+INSERT INTO `exports` VALUES (1,1,0,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-22 09:55:20'),(2,4,0,1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc','2022-05-22 09:58:41'),(3,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:01:20'),(4,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:07:03'),(7,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:20:12'),(8,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:23:16'),(9,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:53:57'),(10,1,0,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-22 14:40:45'),(11,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 14:42:46');
 /*!40000 ALTER TABLE `exports` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -113,8 +140,10 @@ CREATE TABLE `exprocque` (
   `procuid` int(11) NOT NULL,
   `status` int(11) NOT NULL,
   `comment` varchar(200) DEFAULT '',
-  `proctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `proctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `nodeid` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`nodeid`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,6 +152,7 @@ CREATE TABLE `exprocque` (
 
 LOCK TABLES `exprocque` WRITE;
 /*!40000 ALTER TABLE `exprocque` DISABLE KEYS */;
+INSERT INTO `exprocque` VALUES (8,1,0,'political order','2022-05-22 02:23:16',1),(9,1,0,'political order','2022-05-22 02:53:57',2),(11,1,0,'political order','2022-05-22 06:42:46',3);
 /*!40000 ALTER TABLE `exprocque` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -142,7 +172,7 @@ CREATE TABLE `notifies` (
   `fromuid` int(11) DEFAULT NULL,
   `touid` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -151,7 +181,7 @@ CREATE TABLE `notifies` (
 
 LOCK TABLES `notifies` WRITE;
 /*!40000 ALTER TABLE `notifies` DISABLE KEYS */;
-INSERT INTO `notifies` VALUES (6,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:21:49',1,2),(7,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:21:58',1,3),(8,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:22:20',1,2);
+INSERT INTO `notifies` VALUES (6,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:21:49',1,2),(7,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:21:58',1,3),(8,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:22:20',1,2),(9,2,'9','political order','2022-05-22 02:53:57',3,1),(10,2,'11','political order','2022-05-22 06:42:46',3,1),(11,0,'test a plain text','','2022-05-22 06:47:30',3,2),(12,0,'test a plain text','','2022-05-22 06:47:49',3,2);
 /*!40000 ALTER TABLE `notifies` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -191,7 +221,8 @@ DROP TABLE IF EXISTS `rcinputdata`;
 CREATE TABLE `rcinputdata` (
   `rcid` int(11) DEFAULT NULL,
   `srcuuid` char(36) DEFAULT NULL,
-  `srctype` int(11) DEFAULT NULL
+  `srctype` int(11) DEFAULT NULL,
+  `ownerid` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -201,7 +232,7 @@ CREATE TABLE `rcinputdata` (
 
 LOCK TABLES `rcinputdata` WRITE;
 /*!40000 ALTER TABLE `rcinputdata` DISABLE KEYS */;
-INSERT INTO `rcinputdata` VALUES (1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1),(1,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0),(2,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1),(2,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0);
+INSERT INTO `rcinputdata` VALUES (1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1),(1,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1),(2,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1),(2,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1);
 /*!40000 ALTER TABLE `rcinputdata` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -365,4 +396,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-05-20 21:32:27
+-- Dump completed on 2022-05-22 14:49:24

@@ -294,7 +294,7 @@ type ExportProcInfo struct{
 	ExpId int64 `json:"expid"`
 	Status int32 `json:"status"`
 	DstData *ProcDataObj `json:"dataobj"`
-	LastProcTime string `json:"lasttime"`
+	CrTime string `json:"crtime"`
 	ProcQueue []*ExProcNode `json:"procqueue"`
 }
 
