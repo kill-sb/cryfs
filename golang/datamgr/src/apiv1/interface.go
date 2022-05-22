@@ -20,6 +20,12 @@ const (
 	AGREE
 )
 
+const (
+    TEXTMSG=iota
+    SHAREDATA
+    EXPORTDATA
+)
+
 func NewSimpleAck() *ISimpleAck{
 	sa:=new (ISimpleAck)
 	sa.Code=-1

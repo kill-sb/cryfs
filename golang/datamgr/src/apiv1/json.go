@@ -282,7 +282,7 @@ type ProcDataObj struct{
 }
 
 type ExProcNode struct{
-	ExpId int64 `json:"expid"`
+//	ExpId int64 `json:"expid"`
 	ProcUid int32 `json:"procuid"`
 	SrcData []*ProcDataObj `json:"srcdata"`
 	Status int32	`json:"status"`

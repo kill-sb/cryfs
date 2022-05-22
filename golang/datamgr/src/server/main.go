@@ -135,6 +135,8 @@ func SetupHandler() error{
 	routemap[prefix+"createnotify"]=CreateNotifyFunc
 	routemap[prefix+"searchnotifies"]=SearchNotifiesFunc
 	routemap[prefix+"delnotify"]=DelNotifyFunc
+	routemap[prefix+"exportdata"]=ExportDataFunc
+
 	http.HandleFunc(prefix,DistroFunc)
 	/*
 	http.HandleFunc(prefix+"login",LoginFunc) // POST

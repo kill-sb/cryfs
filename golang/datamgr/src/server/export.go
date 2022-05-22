@@ -33,7 +33,7 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(epack)
 			return
 		}
-		ownerid,err:=dbop.GetDataOwner(epreq.Data)
+/*		ownerid,err:=dbop.GetDataOwner(epreq.Data)
 		if err!=nil{
             epack.Code=1
             epack.Msg=err.Error()
@@ -46,9 +46,9 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 			epack.Msg="Invalid user"
 			json.NewEncoder(w).Encode(epack)
 			return
-		}
+		}*/
 		// user info checked ok
-		if epack.Data,err=dbop.NewExport(epreq.Data,ownerid,&epreq.Comment);err!=nil{
+		if epack.Data,err=dbop.NewExport(epreq.Data,luinfo.Id,&epreq.Comment);err!=nil{
 			epack.Code=1
 			epack.Msg=err.Error()
 			epack.Data=nil
