@@ -819,7 +819,7 @@ func RecordProcQueue(expid int64, queue []*api.ExProcNode,comment *string) error
 	    if result, err = db.Exec(query); err == nil{
 			nodeid, _:= result.LastInsertId()
 			for _,usrdata:=range v.SrcData{
-				_,err=db.Exec(fmt.Sprintf("insert into expinvolvedata (expid,nodeid,datauuid,datatype,dataowner) values (%d,%d,'%s',%d,%d)",expid,nodeid,usrdata.Uuid,usrdata.Type,usrdata.OwnerId))
+				_,err=db.Exec(fmt.Sprintf("insert into expinvolvedata (expid,nodeid,datauuid,datatype,dataowner) values (%d,%d,'%s',%d,%d)",expid,nodeid,usrdata.Uuid,usrdata.Type,usrdata.UserId))
 				if err!=nil{
 					return err
 				}
@@ -861,7 +861,7 @@ func CreateProcQueue(selfid int32,data *api.DataObj)([]*api.ExProcNode,error){
 		if owner==selfid{
 			continue
 		}
-		curobj:=&api.ProcDataObj{Uuid:obj.Obj,Type:obj.Type,OwnerId:owner}
+		curobj:=&api.ProcDataObj{Uuid:obj.Obj,Type:obj.Type,UserId:owner}
 		user,find:=authors[owner]
 		if !find{
 			user=new (api.ExProcNode)
@@ -870,7 +870,6 @@ func CreateProcQueue(selfid int32,data *api.DataObj)([]*api.ExProcNode,error){
 			user.SrcData=make([]*api.ProcDataObj,1,20)
 			user.SrcData[0]=curobj
 		}else{
-//			curobj:=&ProcDataObj{Uuid:obj.Obj,Type:obj.Type,OwnerId:owner}
 			user.SrcData=append(user.SrcData,curobj)
 		}
 		nodes=append(nodes,user)
@@ -883,7 +882,7 @@ func NewExport(data *api.DataObj,userid int32, comment *string)(*api.ExportProcI
 		return nil,errors.New("Empty DataObj pointer")
 	}
 	epinfo:=new (api.ExportProcInfo)
-	epinfo.DstData=&api.ProcDataObj{Uuid:data.Obj,Type:data.Type,OwnerId:userid}
+	epinfo.DstData=&api.ProcDataObj{Uuid:data.Obj,Type:data.Type,UserId:userid}
 	var err error
 	epinfo.ProcQueue,err=CreateProcQueue(userid,data)
 	if err!=nil || epinfo.ProcQueue==nil{
@@ -908,4 +907,54 @@ func NewExport(data *api.DataObj,userid int32, comment *string)(*api.ExportProcI
 	}else{
 		return nil,err
 	}
+}
+
+func GetExportInfo(expid int64)(*api.ExportProcInfo,error){
+	epinfo:=new (api.ExportProcInfo)
+	epinfo.DstData=new (api.ProcDataObj)
+	epinfo.ExpId=expid
+	db:=GetDB()
+	query:=fmt.Sprintf("select requid,status,datatype,datauuid,crtime from exports where expid=%d",expid)
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("select from exports error:",err)
+		return nil,err
+	}
+	if res.Next(){
+		err=res.Scan(&epinfo.DstData.UserId,&epinfo.Status,&epinfo.DstData.Type,&epinfo.DstData.Uuid,&epinfo.CrTime)
+		if err!=nil{
+			return nil,err
+		}
+	}
+	return epinfo,nil
+}
+
+func LoadProcQueue(epinfo *api.ExportProcInfo)error{
+	db:=GetDB()
+	query:=fmt.Sprintf("select status,comment,proctime,nodeid from exprocque where expid=%d",epinfo.ExpId)
+	res,err:=db.Query(query)
+	epinfo.ProcQueue=make([]*api.ExProcNode,0,50)
+	for res.Next(){
+		node:=new(api.ExProcNode)
+		var nodeid int64
+		err=res.Scan(&node.Status,&node.Comment,&node.ProcTime,&nodeid)
+		if err!=nil{
+			epinfo.ProcQueue=nil
+			return err
+		}
+		node.SrcData=make([]*api.ProcDataObj,0,20)
+		query:=fmt.Sprintf("select datauuid,datatype,dataowner from expinvolvedata where nodeid=%d",nodeid)
+		resdata,err:=db.Query(query)
+		for resdata.Next(){
+			srcnode:=new (api.ProcDataObj)
+			err=resdata.Scan(&srcnode.Uuid,&srcnode.Type,&srcnode.UserId)
+			if err!=nil{
+				epinfo.ProcQueue=nil
+				return err
+			}
+			node.SrcData=append(node.SrcData,srcnode)
+		}
+		epinfo.ProcQueue=append(epinfo.ProcQueue,node)
+	}
+	return nil
 }

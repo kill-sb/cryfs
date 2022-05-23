@@ -64,38 +64,52 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 
 func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
-		ifack:=api.NewDataInfoAck()
+		epack:=api.NewExProcAck()
 		w.Header().Set("Content-Type","application/json")
-		var difreq api.GetDataInfoReq
-		err:=json.NewDecoder(r.Body).Decode(&difreq)
+		var epreq api.ExportProcReq
+		err:=json.NewDecoder(r.Body).Decode(&epreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
-			json.NewEncoder(w).Encode(ifack)
+			json.NewEncoder(w).Encode(epack)
 			return
 		}
         if g_config.Debug{
-            DebugJson("Request:",&difreq)
-            defer DebugJson("Response:",ifack)
+            DebugJson("Request:",&epreq)
+            defer DebugJson("Response:",epack)
         }
-		/*
-		_,err=GetLoginUserInfo(sifreq.Token)
-        if err!=nil{
-            sifack.Code=1
-            sifack.Msg="You should login first"
-            json.NewEncoder(w).Encode(sifack)
-            return
-        }*/
 
-		retdata,err:=dbop.GetEncDataInfo(difreq.Uuid)
+		luinfo,err:=GetLoginUserInfo(epreq.Token)
+        if err!=nil{
+            epack.Code=1
+            epack.Msg="You should login first"
+            json.NewEncoder(w).Encode(epack)
+            return
+        }
+
+		epinfo,err:=dbop.GetExportInfo(epreq.ExpId)
 		if err!=nil{
-			ifack.Code=2
-			ifack.Msg=err.Error()
+			epack.Code=2
+			epack.Data=nil
+			epack.Msg=err.Error()
 		}else{
-			ifack.Code=0
-			ifack.Msg="OK"
-			ifack.Data=retdata
+			if luinfo.Id!=epinfo.DstData.UserId{// fixme: check watiqueue owner later
+				Debug("luid:",luinfo.Id,"epid:",epinfo.DstData.UserId)
+				epack.Code=3
+				epack.Msg="Data not belong to login user"
+				epack.Data=nil
+			}else{
+				err=dbop.LoadProcQueue(epinfo)
+				if err!=nil{
+					epack.Code=2
+					epack.Msg=err.Error()
+				}else{
+					epack.Code=0
+					epack.Msg="OK"
+					epack.Data=epinfo
+				}
+			}
 		}
-        json.NewEncoder(w).Encode(ifack)
+        json.NewEncoder(w).Encode(epack)
 	}else{
 		http.NotFound(w,r)
 	}

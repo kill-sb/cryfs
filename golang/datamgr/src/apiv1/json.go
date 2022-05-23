@@ -278,7 +278,7 @@ type NewExportReq struct{
 type ProcDataObj struct{
 	Uuid string `json:"uuid"`
 	Type int `json:"type"`
-	OwnerId int32 `json:"ownerid"`
+	UserId int32 `json:"uerid"`
 }
 
 type ExProcNode struct{
@@ -303,7 +303,7 @@ type IExProcAck struct{
 	Data *ExportProcInfo `json:"data"`
 }
 
-type QueryExProcReq struct{
+type ExportProcReq struct{
 	Token string `json:"token"`
 	ExpId int64 `json:"expid"`
 }  // response use IExProcAck
