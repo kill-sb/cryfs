@@ -278,7 +278,7 @@ type NewExportReq struct{
 type ProcDataObj struct{
 	Uuid string `json:"uuid"`
 	Type int `json:"type"`
-	UserId int32 `json:"uerid"`
+	UserId int32 `json:"userid"`
 }
 
 type ExProcNode struct{
@@ -308,6 +308,26 @@ type ExportProcReq struct{
 	ExpId int64 `json:"expid"`
 }  // response use IExProcAck
 
+type SearchExpReq struct{
+	Token string `json:"token"`
+	FromUid int32 `json:"fromuid"`
+	ToUid int32 `json:"touid"`
+	Status int32 `json:"status"`
+	Start string `json:"startdate"`
+	End string `json:"enddate"`
+}
+
+type ISearchExpAck struct{
+	RetStat
+	Data []*ExportProcInfo `json:"data"`
+}
+
+type RespExpReq struct{
+	Token string `json:"token"`
+	ExpId int64 `json:"expid"`
+	Status int32 `json:"status"`
+	Comment string `json:"comment"`
+}
 
 type NotifyInfo struct{
 	Id int64 `json:"id"`
@@ -333,6 +353,7 @@ type SearchNotifiesReq struct{
 	Token string `json:"token"`
 	ToUid int32 `json:"touid"`
 	FromUid int32 `json:"fromuid"`
+	Type int32 `json:"type"`
 }
 
 type ISearchNotifiesAck struct{

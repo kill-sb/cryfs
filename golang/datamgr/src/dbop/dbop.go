@@ -501,7 +501,6 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	if req.End!=""{
 		query+=fmt.Sprintf("and sharetags.crtime <= '%s' ",req.End+" 23.59:59")
 	}
-	log.Println("search query:",query)
 	res,err:=db.Query(query)
 	if err!=nil{
 		log.Println("select from db error:",err)
@@ -770,7 +769,7 @@ func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
 	}
 }
 
-func SearchNotifies(fromuid,touid int32)([]*api.NotifyInfo,error){
+func SearchNotifies(fromuid,touid,ntype int32)([]*api.NotifyInfo,error){
 	if fromuid==0 && touid==0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
@@ -779,9 +778,12 @@ func SearchNotifies(fromuid,touid int32)([]*api.NotifyInfo,error){
 	if fromuid!=0 && touid!=0{
 		query+=fmt.Sprintf("where fromuid=%d and touid=%d ",fromuid,touid)
 	}else if fromuid!=0{
-		query+=fmt.Sprintf("where  fromuid=%d",fromuid)
+		query+=fmt.Sprintf("where  fromuid=%d ",fromuid)
 	}else{
 		query+=fmt.Sprintf("where touid=%d ",touid)
+	}
+	if ntype!=0{
+		query+=fmt.Sprintf(" and type=%d ",ntype)
 	}
 	query+=" order by crtime"
 	res,err:=db.Query(query)
@@ -931,13 +933,13 @@ func GetExportInfo(expid int64)(*api.ExportProcInfo,error){
 
 func LoadProcQueue(epinfo *api.ExportProcInfo)error{
 	db:=GetDB()
-	query:=fmt.Sprintf("select status,comment,proctime,nodeid from exprocque where expid=%d",epinfo.ExpId)
+	query:=fmt.Sprintf("select status,procuid,comment,proctime,nodeid from exprocque where expid=%d",epinfo.ExpId)
 	res,err:=db.Query(query)
 	epinfo.ProcQueue=make([]*api.ExProcNode,0,50)
 	for res.Next(){
 		node:=new(api.ExProcNode)
 		var nodeid int64
-		err=res.Scan(&node.Status,&node.Comment,&node.ProcTime,&nodeid)
+		err=res.Scan(&node.Status,&node.ProcUid,&node.Comment,&node.ProcTime,&nodeid)
 		if err!=nil{
 			epinfo.ProcQueue=nil
 			return err
@@ -955,6 +957,97 @@ func LoadProcQueue(epinfo *api.ExportProcInfo)error{
 			node.SrcData=append(node.SrcData,srcnode)
 		}
 		epinfo.ProcQueue=append(epinfo.ProcQueue,node)
+	}
+	return nil
+}
+
+func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
+	if req.FromUid<=0 && req.ToUid<=0{
+		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
+	}
+	db:=GetDB()
+	query:=""
+	if req.ToUid>0{
+		query=fmt.Sprintf("select exports.expid, exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime from exports,exprocque where (exprocque.procuid=%d and exprocque.expid=exports.expid) ", req.ToUid)
+		if req.FromUid>0{
+			query+=fmt.Sprintf("and exports.requid=%d ",req.FromUid)
+		}
+	}else{ //no ToUid, FromUid must be >0
+		query=fmt.Sprintf("select exports.expid,exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime from exports where exports.requid=%d ",req.FromUid)
+	}
+	if req.Status!=0{
+		query+=fmt.Sprintf(" and exports.Status=%d ",req.Status)
+	}
+    if req.Start!=""{
+		query+=fmt.Sprintf(" and exports.crtime >= '%s' ",req.Start+" 00:00:00")
+	}
+	if req.End!=""{
+		query+=fmt.Sprintf(" and exports.crtime <= '%s' ",req.End+" 23.59:59")
+	}
+
+	res,err:=db.Query(query)
+	if err!=nil{
+		log.Println("select from db error:",err)
+		return nil,err
+	}
+	ret:=make([]*api.ExportProcInfo,0,50)
+	for res.Next(){
+		info:=new(api.ExportProcInfo)
+// exports.expid,exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime 
+		info.DstData=new (api.ProcDataObj)
+		err=res.Scan(&info.ExpId,&info.DstData.UserId,&info.Status,&info.DstData.Type,&info.DstData.Uuid,&info.CrTime)
+		if err!=nil{
+			return nil,err
+		}
+		if err=LoadProcQueue(info);err!=nil{
+			return nil,err
+		}
+		ret=append(ret,info)
+	}
+	return ret,nil
+}
+
+func RespExportReq(uid int32,req *api.RespExpReq) error{
+	info,err:=GetExportInfo(req.ExpId)
+	if err!=nil{
+		return err
+	}
+	err=LoadProcQueue(info)
+	if err!=nil{
+		return err
+	}
+	var node *api.ExProcNode=nil
+	nlist:=len(info.ProcQueue)
+	refuse:=false
+	agree:=0
+	for i:=0;i<nlist;i++{
+		if info.ProcQueue[i].ProcUid==uid{
+			if info.ProcQueue[i].Status!=api.WAITING{
+				return errors.New("The request is processed already")
+			}
+			node=info.ProcQueue[i]
+		}else if info.ProcQueue[i].Status==api.AGREE{
+			agree++
+		}else if info.ProcQueue[i].Status==api.REFUSE{
+			refuse=true
+		}
+	}
+	if node==nil{
+		return errors.New("User not in author list")
+	}
+
+	db:=GetDB()
+	query:=fmt.Sprintf("update exprocque set status=%d,comment='%s',proctime='%s' where expid=%d and procuid=%d", req.Status,req.Comment,core.GetCurTime(), req.ExpId, uid)
+	if _,err=db.Exec(query);err!=nil{
+		return err
+	}
+
+	if (!refuse && agree==nlist-1 && req.Status!=api.WAITING ) || req.Status==api.REFUSE{
+		query=fmt.Sprintf("update exports set status=%d where expid=%d",req.Status,req.ExpId)
+		_,err=db.Exec(query)
+		if err!=nil{
+			return err
+		}
 	}
 	return nil
 }

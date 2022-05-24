@@ -124,7 +124,7 @@ CREATE TABLE `exports` (
 
 LOCK TABLES `exports` WRITE;
 /*!40000 ALTER TABLE `exports` DISABLE KEYS */;
-INSERT INTO `exports` VALUES (1,1,0,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-22 09:55:20'),(2,4,0,1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc','2022-05-22 09:58:41'),(3,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:01:20'),(4,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:07:03'),(7,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:20:12'),(8,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:23:16'),(9,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:53:57'),(10,1,0,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-22 14:40:45'),(11,3,0,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 14:42:46');
+INSERT INTO `exports` VALUES (1,1,2,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-22 09:55:20'),(2,4,2,1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc','2022-05-22 09:58:41'),(3,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:01:20'),(4,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:07:03'),(7,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:20:12'),(8,3,-1,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:23:16'),(9,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:53:57'),(10,1,2,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-24 00:00:00'),(11,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-24 00:00:00');
 /*!40000 ALTER TABLE `exports` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -152,7 +152,7 @@ CREATE TABLE `exprocque` (
 
 LOCK TABLES `exprocque` WRITE;
 /*!40000 ALTER TABLE `exprocque` DISABLE KEYS */;
-INSERT INTO `exprocque` VALUES (8,1,0,'political order','2022-05-22 02:23:16',1),(9,1,0,'political order','2022-05-22 02:53:57',2),(11,1,0,'political order','2022-05-22 06:42:46',3);
+INSERT INTO `exprocque` VALUES (8,1,-1,'piss off','2022-05-24 13:35:03',1),(9,2,2,'political order','2022-05-24 10:14:19',2),(11,1,2,'political order','2022-05-24 10:14:19',3);
 /*!40000 ALTER TABLE `exprocque` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -181,7 +181,7 @@ CREATE TABLE `notifies` (
 
 LOCK TABLES `notifies` WRITE;
 /*!40000 ALTER TABLE `notifies` DISABLE KEYS */;
-INSERT INTO `notifies` VALUES (6,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:21:49',1,2),(7,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:21:58',1,3),(8,1,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-20 13:22:20',1,2),(9,2,'9','political order','2022-05-22 02:53:57',3,1),(10,2,'11','political order','2022-05-22 06:42:46',3,1),(11,0,'test a plain text','','2022-05-22 06:47:30',3,2),(12,0,'test a plain text','','2022-05-22 06:47:49',3,2);
+INSERT INTO `notifies` VALUES (6,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,2),(7,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,3),(8,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,2),(9,3,'9','political order','2022-05-24 09:30:51',3,1),(10,3,'11','political order','2022-05-24 09:30:51',3,1),(11,1,'test a plain text','','2022-05-24 09:30:51',3,2),(12,1,'test a plain text','','2022-05-24 09:30:51',3,2);
 /*!40000 ALTER TABLE `notifies` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -396,4 +396,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-05-22 14:49:24
+-- Dump completed on 2022-05-24 21:37:38

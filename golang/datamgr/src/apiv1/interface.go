@@ -15,13 +15,13 @@ const (
 )
 
 const (
-	REFUSE=iota-1
+	REFUSE=-1
+	AGREE=iota
 	WAITING
-	AGREE
 )
 
 const (
-    TEXTMSG=iota
+    TEXTMSG=iota+1
     SHAREDATA
     EXPORTDATA
 )
@@ -170,6 +170,13 @@ func NewExProcAck() *IExProcAck{
 	return epa
 }
 
+func NewSearchExpAck() *ISearchExpAck{
+	sea:=new (ISearchExpAck)
+	sea.Code=-1
+	sea.Msg=INIT_MSG
+	sea.Data=make([]*ExportProcInfo,0,50)
+	return sea
+}
 
 func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (int32)string)error{
     for i:=0;i<level;i++{
