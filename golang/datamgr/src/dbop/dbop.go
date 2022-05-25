@@ -736,7 +736,7 @@ func DelNotifies(ids []int64)error{
 		query+=fmt.Sprintf(" or id=%d",v)
 	}
 	if _, err := db.Exec(query); err != nil {
-		fmt.Println("query:",query)
+		fmt.Println("query error:",query)
 		return err
 	} /*else {
 		if row, _ := res.RowsAffected(); row ==l {
@@ -869,12 +869,13 @@ func CreateProcQueue(selfid int32,data *api.DataObj)([]*api.ExProcNode,error){
 			user=new (api.ExProcNode)
 			authors[owner]=user
 			user.ProcUid=owner
+			user.Status=api.WAITING
 			user.SrcData=make([]*api.ProcDataObj,1,20)
 			user.SrcData[0]=curobj
+			nodes=append(nodes,user)
 		}else{
 			user.SrcData=append(user.SrcData,curobj)
 		}
-		nodes=append(nodes,user)
 	}
 	return nodes,nil
 }
@@ -984,7 +985,6 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
 	if req.End!=""{
 		query+=fmt.Sprintf(" and exports.crtime <= '%s' ",req.End+" 23.59:59")
 	}
-
 	res,err:=db.Query(query)
 	if err!=nil{
 		log.Println("select from db error:",err)

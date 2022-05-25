@@ -61,7 +61,7 @@ CREATE TABLE `efilemeta` (
   `orgname` varchar(255) DEFAULT NULL,
   `multisrc` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,7 +70,7 @@ CREATE TABLE `efilemeta` (
 
 LOCK TABLES `efilemeta` WRITE;
 /*!40000 ALTER TABLE `efilemeta` DISABLE KEYS */;
-INSERT INTO `efilemeta` VALUES (53,'cb2d7086-ff7d-4a2e-aed7-d545d27f5dce','cmit encrypted data',0,1,'2022-01-25 08:09:52',0,'Makefile',0),(54,'5a74f943-bbf8-475d-9135-434892b8970e','cmit encrypted data',0,1,'2022-01-25 09:20:10',0,'Makefile',0),(55,'78a24e23-86a9-4314-acfb-55400b196fcf','cmit encrypted data',0,1,'2022-01-26 07:19:15',0,'Makefile',0),(56,'9673841d-b1e7-4395-84c9-2c7ab97be635','cmit encrypted data',0,1,'2022-01-27 09:15:37',0,'TODO',0),(57,'6129b420-59e3-4e87-b449-d95426938b48','cmit encrypted data',0,1,'2022-01-27 09:20:54',0,'TODO',0),(58,'a7f014d9-73fe-44e5-82a3-d8f76ebf7529','cmit encrypted data',0,1,'2022-01-27 09:22:53',0,'TODO',0),(59,'a660fbb8-35ef-4470-ac76-3a3550776b02','cmit encrypted data',0,1,'2022-01-27 09:23:55',0,'TODO',0),(60,'dc082df5-c36d-4044-bc9f-011c13e41e4f','cmit encrypted data',0,1,'2022-01-28 04:20:21',0,'TODO',0),(61,'ef5e29c3-0b0b-4c49-a157-c81d836e7571','cmit encrypted data',0,1,'2022-01-28 04:23:06',0,'TODO',0),(62,'ef5e29c3-0b0b-4c49-a157-c81d836e7571','cmit encrypted data',0,1,'2022-01-28 04:28:15',0,'TODO',0),(63,'1ca01ce0-5243-488c-bcd2-a0c0409e9153','cmit encrypted dir',0,1,'2022-01-28 04:38:05',1,'nls',0),(64,'1a45df84-c3c8-47ff-a34b-128f4806ec7f','cmit encrypted data',0,1,'2022-01-28 04:40:39',0,'TODO',0),(65,'de97f6fc-1d5d-420a-8b2a-8261329ff041','cmit encrypted dir',0,1,'2022-01-28 04:51:35',1,'nls',0),(66,'b4f620ac-065b-4a4b-8a99-e2b68fe3953f','cmit encrypted data',0,1,'2022-02-11 08:08:00',0,'Makefile',0),(67,'ac1ada36-c79e-4951-bb6a-c37cca8952c0','cmit encrypted dir',0,1,'2022-02-11 08:08:59',1,'samplefs',0),(68,'f6e63544-ebe2-4c83-bdc9-9a10baf2438e','cmit encrypted data',0,1,'2022-03-04 02:38:55',0,'Makefile',0),(69,'02c4c033-5ab0-4aa0-8edc-bd4590b9056e','cmit encrypted dir',1,2,'2022-03-01 08:12:04',1,'1.csd.outdata',0),(71,'e9002c53-3a67-4a5b-8010-89a9a8e6dc06','test new data',1,1,'2022-04-06 07:25:25',0,'Makefile',0);
+INSERT INTO `efilemeta` VALUES (53,'cb2d7086-ff7d-4a2e-aed7-d545d27f5dce','cmit encrypted data',0,1,'2022-01-25 08:09:52',0,'Makefile',0),(54,'5a74f943-bbf8-475d-9135-434892b8970e','cmit encrypted data',0,1,'2022-01-25 09:20:10',0,'Makefile',0),(55,'78a24e23-86a9-4314-acfb-55400b196fcf','cmit encrypted data',0,1,'2022-01-26 07:19:15',0,'Makefile',0),(56,'9673841d-b1e7-4395-84c9-2c7ab97be635','cmit encrypted data',0,1,'2022-01-27 09:15:37',0,'TODO',0),(57,'6129b420-59e3-4e87-b449-d95426938b48','cmit encrypted data',0,1,'2022-01-27 09:20:54',0,'TODO',0),(58,'a7f014d9-73fe-44e5-82a3-d8f76ebf7529','cmit encrypted data',0,1,'2022-01-27 09:22:53',0,'TODO',0),(59,'a660fbb8-35ef-4470-ac76-3a3550776b02','cmit encrypted data',0,1,'2022-01-27 09:23:55',0,'TODO',0),(60,'dc082df5-c36d-4044-bc9f-011c13e41e4f','cmit encrypted data',0,1,'2022-01-28 04:20:21',0,'TODO',0),(61,'ef5e29c3-0b0b-4c49-a157-c81d836e7571','cmit encrypted data',0,1,'2022-01-28 04:23:06',0,'TODO',0),(62,'ef5e29c3-0b0b-4c49-a157-c81d836e7571','cmit encrypted data',0,1,'2022-01-28 04:28:15',0,'TODO',0),(63,'1ca01ce0-5243-488c-bcd2-a0c0409e9153','cmit encrypted dir',0,1,'2022-01-28 04:38:05',1,'nls',0),(64,'1a45df84-c3c8-47ff-a34b-128f4806ec7f','cmit encrypted data',0,1,'2022-01-28 04:40:39',0,'TODO',0),(65,'de97f6fc-1d5d-420a-8b2a-8261329ff041','cmit encrypted dir',0,1,'2022-01-28 04:51:35',1,'nls',0),(66,'b4f620ac-065b-4a4b-8a99-e2b68fe3953f','cmit encrypted data',0,1,'2022-02-11 08:08:00',0,'Makefile',0),(67,'ac1ada36-c79e-4951-bb6a-c37cca8952c0','cmit encrypted dir',0,1,'2022-02-11 08:08:59',1,'samplefs',0),(68,'f6e63544-ebe2-4c83-bdc9-9a10baf2438e','cmit encrypted data',0,1,'2022-03-04 02:38:55',0,'Makefile',0),(69,'02c4c033-5ab0-4aa0-8edc-bd4590b9056e','cmit encrypted dir',1,2,'2022-03-01 08:12:04',1,'1.csd.outdata',0),(71,'e9002c53-3a67-4a5b-8010-89a9a8e6dc06','test new data',1,1,'2022-04-06 07:25:25',0,'Makefile',0),(72,'1c6669f8-c74b-4522-886e-b19df1ec7f25','test new data',0,3,'2022-05-25 08:25:32',0,'newtests',0),(73,'e9002c53-3a67-4a5b-8010-89a9a8e6dc06','test new data',3,4,'2022-05-25 08:33:06',0,'Makefile',0),(74,'2c9f3bd3-db39-43da-b464-035dee54551d','test new data',3,4,'2022-05-25 08:39:28',0,'Makefile',0);
 /*!40000 ALTER TABLE `efilemeta` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -96,7 +96,7 @@ CREATE TABLE `expinvolvedata` (
 
 LOCK TABLES `expinvolvedata` WRITE;
 /*!40000 ALTER TABLE `expinvolvedata` DISABLE KEYS */;
-INSERT INTO `expinvolvedata` VALUES (8,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,1),(9,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,2),(11,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,3);
+INSERT INTO `expinvolvedata` VALUES (8,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,1),(9,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,2),(11,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,3),(13,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,7),(13,'f6e63544-ebe2-4c83-bdc9-9a10baf2438e',0,1,7),(13,'1c6669f8-c74b-4522-886e-b19df1ec7f25',0,3,8),(15,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1,11),(15,'f6e63544-ebe2-4c83-bdc9-9a10baf2438e',0,1,11),(15,'1c6669f8-c74b-4522-886e-b19df1ec7f25',0,3,12);
 /*!40000 ALTER TABLE `expinvolvedata` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -115,7 +115,7 @@ CREATE TABLE `exports` (
   `datauuid` char(36) NOT NULL,
   `crtime` datetime NOT NULL,
   PRIMARY KEY (`expid`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -124,7 +124,7 @@ CREATE TABLE `exports` (
 
 LOCK TABLES `exports` WRITE;
 /*!40000 ALTER TABLE `exports` DISABLE KEYS */;
-INSERT INTO `exports` VALUES (1,1,2,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-22 09:55:20'),(2,4,2,1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc','2022-05-22 09:58:41'),(3,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:01:20'),(4,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:07:03'),(7,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:20:12'),(8,3,-1,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:23:16'),(9,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:53:57'),(10,1,2,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-24 00:00:00'),(11,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-24 00:00:00');
+INSERT INTO `exports` VALUES (1,1,2,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-22 09:55:20'),(2,4,2,1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc','2022-05-22 09:58:41'),(3,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:01:20'),(4,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:07:03'),(7,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:20:12'),(8,3,-1,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:23:16'),(9,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-22 10:53:57'),(10,1,2,1,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3','2022-05-24 00:00:00'),(11,3,2,1,'2e888dcf-7e68-4665-910a-eb906995b60f','2022-05-24 00:00:00'),(13,4,2,1,'2c9f3bd3-db39-43da-b464-035dee545511','2022-05-25 16:54:44'),(15,4,1,1,'2c9f3bd3-db39-43da-b464-035dee545511','2022-05-25 17:27:28');
 /*!40000 ALTER TABLE `exports` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -143,7 +143,7 @@ CREATE TABLE `exprocque` (
   `proctime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `nodeid` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`nodeid`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -152,7 +152,7 @@ CREATE TABLE `exprocque` (
 
 LOCK TABLES `exprocque` WRITE;
 /*!40000 ALTER TABLE `exprocque` DISABLE KEYS */;
-INSERT INTO `exprocque` VALUES (8,1,-1,'piss off','2022-05-24 13:35:03',1),(9,2,2,'political order','2022-05-24 10:14:19',2),(11,1,2,'political order','2022-05-24 10:14:19',3);
+INSERT INTO `exprocque` VALUES (8,1,-1,'piss off','2022-05-24 13:35:03',1),(9,2,2,'political order','2022-05-24 10:14:19',2),(11,1,2,'political order','2022-05-24 10:14:19',3),(13,1,2,'political order','2022-05-25 09:30:53',7),(13,3,2,'political order','2022-05-25 09:30:53',8),(15,1,1,'ok','2022-05-25 09:28:41',11),(15,3,1,'ok','2022-05-25 09:29:34',12);
 /*!40000 ALTER TABLE `exprocque` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -172,7 +172,7 @@ CREATE TABLE `notifies` (
   `fromuid` int(11) DEFAULT NULL,
   `touid` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -181,7 +181,7 @@ CREATE TABLE `notifies` (
 
 LOCK TABLES `notifies` WRITE;
 /*!40000 ALTER TABLE `notifies` DISABLE KEYS */;
-INSERT INTO `notifies` VALUES (6,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,2),(7,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,3),(8,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,2),(9,3,'9','political order','2022-05-24 09:30:51',3,1),(10,3,'11','political order','2022-05-24 09:30:51',3,1),(11,1,'test a plain text','','2022-05-24 09:30:51',3,2),(12,1,'test a plain text','','2022-05-24 09:30:51',3,2);
+INSERT INTO `notifies` VALUES (6,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,2),(7,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,3),(8,2,'44acb473-1aa1-455f-b8a8-765d8d250d48','new shared data','2022-05-24 09:30:51',1,2),(9,3,'9','political order','2022-05-24 09:30:51',3,1),(10,3,'11','political order','2022-05-24 09:30:51',3,1),(11,1,'test a plain text','','2022-05-24 09:30:51',3,2),(12,1,'test a plain text','','2022-05-24 09:30:51',3,2),(13,3,'12','political order','2022-05-25 08:41:13',4,3),(14,3,'12','political order','2022-05-25 08:41:13',4,1),(15,3,'12','political order','2022-05-25 08:41:13',4,1),(16,3,'13','political order','2022-05-25 08:54:44',4,1),(17,3,'13','political order','2022-05-25 08:54:44',4,3),(18,3,'14','political order','2022-05-25 09:22:00',4,1),(19,3,'14','political order','2022-05-25 09:22:00',4,3),(20,3,'15','political order','2022-05-25 09:27:28',4,1),(21,3,'15','political order','2022-05-25 09:27:28',4,3);
 /*!40000 ALTER TABLE `notifies` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -207,7 +207,7 @@ CREATE TABLE `rcimport` (
 
 LOCK TABLES `rcimport` WRITE;
 /*!40000 ALTER TABLE `rcimport` DISABLE KEYS */;
-INSERT INTO `rcimport` VALUES (1,'path/data1','data1','f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1',2048),(2,'path/data1','data1','f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1',2048);
+INSERT INTO `rcimport` VALUES (1,'path/data1','data1','f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1',2048),(2,'path/data1','data1','f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1',2048),(3,'path/data1','data1','f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1',2048);
 /*!40000 ALTER TABLE `rcimport` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -232,7 +232,7 @@ CREATE TABLE `rcinputdata` (
 
 LOCK TABLES `rcinputdata` WRITE;
 /*!40000 ALTER TABLE `rcinputdata` DISABLE KEYS */;
-INSERT INTO `rcinputdata` VALUES (1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1),(1,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1),(2,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1),(2,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1);
+INSERT INTO `rcinputdata` VALUES (1,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1),(1,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1),(2,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1),(2,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,1),(3,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,0),(3,'ac1ada36-c79e-4951-bb6a-c37cca8952c0',0,0),(3,'1c6669f8-c74b-4522-886e-b19df1ec7f25',0,0);
 /*!40000 ALTER TABLE `rcinputdata` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -280,7 +280,7 @@ CREATE TABLE `runcontext` (
   `detime` datetime DEFAULT '2022-01-01 00:00:00',
   `ipaddr` varchar(50) DEFAULT '',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -289,7 +289,7 @@ CREATE TABLE `runcontext` (
 
 LOCK TABLES `runcontext` WRITE;
 /*!40000 ALTER TABLE `runcontext` DISABLE KEYS */;
-INSERT INTO `runcontext` VALUES (1,1,'linux','centos8','e9002c53-3a67-4a5b-8010-89a9a8e6dc06','2022-04-06 00:00:00','2022-04-06 15:00:01','192.168.80.138'),(2,1,'linux','centos8','','2022-04-06 00:00:00','2022-01-01 00:00:00','127.0.0.1');
+INSERT INTO `runcontext` VALUES (1,1,'linux','centos8','e9002c53-3a67-4a5b-8010-89a9a8e6dc06','2022-04-06 00:00:00','2022-04-06 15:00:01','192.168.80.138'),(2,1,'linux','centos8','','2022-04-06 00:00:00','2022-01-01 00:00:00','127.0.0.1'),(3,4,'linux','centos8','2c9f3bd3-db39-43da-b464-035dee54551d','2022-05-06 00:00:00','2022-05-26 15:00:01','127.0.0.1');
 /*!40000 ALTER TABLE `runcontext` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -318,7 +318,7 @@ CREATE TABLE `sharetags` (
   `content` int(11) NOT NULL DEFAULT '0',
   `descr` varchar(255) DEFAULT '',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -327,7 +327,7 @@ CREATE TABLE `sharetags` (
 
 LOCK TABLES `sharetags` WRITE;
 /*!40000 ALTER TABLE `sharetags` DISABLE KEYS */;
-INSERT INTO `sharetags` VALUES (42,'5d12b326-3a7a-4727-a7bb-a2cace3450db',1,'li4,wang2','2999-12-31 00:00:00',-1,'08bb4f4e191a467770c86ba0ef57a4dc','1a45df84-c3c8-47ff-a34b-128f4806ec7f',1,0,'','2022-01-28 14:43:52','TODO',0,0,''),(43,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',2,'zhang3,li4,wang2','2999-12-31 00:00:00',-1,'ad5d314cf0496d46091f8a784f6270ab','5d12b326-3a7a-4727-a7bb-a2cace3450db',1,1,'','2022-01-28 15:40:43','TODO',0,0,''),(44,'773b4a93-aa9d-42a6-8b47-46bd89872832',1,'li4','2999-12-31 00:00:00',-1,'24dfbc58ec833a051c3ff1c22a6612b3','1a45df84-c3c8-47ff-a34b-128f4806ec7f',1,0,'','2022-01-30 09:20:32','TODO',0,0,''),(45,'c38eb51b-fea0-4654-9bfc-b1d4c83123cf',2,'wang2,cmit','2999-12-31 00:00:00',-1,'f473653760f74ce9108946711498d925','773b4a93-aa9d-42a6-8b47-46bd89872832',1,1,'','2022-01-30 09:21:42','TODO',0,0,''),(46,'44acb473-1aa1-455f-b8a8-765d8d250d48',1,'li4,wang2','2999-12-31 00:00:00',-1,'83a47e65d005760e499466cceba68eae','ac1ada36-c79e-4951-bb6a-c37cca8952c0',1,0,'','2022-02-11 16:09:32','',0,0,''),(47,'2e888dcf-7e68-4665-910a-eb906995b60f',2,'wang2','2999-12-31 00:00:00',-1,'162b4cb2cd7efbb4f564d34962c571af','44acb473-1aa1-455f-b8a8-765d8d250d48',1,1,'','2022-02-15 15:00:15','',0,0,''),(49,'b178ea6d-877d-405e-a440-35ba705773d1',3,'li4','2999-12-31 00:00:00',-1,'eb6586dcbf60bc559a1b31b4a6e496be','cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1,'','2022-03-02 14:00:00','Makefile',0,0,''),(50,'eb60fafe-bac1-4343-b863-5c60ddd7e5b8',2,'li4','2999-12-31 00:00:00',-1,'93ab627ed3433957130d639c564e0ad6','b178ea6d-877d-405e-a440-35ba705773d1',1,1,'','2022-03-02 14:35:11','Makefile',0,0,''),(52,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,'wang2,cmit','2999-12-31 00:00:00',-1,'3b7b57bef298969fcf272b8caa56d3d6','f6e63544-ebe2-4c83-bdc9-9a10baf2438e',1,0,'','2022-01-30 09:21:42','TODO',0,0,'');
+INSERT INTO `sharetags` VALUES (42,'5d12b326-3a7a-4727-a7bb-a2cace3450db',1,'li4,wang2','2999-12-31 00:00:00',-1,'08bb4f4e191a467770c86ba0ef57a4dc','1a45df84-c3c8-47ff-a34b-128f4806ec7f',1,0,'','2022-01-28 14:43:52','TODO',0,0,''),(43,'1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',2,'zhang3,li4,wang2','2999-12-31 00:00:00',-1,'ad5d314cf0496d46091f8a784f6270ab','5d12b326-3a7a-4727-a7bb-a2cace3450db',1,1,'','2022-01-28 15:40:43','TODO',0,0,''),(44,'773b4a93-aa9d-42a6-8b47-46bd89872832',1,'li4','2999-12-31 00:00:00',-1,'24dfbc58ec833a051c3ff1c22a6612b3','1a45df84-c3c8-47ff-a34b-128f4806ec7f',1,0,'','2022-01-30 09:20:32','TODO',0,0,''),(45,'c38eb51b-fea0-4654-9bfc-b1d4c83123cf',2,'wang2,cmit','2999-12-31 00:00:00',-1,'f473653760f74ce9108946711498d925','773b4a93-aa9d-42a6-8b47-46bd89872832',1,1,'','2022-01-30 09:21:42','TODO',0,0,''),(46,'44acb473-1aa1-455f-b8a8-765d8d250d48',1,'li4,wang2','2999-12-31 00:00:00',-1,'83a47e65d005760e499466cceba68eae','ac1ada36-c79e-4951-bb6a-c37cca8952c0',1,0,'','2022-02-11 16:09:32','',0,0,''),(47,'2e888dcf-7e68-4665-910a-eb906995b60f',2,'wang2','2999-12-31 00:00:00',-1,'162b4cb2cd7efbb4f564d34962c571af','44acb473-1aa1-455f-b8a8-765d8d250d48',1,1,'','2022-02-15 15:00:15','',0,0,''),(49,'b178ea6d-877d-405e-a440-35ba705773d1',3,'li4','2999-12-31 00:00:00',-1,'eb6586dcbf60bc559a1b31b4a6e496be','cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,1,'','2022-03-02 14:00:00','Makefile',0,0,''),(50,'eb60fafe-bac1-4343-b863-5c60ddd7e5b8',2,'li4','2999-12-31 00:00:00',-1,'93ab627ed3433957130d639c564e0ad6','b178ea6d-877d-405e-a440-35ba705773d1',1,1,'','2022-03-02 14:35:11','Makefile',0,0,''),(52,'cd77acc1-3a40-4e02-8ddc-acc7a67474cc',1,'wang2,cmit','2999-12-31 00:00:00',-1,'3b7b57bef298969fcf272b8caa56d3d6','f6e63544-ebe2-4c83-bdc9-9a10baf2438e',1,0,'','2022-01-30 09:21:42','TODO',0,0,''),(53,'2c9f3bd3-db39-43da-b464-035dee545511',4,'li4,wang2,zhang3','2999-12-31 00:00:00',-1,'3b7b57bef298969fcf272b8caa56d3d6','2c9f3bd3-db39-43da-b464-035dee54551d',1,0,'f6b0ff59bc0a97b8c293398546b001320ce3d127f32b23c1a5f562afdbf4c5c1','2022-05-25 09:21:42','Makefile',0,0,'');
 /*!40000 ALTER TABLE `sharetags` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -351,7 +351,7 @@ CREATE TABLE `shareusers` (
 
 LOCK TABLES `shareusers` WRITE;
 /*!40000 ALTER TABLE `shareusers` DISABLE KEYS */;
-INSERT INTO `shareusers` VALUES ('5d12b326-3a7a-4727-a7bb-a2cace3450db',2,-1),('5d12b326-3a7a-4727-a7bb-a2cace3450db',3,-1),('1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',1,-1),('1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',2,-1),('1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',3,-1),('773b4a93-aa9d-42a6-8b47-46bd89872832',2,-1),('c38eb51b-fea0-4654-9bfc-b1d4c83123cf',3,-1),('c38eb51b-fea0-4654-9bfc-b1d4c83123cf',4,-1),('44acb473-1aa1-455f-b8a8-765d8d250d48',2,-1),('44acb473-1aa1-455f-b8a8-765d8d250d48',0,-1),('2e888dcf-7e68-4665-910a-eb906995b60f',0,-1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',2,3),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',3,1),('e40fc6f2-ae6d-4278-9b64-612646aaa7d0',2,-1),('971f7c51-98f1-401d-a38f-517eb23621d5',2,-1),('b178ea6d-877d-405e-a440-35ba705773d1',2,-1),('eb60fafe-bac1-4343-b863-5c60ddd7e5b8',2,-1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',3,1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',4,-1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',3,1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',4,-1);
+INSERT INTO `shareusers` VALUES ('5d12b326-3a7a-4727-a7bb-a2cace3450db',2,-1),('5d12b326-3a7a-4727-a7bb-a2cace3450db',3,-1),('1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',1,-1),('1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',2,-1),('1a6c3ece-dc57-4cc9-ae3c-d7f50d9362e3',3,-1),('773b4a93-aa9d-42a6-8b47-46bd89872832',2,-1),('c38eb51b-fea0-4654-9bfc-b1d4c83123cf',3,-1),('c38eb51b-fea0-4654-9bfc-b1d4c83123cf',4,-1),('44acb473-1aa1-455f-b8a8-765d8d250d48',2,-1),('44acb473-1aa1-455f-b8a8-765d8d250d48',0,-1),('2e888dcf-7e68-4665-910a-eb906995b60f',0,-1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',2,3),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',3,1),('e40fc6f2-ae6d-4278-9b64-612646aaa7d0',2,-1),('971f7c51-98f1-401d-a38f-517eb23621d5',2,-1),('b178ea6d-877d-405e-a440-35ba705773d1',2,-1),('eb60fafe-bac1-4343-b863-5c60ddd7e5b8',2,-1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',3,1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',4,-1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',3,1),('cd77acc1-3a40-4e02-8ddc-acc7a67474cc',4,-1),('2c9f3bd3-db39-43da-b464-035dee545511',1,-1),('2c9f3bd3-db39-43da-b464-035dee545511',2,-1),('2c9f3bd3-db39-43da-b464-035dee545511',3,-1);
 /*!40000 ALTER TABLE `shareusers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -396,4 +396,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-05-24 21:37:38
+-- Dump completed on 2022-05-25 17:31:43

@@ -219,7 +219,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	login: 
 	curl -H "Content-Type: application/json" -X POST -d '{"name":"wang2","passwd":"654321","primask":0}' -k https://apisvr:8080/api/v1/login
 	call:
-	url -H "Content-Type: application/json" -X POST -d '{"token":"aaebe36decfcf10dc77088650ae7c435","expid":10}' -k https://apisvr:8080/api/v1/getexportstat
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"aaebe36decfcf10dc77088650ae7c435","expid":10}' -k https://apisvr:8080/api/v1/getexportstat
 
 27. searchexports
 	call:
@@ -229,4 +229,4 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 28. respexport
 	call:
-	 curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","expid":9,"status":2,"comment":"piss off"}'  -k https://apisvr:8080/api/v1/respexport
+	 curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","expid":9,"status":1,"comment":"piss off"}'  -k https://apisvr:8080/api/v1/respexport
