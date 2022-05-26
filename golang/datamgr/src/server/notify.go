@@ -6,6 +6,7 @@ import (
     "log"
 //  core "coredata"
 //  "os"
+	"fmt"
     "dbop"
     api "apiv1"
 )
@@ -106,6 +107,57 @@ func DelNotifyFunc(w http.ResponseWriter, r *http.Request){
 			dnack.Msg="OK"
 		}
 		json.NewEncoder(w).Encode(dnack)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+
+func GetNotifyInfoFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		gniack:=api.NewSearchNotifiesAck()
+		w.Header().Set("Content-Type","application/json")
+		var gnireq api.GetNotifyInfoReq
+		err:=json.NewDecoder(r.Body).Decode(&gnireq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(gniack)
+			return
+		}
+        if g_config.Debug{
+            DebugJson("Request:",&gnireq)
+            defer DebugJson("Response:",gniack)
+        }
+		luinfo,err:=GetLoginUserInfo(gnireq.Token)
+		if err!=nil{
+			gniack.Code=1
+			gniack.Msg=err.Error()
+			json.NewEncoder(w).Encode(gniack)
+			return
+		}
+
+		nIds:=len(gnireq.Ids)
+		gniack.Data=make([]*api.NotifyInfo,0,nIds)
+		for _,id:=range gnireq.Ids{
+			ninfo,err:=dbop.GetNotifyInfo(id)
+			if err!=nil{
+				gniack.Code=1
+				gniack.Msg=err.Error()
+				gniack.Data=nil
+				break
+			}
+			if luinfo.Id!=ninfo.FromUid && luinfo.Id!=ninfo.ToUid{
+				gniack.Code=2
+				gniack.Msg=fmt.Sprintf("Current user is neither sender nor receiver of notify-%d",ninfo.Id)
+				gniack.Data=nil
+				break
+			}
+			gniack.Data=append(gniack.Data,ninfo)
+		}
+		if gniack.Data!=nil && nIds==len(gniack.Data){ // all data are ok
+			gniack.Code=0
+			gniack.Msg="OK"
+		}
+		json.NewEncoder(w).Encode(gniack)
 	}else{
 		http.NotFound(w,r)
 	}

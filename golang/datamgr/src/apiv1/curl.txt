@@ -201,6 +201,8 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 		curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://apisvr:8080/api/v1/login
 	call:
 		curl -H "Content-Type: application/json" -X POST -d '{"token":"f06e795ef8119cab70fecb744a975d4d","data":{"type":0,"fromuid":1,"touid":2,"content":"test a plain text"}}' -k https://apisvr:8080/api/v1/createnotify
+	return ok:
+	{"code":0,"message":"OK","data":22}
 
 23. searchnotifies
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","fromuid":1}' -k https://apisvr:8080/api/v1/searchnotifies
@@ -208,25 +210,34 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 24. delnotify
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","ids":[2,3]}' -k https://apisvr:8080/api/v1/delnotify
+	return ok:
+	{"code":0,"message":"OK"}
 
-25. exportdata
+25. getnotifyinfo
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"3b1328752bf99daa936d7fe85a1bcce9","ids":[12,13]}' -k https://apisvr:8080/api/v1/getnotifyinfo
+	return ok:
+	{"code":0,"message":"OK","data":[{"id":12,"type":1,"fromuid":3,"touid":2,"content":"test a plain text","comment":"","CrTime":"2022-05-24 17:30:51"},{"id":13,"type":3,"fromuid":4,"touid":3,"content":"12","comment":"political order","CrTime":"2022-05-25 16:41:13"}]}
+
+26. exportdata
 	login:
 	curl -H "Content-Type: application/json" -X POST -d '{"name":"wang2","passwd":"654321","primask":0}' -k https://apisvr:8080/api/v1/login
 	call:
   	curl -H "Content-Type: application/json" -X POST -d '{"token":"aaebe36decfcf10dc77088650ae7c435","data":{"type":1,"obj":"2e888dcf-7e68-4665-910a-eb906995b60f"},"comment":"political order"}' -k https://apisvr:8080/api/v1/exportdata
-
-26. getexportstat
-	login: 
-	curl -H "Content-Type: application/json" -X POST -d '{"name":"wang2","passwd":"654321","primask":0}' -k https://apisvr:8080/api/v1/login
-	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"aaebe36decfcf10dc77088650ae7c435","expid":10}' -k https://apisvr:8080/api/v1/getexportstat
 
 27. searchexports
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","fromuid":1,"touid":1,startdate":"2022-05-23"}' -k https://apisvr:8080/api/v1/searchexports
 	
 
-
 28. respexport
 	call:
 	 curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","expid":9,"status":1,"comment":"piss off"}'  -k https://apisvr:8080/api/v1/respexport
+
+29. getexportstat
+	login: 
+	curl -H "Content-Type: application/json" -X POST -d '{"name":"wang2","passwd":"654321","primask":0}' -k https://apisvr:8080/api/v1/login
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"aaebe36decfcf10dc77088650ae7c435","expid":10}' -k https://apisvr:8080/api/v1/getexportstat
+
+

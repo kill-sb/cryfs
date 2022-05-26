@@ -134,6 +134,7 @@ func SetupHandler() error{
 	routemap[prefix+"getrcinfo"]=GetRCInfoFunc
 	routemap[prefix+"createnotify"]=CreateNotifyFunc
 	routemap[prefix+"searchnotifies"]=SearchNotifiesFunc
+	routemap[prefix+"getnotifyinfo"]=GetNotifyInfoFunc
 	routemap[prefix+"delnotify"]=DelNotifyFunc
 	routemap[prefix+"exportdata"]=ExportDataFunc
 	routemap[prefix+"getexportstat"]=GetExportStatFunc

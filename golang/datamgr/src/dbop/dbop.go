@@ -757,7 +757,6 @@ func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
 		return nil,err
 	}
 	if res.Next(){
-		ninfo:=new (api.NotifyInfo)
 		err=res.Scan(&ninfo.Type,&ninfo.Content,&ninfo.Comment,&ninfo.CrTime,&ninfo.FromUid,&ninfo.ToUid)
 		if err!=nil{
 			return nil,err

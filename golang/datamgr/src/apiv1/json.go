@@ -361,6 +361,11 @@ type ISearchNotifiesAck struct{
 	Data []*NotifyInfo `json:"data"`
 }
 
+type GetNotifyInfoReq struct{
+	Token string `json:"token"`
+	Ids []int64 `json:"ids"`
+}
+
 type DelNotifyReq struct{
 	Token string `json:"token"`
 	Ids []int64 `json:"ids"`
