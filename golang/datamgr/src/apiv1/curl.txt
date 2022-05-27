@@ -224,20 +224,30 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	curl -H "Content-Type: application/json" -X POST -d '{"name":"wang2","passwd":"654321","primask":0}' -k https://apisvr:8080/api/v1/login
 	call:
   	curl -H "Content-Type: application/json" -X POST -d '{"token":"aaebe36decfcf10dc77088650ae7c435","data":{"type":1,"obj":"2e888dcf-7e68-4665-910a-eb906995b60f"},"comment":"political order"}' -k https://apisvr:8080/api/v1/exportdata
+	return ok:
+	{"code":0,"message":"OK","data":{"expid":16,"status":2,"dataobj":{"uuid":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1,"userid":3},"crtime":"2022-05-27 09:29:51","procqueue":[{"procuid":1,"srcdata":[{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0,"userid":1}],"status":2,"comment":"","proctime":""}]}}
 
 27. searchexports
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","fromuid":1,"touid":1,startdate":"2022-05-23"}' -k https://apisvr:8080/api/v1/searchexports
-	
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"36b23a3558fa64cfa767a3cd6b7e7ee2","touid":1,"status":1,"startdate":"2022-05-23"}' -k https://apisvr:8080/api/v1/searchexports
+
+	return ok:
+	{"code":0,"message":"OK","data":[{"expid":11,"status":1,"dataobj":{"uuid":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1,"userid":3},"crtime":"2022-05-24 00:00:00","procqueue":[{"procuid":1,"srcdata":[{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0,"userid":1}],"status":1,"comment":"piss off","proctime":"2022-05-27 10:58:39"}]},{"expid":15,"status":1,"dataobj":{"uuid":"2c9f3bd3-db39-43da-b464-035dee545511","type":1,"userid":4},"crtime":"2022-05-25 17:27:28","procqueue":[{"procuid":1,"srcdata":[{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0,"userid":1},{"uuid":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","type":0,"userid":1}],"status":1,"comment":"ok","proctime":"2022-05-25 17:28:41"},{"procuid":3,"srcdata":[{"uuid":"1c6669f8-c74b-4522-886e-b19df1ec7f25","type":0,"userid":3}],"status":1,"comment":"ok","proctime":"2022-05-25 17:29:34"}]}]}
 
 28. respexport
 	call:
 	 curl -H "Content-Type: application/json" -X POST -d '{"token":"e20cecb76cfea4661dfd7fc5a9c1008d","expid":9,"status":1,"comment":"piss off"}'  -k https://apisvr:8080/api/v1/respexport
+	return ok:
+	{"code":0,"message":"OK"}
+	return false:
+	{"code":1,"message":"The request is processed already"}
 
 29. getexportstat
 	login: 
 	curl -H "Content-Type: application/json" -X POST -d '{"name":"wang2","passwd":"654321","primask":0}' -k https://apisvr:8080/api/v1/login
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"aaebe36decfcf10dc77088650ae7c435","expid":10}' -k https://apisvr:8080/api/v1/getexportstat
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"ff9e144554fd0e5821c2149192e42d3e","expid":11}' -k https://apisvr:8080/api/v1/getexportstat
+	return ok:
+	{"code":0,"message":"OK","data":{"expid":11,"status":2,"dataobj":{"uuid":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1,"userid":3},"crtime":"2022-05-24 00:00:00","procqueue":[{"procuid":1,"srcdata":[{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0,"userid":1}],"status":2,"comment":"political order","proctime":"2022-05-24 18:14:19"}]}}
 
 

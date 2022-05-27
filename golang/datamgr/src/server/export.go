@@ -78,7 +78,7 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
             defer DebugJson("Response:",epack)
         }
 
-		luinfo,err:=GetLoginUserInfo(epreq.Token)
+		_,err=GetLoginUserInfo(epreq.Token)
         if err!=nil{
             epack.Code=1
             epack.Msg="You should login first"
@@ -92,12 +92,12 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 			epack.Data=nil
 			epack.Msg=err.Error()
 		}else{
-			if luinfo.Id!=epinfo.DstData.UserId{// fixme: check watiqueue owner later
+	/*		if luinfo.Id!=epinfo.DstData.UserId{// fixme: check watiqueue owner later
 				Debug("luid:",luinfo.Id,"epid:",epinfo.DstData.UserId)
 				epack.Code=3
 				epack.Msg="Data not belong to login user"
 				epack.Data=nil
-			}else{
+			}else{*/
 				err=dbop.LoadProcQueue(epinfo)
 				if err!=nil{
 					epack.Code=2
@@ -107,7 +107,7 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 					epack.Msg="OK"
 					epack.Data=epinfo
 				}
-			}
+	//		}
 		}
         json.NewEncoder(w).Encode(epack)
 	}else{
