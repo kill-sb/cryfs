@@ -107,7 +107,7 @@ long decodefd(int sfd,int dfd, const char* passwd,off_t offset){
 	fstat(sfd,&st);
 	flen=st.st_size-offset;
 	if(flen%AESBLOCK){
-		printf("Warning: error file size,decoding may be wrong,cancelled.\n");
+		printf("Warning: error file size,decoding may be wrong,cancelled.(flen:%d)\n",flen);
 		return -1;
 	}
 	lseek(sfd,offset,SEEK_SET);
@@ -394,7 +394,7 @@ func DecodeFile(ipath,opath string,linfo *core.LoginInfo,finfo os.FileInfo)error
 	case core.CSDFILE:
 		return DecodeCSDFile(linfo,ipath,opath)
 	default:
-		fmt.Println("Unknow filetype of ",ipath)
+		fmt.Println("Unknow filetype of ",ipath,"---",ftype)
 		return errors.New("Unknown filetype")
 	}
 }

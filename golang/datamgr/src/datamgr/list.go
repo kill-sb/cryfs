@@ -177,7 +177,7 @@ func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
     info.FromRCId=adata.FromRCId
     info.OrgName=adata.OrgName
     info.CrTime=adata.CrTime
-	if info.FromRCId>0{
+	if info.FromRCId>0{ // TODO need to be tested more 
 		info.FromContext,_=GetRCInfo_API(info.FromRCId)
 	}
 	info.EncryptingKey=make([]byte,16)

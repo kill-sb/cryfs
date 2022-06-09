@@ -3,8 +3,12 @@ package main
 import(
 	"fmt"
 	"os"
+	"io"
 	"strings"
+	"unsafe"
 	"errors"
+	"bytes"
+	"encoding/binary"
 	api "apiv1"
 	core "coredata"
 )
@@ -65,7 +69,6 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 		fmt.Println("GetEncDataFromDisk in shareDir error:",err)
 		return
 	}
-
 	if dinfo.OwnerId!=linfo.Id{
 		fmt.Println("The data does not belong to",linfo.Name,dinfo.OwnerId,linfo.Id)
 		return
@@ -81,6 +84,9 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 	}else{
 		LoadShareInfoConfig(sinfo)
 	}
+   // sinfo.IsDir=1 has already been determined in NewShareInfo
+    sinfo.OrgName=dinfo.OrgName
+
 	sinfo.CrTime=core.GetCurTime()
 	sign,err:=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
@@ -122,12 +128,12 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		return err
 	}
 	if fromtype==core.ENCDATA{
-		// todo: judge Isdir
 		dinfo,_,err:=GetEncDataFromDisk(linfo,ipath)
 		if(err!=nil){
 			fmt.Println("GetEncData error:",err)
 			return err
 		}
+
 		if dinfo.OwnerId!=linfo.Id{
 			fmt.Println("The data does belong to",linfo.Name,dinfo.OwnerId,linfo.Id)
 			return errors.New("incorrect user")
@@ -177,7 +183,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 			return err
 		}
 	}else{
-		LoadShareInfoConfig(sinfo)
+		LoadShareInfoConfig(sinfo) // TODO implement share config file
 	}
 	sinfo.CrTime=core.GetCurTime()
 	sign,err:=WriteShareInfo(linfo.Token,sinfo)
@@ -249,14 +255,14 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 }
 
 func CreateCSDFile(sinfo *core.ShareInfo,sign []byte, dstfile string)error{
-/*	fw,err:=os.Create(dstfile) // fixme: file mode should be assigned later
+	fw,err:=os.Create(dstfile) // fixme: file mode should be assigned later
 	if err!=nil{
 		fmt.Println("CreateCSDFile error:",err)
 			return err
 	}
 	defer fw.Close()
-	if sinfo.FromType==ENCDATA{
-		if WriteCSDHead(sinfo,sign,fw)==BINCONTENT{
+	if sinfo.FromType==core.ENCDATA{
+		if _,err=WriteCSDHead(sinfo,sign,fw);err==nil{
 			if sinfo.IsDir==0{
 				fr,err:=os.Open(sinfo.FileUri)
 				if err!=nil{
@@ -266,32 +272,32 @@ func CreateCSDFile(sinfo *core.ShareInfo,sign []byte, dstfile string)error{
 				defer fr.Close()
 				io.Copy(fw,fr)
 			}else{
-				ZipToFile(sinfo.FileUri,fw)
+				core.ZipToFile(sinfo.FileUri,fw)
 			}
 		}else{
 			fw.Write([]byte(sinfo.FileUri))
 		}
 	}else{
-        if WriteCSDHead(sinfo,sign,fw)==BINCONTENT{
+		if hd,er:=WriteCSDHead(sinfo,sign,fw); er==nil{
             fr,err:=os.Open(sinfo.FileUri)
             if err!=nil{
                 fmt.Println("Open FileUri error:",err)
                 return err
             }
             defer fr.Close()
-			fr.Seek(60,0)
+			fr.Seek(int64(unsafe.Sizeof(*hd)),0)
+			//fr.Seek(60,0)
             io.Copy(fw,fr)
         }else{
             fw.Write([]byte(sinfo.FileUri))
         }
-	}*/
+	}
 	return nil
 }
 
 
-func WriteCSDHead(sinfo *core.ShareInfo, sign []byte,fw *os.File) error {
-	/*
-	head:=new (ShareInfoHeader)
+func WriteCSDHead(sinfo *core.ShareInfo, sign []byte,fw *os.File)(*core.ShareInfoHeader_V2, error) {
+/*	head:=new (ShareInfoHeader)
 	copy(head.MagicStr[:],[]byte("CMITFS"))
 	copy(head.Uuid[:],[]byte(sinfo.Uuid))
 	copy(head.EncryptedKey[:],sinfo.EncryptedKey)
@@ -316,7 +322,10 @@ func WriteCSDHead(sinfo *core.ShareInfo, sign []byte,fw *os.File) error {
 	copy(head.EncryptedKey[:],sinfo.EncryptedKey)
 //	copy(head.Sha256[:],[]byte(sha256))
 //	copy(head.Sign[:],sign)
-	return nil
+	buf:=new(bytes.Buffer)
+	binary.Write(buf,binary.LittleEndian,head)
+	fw.Write(buf.Bytes())
+	return head,nil
 }
 
 func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo)(*core.ShareInfo,error){
@@ -367,8 +376,8 @@ func FillShareInfo(apidata *api.ShareInfoData, encryptedkey []byte)*core.ShareIn
     sinfo.FromUuid=apidata.FromUuid
 //    sinfo.ContentType=ctype
 
-	apidata.IsDir=sinfo.IsDir
-    sinfo.CrTime=apidata.CrTime
+	sinfo.IsDir=apidata.IsDir
+	sinfo.CrTime=apidata.CrTime
     sinfo.OrgName=apidata.OrgName
     return sinfo
 }

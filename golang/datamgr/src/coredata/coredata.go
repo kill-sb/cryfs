@@ -290,7 +290,7 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 	sinfo.FromType=fromtype
 	sinfo.RandKey,_=RandPasswd()
 	if fromtype==ENCDATA{
-	//if fromtype!=UNKNOWN{
+	// if fromtype!=UNKNOWN {
 		st,_:=os.Stat(fromobj)
 		sinfo.FromUuid=st.Name()
 		if !IsValidUuid(sinfo.FromUuid){
@@ -310,6 +310,7 @@ func NewShareInfo(luser* LoginInfo,fromtype int, fromobj string /* need a local 
 	}
 	sinfo.FileUri=fromobj
 	sinfo.EncryptedKey=make([]byte,16) // calc outside later
+	// TODO be sure: orgname and isdir is filled outsize, because new edtion removed these info in CSD File Header
 	return sinfo,nil
 }
 
