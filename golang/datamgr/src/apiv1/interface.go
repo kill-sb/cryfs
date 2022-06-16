@@ -178,6 +178,14 @@ func NewSearchExpAck() *ISearchExpAck{
 	return sea
 }
 
+func NewGetContactsAck() *IGetContactsAck {
+	gca:=new (IGetContactsAck)
+	gca.Code=01
+	gca.Msg=INIT_MSG
+	gca.Data=make([]*ContactInfo,0,50)
+	return gca
+}
+
 func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (int32)string)error{
     for i:=0;i<level;i++{
         fmt.Print("\t")

@@ -216,12 +216,6 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	return ok:
 	{"code":0,"message":"OK"}
 
-24.5 setnewstat
-	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","ids":[6,7],"isnew":[0,1]}' -k https://apisvr:8080/api/v1/setnewstat	
-	return ok:
-	{"code":0,"message":"OK"}
-
 25. getnotifyinfo
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"3b1328752bf99daa936d7fe85a1bcce9","ids":[18,20]}' -k https://apisvr:8080/api/v1/getnotifyinfo
@@ -259,4 +253,35 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	return ok:
 	{"code":0,"message":"OK","data":{"expid":11,"status":2,"dataobj":{"uuid":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1,"userid":3},"crtime":"2022-05-24 00:00:00","procqueue":[{"procuid":1,"srcdata":[{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0,"userid":1}],"status":2,"comment":"political order","proctime":"2022-05-24 18:14:19"}]}}
 
+30. setnotifystat
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","ids":[6,7],"isnew":[0,1]}' -k https://apisvr:8080/api/v1/setnotifystat	
+	return ok:
+	{"code":0,"message":"OK"}
+
+31. addcontacts
+	login:
+	curl -H "Content-Type: application/json" -X POST -d '{"name":"li4","passwd":"123123","primask":0}' -k https://apisvr:8080/api/v1/login
+	return:
+	{"code":0,"message":"OK","data":{"id":2,"token":"2b0ef7ac48c24195b6c6149fbfc44f36","key":"4297f44b13955235245b2497399d7a93","timeout":900}}
+	
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"2b0ef7ac48c24195b6c6149fbfc44f36","contactids":[1,3]}' -k https://apisvr:8080/api/v1/addcontacts
+	return ok:
+	{"code":0,"message":"OK"}
+
+32. delcontacts
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"2b0ef7ac48c24195b6c6149fbfc44f36","contactids":[1,3]}' -k https://apisvr:8080/api/v1/delcontacts
+	return ok:
+	{"code":0,"message":"OK"}
+
+33.listcontacts
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"4ce925897e68827d56d0ede7de55c63d"}' -k https://apisvr:8080/api/v1/listcontacts
+	return ok:
+	{"code":0,"message":"OK","data":[{"userid":1,"name":"zhang3"},{"userid":3,"name":"wang2"}]}
+
+34. searchcontacts
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"2b0ef7ac48c24195b6c6149fbfc44f36","keyword":"ang"}' -k https://apisvr:8080/api/v1/searchcontacts
+	return ok:
+	{"code":0,"message":"OK","data":[{"userid":1,"name":"zhang3"},{"userid":3,"name":"wang2"}]}
 

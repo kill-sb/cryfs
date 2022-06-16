@@ -1063,3 +1063,80 @@ func RespExportReq(uid int32,req *api.RespExpReq) error{
 	}
 	return nil
 }
+
+func NewContact(uid, cid int32)error{
+    db:=GetDB()
+	query:=fmt.Sprintf("select count(*) from contacts where userid=%d and contactuserid=%d",uid,cid)
+	res,err:=db.Query(query)
+    if err!=nil{
+        fmt.Println("select from contacts error:",err)
+        return err
+    }
+    if res.Next(){
+        var count int64
+        err=res.Scan(&count)
+        if err!=nil{
+            return err
+        }
+		if count>0{
+			return nil //errors.New("contact exists already")
+		}
+	}
+    query=fmt.Sprintf("insert into contacts (userid, contactuserid) values (%d,%d)",uid,cid)
+    if _, err= db.Exec(query); err == nil {
+		return nil
+	}else{
+		return err
+	}
+}
+
+func ListContacts(uid int32)([]*api.ContactInfo,error){
+	db:=GetDB()
+	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and users.id=contacts.contactuserid",uid)
+	res, err := db.Query(query)
+	if err != nil {
+		fmt.Println("query contacts error:",query)
+		return nil,err
+	}
+	clist:=make([]*api.ContactInfo,0,50)
+	for res.Next(){
+		cinfo:=new(api.ContactInfo)
+		err=res.Scan(&cinfo.UserId,&cinfo.Name)
+		if err!=nil{
+			return nil,err
+		}
+		clist=append(clist,cinfo)
+	}
+	return clist,nil
+}
+
+func FuzzySearch(uid int32, keyword string)([]*api.ContactInfo,error){
+	db:=GetDB()
+	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and contacts.contactuserid=users.id and users.name like '%s'",uid,"%"+keyword+"%")
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("query error:",query)
+		return nil,err
+	}
+	clist:=make([]*api.ContactInfo,0,50)
+	for res.Next(){
+		cinfo:=new(api.ContactInfo)
+		err=res.Scan(&cinfo.UserId,&cinfo.Name)
+		if err!=nil{
+			return nil,err
+		}
+		clist=append(clist,cinfo)
+	}
+	return clist,nil
+}
+
+func DelContact(uid,cid int32 )error{
+	db:=GetDB()
+	query:=fmt.Sprintf("delete from contacts where userid=%d and contactuserid=%d",uid,cid)
+	if _,err:= db.Exec(query);err != nil{
+		fmt.Println("DelContact error:",query)
+		return err
+	}
+	return nil
+}
+

@@ -136,11 +136,16 @@ func SetupHandler() error{
 	routemap[prefix+"searchnotifies"]=SearchNotifiesFunc
 	routemap[prefix+"getnotifyinfo"]=GetNotifyInfoFunc
 	routemap[prefix+"delnotify"]=DelNotifyFunc
-	routemap[prefix+"setnewstat"]=SetNotifyStatFunc
+	routemap[prefix+"setnotifystat"]=SetNotifyStatFunc
 	routemap[prefix+"exportdata"]=ExportDataFunc
 	routemap[prefix+"getexportstat"]=GetExportStatFunc
 	routemap[prefix+"searchexports"]=SearchExportsFunc
 	routemap[prefix+"respexport"]=RespExportFunc
+	routemap[prefix+"addcontacts"]=AddContactsFunc
+	routemap[prefix+"delcontacts"]=DelContactsFunc
+	routemap[prefix+"listcontacts"]=GetContactsFunc
+	routemap[prefix+"searchcontacts"]=FuzzySearchFunc
+
 
 	http.HandleFunc(prefix,DistroFunc)
 	/*

@@ -390,3 +390,32 @@ type IQueryNotifyAck struct{
 	RetStat
 	Data *NotifyInfo `json:"data"`
 }
+
+type ContactInfo struct{
+	UserId int32 `json:"userid"`
+	Name string `json:"name"`
+}
+
+type AddContactReq struct{
+	Token string `json:"token"`
+	Ids	[]int32	`json:"contactids"`
+}
+
+type DelContactReq struct{
+    Token string `json:"token"`
+    Ids []int32 `json:"contactids"`
+}
+
+type GetContactReq struct{
+	Token string `json:"token"`
+}
+
+type FzSearchReq struct{
+	Token string `json:"token"`
+	Keyword string `json:"keyword"`
+}
+
+type IGetContactsAck struct{
+	RetStat
+	Data []*ContactInfo `json:"data"`
+}

@@ -190,6 +190,8 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+
+/*
 func GetUserFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		usrack:=api.NewUserInfoAck()
@@ -205,14 +207,6 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 			DebugJson("Request:",&usrreq)
 			defer DebugJson("Response:",usrack)
 		}
-		/*
-		_,err=GetLoginUserInfo(sifreq.Token)
-        if err!=nil{
-            sifack.Code=1
-            sifack.Msg="You should login first"
-            json.NewEncoder(w).Encode(sifack)
-            return
-        }*/
 		usrack.Code=0
 		usrack.Msg="OK"
 		for _,v:=range usrreq.Id{
@@ -248,14 +242,6 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
             defer DebugJson("Response:",usrack)
         }
 
-		/*
-		_,err=GetLoginUserInfo(sifreq.Token)
-        if err!=nil{
-            sifack.Code=1
-            sifack.Msg="You should login first"
-            json.NewEncoder(w).Encode(sifack)
-            return
-        }*/
 		usrack.Code=0
 		usrack.Msg="OK"
 		for _,v:=range usrreq.Name{
@@ -275,7 +261,7 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 		http.NotFound(w,r)
 	}
 
-}
+}*/
 
 func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
