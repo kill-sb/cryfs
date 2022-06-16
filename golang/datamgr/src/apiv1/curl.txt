@@ -205,7 +205,10 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	{"code":0,"message":"OK","data":22}
 
 23. searchnotifies
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","fromuid":1}' -k https://apisvr:8080/api/v1/searchnotifies
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","touid":1,"isnew":0}' -k https://apisvr:8080/api/v1/searchnotifies
+	return ok:
+	{"code":0,"message":"OK","data":[{"id":23,"type":3,"fromuid":3,"touid":1,"content":"16","comment":"political order","CrTime":"2022-06-16 12:28:16","IsNew":0},{"id":20,"type":3,"fromuid":4,"touid":1,"content":"15","comment":"political order","CrTime":"2022-06-16 12:54:41","IsNew":0}]}
+
 
 24. delnotify
 	call:
@@ -213,11 +216,17 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	return ok:
 	{"code":0,"message":"OK"}
 
+24.5 setnewstat
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","ids":[6,7],"isnew":[0,1]}' -k https://apisvr:8080/api/v1/setnewstat	
+	return ok:
+	{"code":0,"message":"OK"}
+
 25. getnotifyinfo
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"3b1328752bf99daa936d7fe85a1bcce9","ids":[12,13]}' -k https://apisvr:8080/api/v1/getnotifyinfo
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"3b1328752bf99daa936d7fe85a1bcce9","ids":[18,20]}' -k https://apisvr:8080/api/v1/getnotifyinfo
 	return ok:
-	{"code":0,"message":"OK","data":[{"id":12,"type":1,"fromuid":3,"touid":2,"content":"test a plain text","comment":"","CrTime":"2022-05-24 17:30:51"},{"id":13,"type":3,"fromuid":4,"touid":3,"content":"12","comment":"political order","CrTime":"2022-05-25 16:41:13"}]}
+	{"code":0,"message":"OK","data":[{"id":18,"type":3,"fromuid":4,"touid":1,"content":"14","comment":"political order","CrTime":"2022-06-16 12:52:30","IsNew":1},{"id":20,"type":3,"fromuid":4,"touid":1,"content":"15","comment":"political order","CrTime":"2022-06-16 12:54:41","IsNew":0}]}
 
 26. exportdata
 	login:

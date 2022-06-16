@@ -62,6 +62,65 @@ func CreateNotifyFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+func SetNotifyStatFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		snsack:=api.NewSimpleAck()
+		w.Header().Set("Content-Type","application/json")
+		var snsreq api.SetNotifyStatReq
+		err:=json.NewDecoder(r.Body).Decode(&snsreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(snsack)
+			return
+		}
+        if g_config.Debug{
+            DebugJson("Request:",&snsreq)
+            defer DebugJson("Response:",snsack)
+        }
+		luinfo,err:=GetLoginUserInfo(snsreq.Token)
+		if err!=nil{
+			snsack.Code=1
+			snsack.Msg=err.Error()
+			json.NewEncoder(w).Encode(snsack)
+			return
+		}
+		alen:=len(snsreq.Ids)
+		if alen!=len(snsreq.Stats){
+			snsack.Code=1
+			snsack.Msg="Invalid parameters"
+			json.NewEncoder(w).Encode(snsack)
+			return
+		}
+		for i:=0;i<alen;i++{
+			ninfo,err:=dbop.GetNotifyInfo(snsreq.Ids[i])
+			if err!=nil{
+				snsack.Code=1
+				snsack.Msg=err.Error()
+				json.NewEncoder(w).Encode(snsack)
+				return
+			}
+			if luinfo.Id!=ninfo.ToUid {
+				snsack.Code=2
+				snsack.Msg="Login user is not receive user."
+				json.NewEncoder(w).Encode(snsack)
+				return
+			}
+			if err=dbop.SetNotifyStat(snsreq.Ids[i],snsreq.Stats[i]);err!=nil{
+				snsack.Code=3
+				snsack.Msg=err.Error()
+                json.NewEncoder(w).Encode(snsack)
+                return
+
+			}
+		}
+		snsack.Code=0
+		snsack.Msg="OK"
+		json.NewEncoder(w).Encode(snsack)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+
 func DelNotifyFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		dnack:=api.NewSimpleAck()
@@ -193,7 +252,7 @@ func SearchNotifiesFunc(w http.ResponseWriter, r *http.Request){
 		}
 
 		// user info checked ok
-		if snack.Data,err=dbop.SearchNotifies(snreq.FromUid,snreq.ToUid,snreq.Type);err!=nil{
+		if snack.Data,err=dbop.SearchNotifies(snreq.FromUid,snreq.ToUid,snreq.Type,snreq.IsNew);err!=nil{
 			snack.Code=1
 			snack.Msg=err.Error()
 			snack.Data=nil

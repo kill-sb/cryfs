@@ -337,6 +337,7 @@ type NotifyInfo struct{
 	Content string `json:"content"`
 	Comment string `json:"comment"`
 	CrTime string `json:crtime"`
+	IsNew	int32 `json:isnew"`
 }
 
 type SendNotifyReq struct{
@@ -354,6 +355,7 @@ type SearchNotifiesReq struct{
 	ToUid int32 `json:"touid"`
 	FromUid int32 `json:"fromuid"`
 	Type int32 `json:"type"`
+	IsNew int32 `json:"isnew"`
 }
 
 type ISearchNotifiesAck struct{
@@ -364,6 +366,12 @@ type ISearchNotifiesAck struct{
 type GetNotifyInfoReq struct{
 	Token string `json:"token"`
 	Ids []int64 `json:"ids"`
+}
+
+type SetNotifyStatReq struct{
+	Token string `json:"token"`
+	Ids []int64 `json:"ids"`
+	Stats []int32 `json:"isnew"`
 }
 
 type DelNotifyReq struct{

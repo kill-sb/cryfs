@@ -136,6 +136,7 @@ func SetupHandler() error{
 	routemap[prefix+"searchnotifies"]=SearchNotifiesFunc
 	routemap[prefix+"getnotifyinfo"]=GetNotifyInfoFunc
 	routemap[prefix+"delnotify"]=DelNotifyFunc
+	routemap[prefix+"setnewstat"]=SetNotifyStatFunc
 	routemap[prefix+"exportdata"]=ExportDataFunc
 	routemap[prefix+"getexportstat"]=GetExportStatFunc
 	routemap[prefix+"searchexports"]=SearchExportsFunc

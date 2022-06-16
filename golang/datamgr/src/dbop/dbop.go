@@ -726,6 +726,16 @@ func NewNotify(info *api.NotifyInfo)error{
 	}
 }
 
+func SetNotifyStat(id int64, isnew int32)error{
+	db:=GetDB()
+	query:=fmt.Sprintf("update notifies set isnew=%d where id=%d",isnew,id)
+	if _, err := db.Exec(query); err != nil {
+		fmt.Println("db exec error:",query)
+		return err
+	}
+	return nil
+}
+
 func DelNotifies(ids []int64)error{
 	if len(ids)<1{
 		return nil
@@ -750,14 +760,14 @@ func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
 	db:=GetDB()
 	ninfo:=new (api.NotifyInfo)
 	ninfo.Id=id
-	query:=fmt.Sprintf("select type,content,descr,crtime,fromuid,touid from notifies where id=%d",id)
+	query:=fmt.Sprintf("select type,content,descr,crtime,fromuid,touid,isnew from notifies where id=%d",id)
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("select from notifies error:",err)
 		return nil,err
 	}
 	if res.Next(){
-		err=res.Scan(&ninfo.Type,&ninfo.Content,&ninfo.Comment,&ninfo.CrTime,&ninfo.FromUid,&ninfo.ToUid)
+		err=res.Scan(&ninfo.Type,&ninfo.Content,&ninfo.Comment,&ninfo.CrTime,&ninfo.FromUid,&ninfo.ToUid,&ninfo.IsNew)
 		if err!=nil{
 			return nil,err
 		}
@@ -768,7 +778,7 @@ func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
 	}
 }
 
-func SearchNotifies(fromuid,touid,ntype int32)([]*api.NotifyInfo,error){
+func SearchNotifies(fromuid,touid,ntype, isnew int32)([]*api.NotifyInfo,error){
 	if fromuid==0 && touid==0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
@@ -783,6 +793,9 @@ func SearchNotifies(fromuid,touid,ntype int32)([]*api.NotifyInfo,error){
 	}
 	if ntype!=0{
 		query+=fmt.Sprintf(" and type=%d ",ntype)
+	}
+	if isnew!=-1{
+		query+=fmt.Sprintf(" and isnew=%d ",isnew)
 	}
 	query+=" order by crtime"
 	res,err:=db.Query(query)
