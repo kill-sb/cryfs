@@ -207,7 +207,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 23. searchnotifies
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"462f8a5f8d185e93e3cdb0faaf3d8cfd","touid":1,"isnew":0}' -k https://apisvr:8080/api/v1/searchnotifies
 	return ok:
-	{"code":0,"message":"OK","data":[{"id":23,"type":3,"fromuid":3,"touid":1,"content":"16","comment":"political order","CrTime":"2022-06-16 12:28:16","IsNew":0},{"id":20,"type":3,"fromuid":4,"touid":1,"content":"15","comment":"political order","CrTime":"2022-06-16 12:54:41","IsNew":0}]}
+	{"code":0,"message":"OK","data":[{"id":23,"type":3,"fromuid":3,"touid":1,"content":"16","comment":"political order","crtime":"2022-06-16 12:28:16","isnew":0},{"id":20,"type":3,"fromuid":4,"touid":1,"content":"15","comment":"political order","crtime":"2022-06-16 12:54:41","isnew":0}]}
 
 
 24. delnotify
@@ -220,7 +220,7 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"3b1328752bf99daa936d7fe85a1bcce9","ids":[18,20]}' -k https://apisvr:8080/api/v1/getnotifyinfo
 	return ok:
-	{"code":0,"message":"OK","data":[{"id":18,"type":3,"fromuid":4,"touid":1,"content":"14","comment":"political order","CrTime":"2022-06-16 12:52:30","IsNew":1},{"id":20,"type":3,"fromuid":4,"touid":1,"content":"15","comment":"political order","CrTime":"2022-06-16 12:54:41","IsNew":0}]}
+	{"code":0,"message":"OK","data":[{"id":18,"type":3,"fromuid":4,"touid":1,"content":"14","comment":"political order","crtime":"2022-06-16 12:52:30","isnew":1},{"id":20,"type":3,"fromuid":4,"touid":1,"content":"15","comment":"political order","crtime":"2022-06-16 12:54:41","isnew":0}]}
 
 26. exportdata
 	login:

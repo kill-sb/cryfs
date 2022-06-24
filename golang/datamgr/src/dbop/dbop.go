@@ -783,7 +783,7 @@ func SearchNotifies(fromuid,touid,ntype, isnew int32)([]*api.NotifyInfo,error){
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
 	db:=GetDB()
-	query:="select id,type,content,descr,crtime,fromuid,touid from notifies "
+	query:="select id,type,content,descr,crtime,fromuid,touid,isnew from notifies "
 	if fromuid!=0 && touid!=0{
 		query+=fmt.Sprintf("where fromuid=%d and touid=%d ",fromuid,touid)
 	}else if fromuid!=0{
@@ -806,7 +806,7 @@ func SearchNotifies(fromuid,touid,ntype, isnew int32)([]*api.NotifyInfo,error){
 	ret:=make([]*api.NotifyInfo,0,50)
 	for res.Next(){
 		node:=new(api.NotifyInfo)
-		err=res.Scan(&node.Id,&node.Type,&node.Content,&node.Comment,&node.CrTime,&node.FromUid,&node.ToUid)
+		err=res.Scan(&node.Id,&node.Type,&node.Content,&node.Comment,&node.CrTime,&node.FromUid,&node.ToUid,&node.IsNew)
 		if err!=nil{
 			return nil,err
 		}

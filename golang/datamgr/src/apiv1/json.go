@@ -336,8 +336,8 @@ type NotifyInfo struct{
 	ToUid int32 `json:"touid"`
 	Content string `json:"content"`
 	Comment string `json:"comment"`
-	CrTime string `json:crtime"`
-	IsNew	int32 `json:isnew"`
+	CrTime string `json:"crtime"`
+	IsNew	int32 `json:"isnew"`
 }
 
 type SendNotifyReq struct{
