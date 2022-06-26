@@ -148,7 +148,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 			fmt.Println("Load share info during reshare error:",err)
 			return err
 		}
-		ssinfo,err:=GetShareInfoFromHead(head,linfo)
+		ssinfo,err:=GetShareInfoFromHead(head,linfo,1)
 		if err!=nil{
 			fmt.Println("Load share info from head error:",err)
 			return err
@@ -328,7 +328,7 @@ func WriteCSDHead(sinfo *core.ShareInfo, sign []byte,fw *os.File)(*core.ShareInf
 	return head,nil
 }
 
-func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo)(*core.ShareInfo,error){
+func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo,needkey int)(*core.ShareInfo,error){
 	uuid:=string(head.Uuid[:])
 //	enckey:=head.EncryptedKey[:]
 	var err error
@@ -337,7 +337,7 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo)(*
 	if linfo==nil{
 		asinfo,err=GetShareInfo_Public_API(uuid)
 	}else{
-		asinfo,err=GetShareInfo_User_API(linfo.Token,uuid)
+		asinfo,err=GetShareInfo_User_API(linfo.Token,uuid,needkey)
 	}
 	if err!=nil{
         fmt.Println("GetShareInfo_API error:",err)

@@ -11,7 +11,7 @@ import(
 const AES_KEY_LEN=128
 
 var definpath , inpath string
-var defoutpath,outpath string
+var defoutpath,outpath , oname string
 var mntimport string
 var defuser, loginuser string
 var config string
@@ -37,7 +37,8 @@ func GetFunction() int {
 //	flag.BoolVar(&bSep,"sep",false,"seperate a file from encrypted dir")
 	flag.BoolVar(&bLogin,"login",false,"seperate a file from encrypted dir")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
-	flag.StringVar(&outpath,"out",definpath,"original data path (may be a file or a directory)")
+	flag.StringVar(&outpath,"out",defoutpath,"output data path")
+	flag.StringVar(&oname,"oname","","output new data org-name(default named with uuid")
 	flag.StringVar(&mntimport,"import","", "import plain data dir into container")
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
 	flag.StringVar(&config,"config","", "use config file to decribe share info")
@@ -131,12 +132,12 @@ func main(){
 		doEncode()
 	case core.DISTRIBUTE:
 		doShare()
+	case core.LIST:
+		doList()
 /*	case core.MOUNT:
 		doMount()
 	case core.TRACE:
 		doTraceAll()
-	case core.LIST:
-		doList()
 	case core.SEPERATE:
 		doSep()*/
 

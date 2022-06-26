@@ -135,7 +135,7 @@ func ListCSDs(csds[]string){
     for _,csd:=range csds{
 		head,err:=core.LoadShareInfoHead(csd)
 		if err==nil{
-			sinfo,err:=GetShareInfoFromHead(head,nil)
+			sinfo,err:=GetShareInfoFromHead(head,nil,0)
             if err==nil{
 				sinfo.FileUri=csd
 		//		fmt.Printf("\t%d\n",i+1)

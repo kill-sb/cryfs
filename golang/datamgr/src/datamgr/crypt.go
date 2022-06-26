@@ -406,11 +406,12 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 		return err
 	}
 	// now we have got a valid csd header, then load info from server
-	sinfo,err:=GetShareInfoFromHead(head,linfo)
+	sinfo,err:=GetShareInfoFromHead(head,linfo,1)
 	if err!=nil{
 		return err
 	}
 	sinfo.FileUri=ipath
+/*	Server will check access control, no need to check here any more
 	inlist:=false
 	for _,user:=range sinfo.Receivers{
 		if linfo.Name==user{
@@ -421,7 +422,7 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 	if !inlist{
 		fmt.Println(linfo.Name,"is not in shared user list")
 		return errors.New("Not shared user")
-	}
+	}*/
 	ofile:=sinfo.OrgName
 //	fmt.Println("Get ofile ",ofile)
 //	fmt.Println("enc keys:",core.BinkeyToString(sinfo.EncryptedKey),"randkey:",core.BinkeyToString(sinfo.RandKey))

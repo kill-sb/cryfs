@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"log"
-//	core "coredata"
+	core "coredata"
 //	"os"
 	"dbop"
 	api "apiv1"
@@ -359,6 +359,9 @@ func CreateRCFunc(w http.ResponseWriter, r *http.Request){
 		}*/
 		rcreq.Data.UserId=luinfo.Id
 		rcreq.Data.IPAddr=GetClientPublicIP(r)
+		if rcreq.Data.EndTime==""{
+			rcreq.Data.EndTime=core.GetCurTime()
+		}
 		if err:=dbop.NewRunContext(rcreq.Data);err!=nil{
 			rcack.Code=2
 			rcack.Msg=err.Error()
