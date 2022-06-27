@@ -439,7 +439,7 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 		defer C.free(unsafe.Pointer(cofile))
 		C.do_decodefile(cipath,cofile,cpasswd,60) // ShareInfoHead offset
 		*/
-		ret=DoDecodeFileInC(ipath,ofile,orgkey,60)
+		ret=DoDecodeFileInC(ipath,ofile,orgkey,core.CSDV2HDSize)
 	}else{
 			// todo: it's a zipped dir
 		ret=DecodeCSDToDir(ipath,ofile,orgkey)

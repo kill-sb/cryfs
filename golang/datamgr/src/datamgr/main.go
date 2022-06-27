@@ -16,9 +16,12 @@ var mntimport string
 var defuser, loginuser string
 var config string
 var keyword string
+var podimg string
 
 var namemap map[string]int32
 var idmap map[int32]string
+
+var uuidmap map[string]*core.EncryptedData
 
 func LoadConfig(){
 	definpath=os.Getenv("DATA_IN_PATH")
@@ -39,6 +42,7 @@ func GetFunction() int {
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",defoutpath,"output data path")
 	flag.StringVar(&oname,"oname","","output new data org-name(default named with uuid")
+	flag.StringVar(&podimg,"img","cmit","container base image")
 	flag.StringVar(&mntimport,"import","", "import plain data dir into container")
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
 	flag.StringVar(&config,"config","", "use config file to decribe share info")
@@ -121,6 +125,8 @@ func main(){
 	LoadConfig()
 	namemap=make(map[string]int32)
 	idmap=make(map[int32]string)
+
+	uuidmap =make(map[string]*core.EncryptedData)
 	fun:=GetFunction()
 	inpath=strings.TrimSuffix(inpath,"/")
 	outpath=strings.TrimSuffix(outpath,"/")

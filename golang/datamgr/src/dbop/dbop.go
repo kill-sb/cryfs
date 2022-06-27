@@ -136,6 +136,9 @@ func GetRCInfo(rcid int64)(*api.RCInfo,error){
 
 func SaveEncMeta(pdata *api.EncDataReq) error{
 	db:=GetDB()
+	if pdata.OrgName==""{
+		pdata.OrgName=pdata.Uuid
+	}
 	query:=fmt.Sprintf("insert into efilemeta (uuid,descr,fromrcid,ownerid,orgname,isdir) values ('%s','%s',%d, %d,'%s',%d)",pdata.Uuid,pdata.Descr,pdata.FromRCId,pdata.OwnerId,pdata.OrgName,pdata.IsDir)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("Insert encrypted data info db error:", err)
@@ -358,6 +361,9 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 	}
 	recvlist=strings.TrimSpace(recvlist)
 	keystr:=sinfo.EncKey
+	if sinfo.OrgName==""{
+		sinfo.OrgName=sinfo.Uuid
+	}
 	query=fmt.Sprintf("insert into sharetags (uuid,sha256,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname,isdir) values ('%s','%s',%d,'%s','%s','%s',%d,'%s','%s',%d,%d,'%s','%s',%d)",sinfo.Uuid,sinfo.Sha256,sinfo.OwnerId,sinfo.Descr,recvlist,sinfo.Expire,sinfo.MaxUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName,sinfo.IsDir)
 	if _, err= db.Exec(query); err != nil {
 		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)

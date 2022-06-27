@@ -126,7 +126,10 @@ type ShareInfoHeader_V2 struct{ // .csd , cmit shared data
 	EncryptedKey	[16] byte // raw key encrypted with temp key(saved on server)
 //	Sha256	[64] byte // file content sha256 sum
 //	Sign	[512] byte // 2048-bit / 8 (8 bits per byte)  / 2 (each byte need 2 ascii-char)
-}	// 640 bytes total, .csd file header
+}	// 60/640 bytes total, .csd file header
+
+const CSDV2HDSize=60
+
 
 
 type ShareInfo struct{

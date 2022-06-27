@@ -38,16 +38,13 @@ import(
 	api  "apiv1"
 )
 
-var BaseImg string="cmit"
-
 type MountOpt struct{
 	dstpt string
 	access string
 }
 
-
 func LocalTempDir(ipath string)string{
-	// return a dir that must be in the same block device with given path
+	// return a dir that must be in the same block device with given path, invoker will add a unique name to the dirname later
 	finfo,err:=os.Stat(ipath)
 	if err!=nil{
 		fmt.Println(ipath, "not exists")
@@ -101,24 +98,10 @@ func doMount(){
 	}
 	defer Logout(linfo)
 
-	/*
-    info,err:=os.Stat(inpath)
-	if err!=nil{
-        fmt.Println("Can't find ",inpath)
-        return
-    }*/
-
-/*
-	if info.IsDir(){
-		MountDir(inpath,linfo) // must be encrypted data, not shared file
-	}else{
-
-		MountFile(inpath,linfo) // may be a encrypted data or a csdfile(may also be a file or a dir)
-	}*/
 	MountObjs(linfo,multisrc,tools)
 }
 
-func PrepareOutput(opath string)(string,string,[]byte,error){
+func PrepareOutputDir(opath string)(string,string,[]byte,error){
 	// check output path valid, create uuid-named dir, mount in cmitfs
 	if opath==""{
 		return "","",nil,nil
@@ -136,7 +119,6 @@ func PrepareOutput(opath string)(string,string,[]byte,error){
 	os.MkdirAll(dstdir,0755)
 	MountDirInC(srcdir,dstdir,key,"rw")
 	return uuidsrc,dstdir,key,nil
-
 }
 
 func ValidateImports(toolpath string)([]*api.ImportFile,error){
@@ -187,24 +169,109 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 				return rdonly,err
 			}
 			sinfo,err:=GetShareInfoFromHead(head,linfo,0)
-			// check readonly
-			if sinfo.LeftUse<1{
-				return rdonly,errors.New(idata+" open times exhaused")
-			}
-			if sinfo.Perm & 1==0{
+			if sinfo.Perm & 1==0 || sinfo.Perm!=-1{
 				rdonly=true
 			}
+			// check readonly
+			if sinfo.LeftUse==0{
+				return rdonly,errors.New(idata+"Invalid user or open times exhaused")
+			}
+			strexp:=strings.Replace(sinfo.Expire," ","T",1)+"+08:00"
+			tmexp,err:=time.Parse(time.RFC3339,strexp)
+			if err!=nil{
+				fmt.Println("Parse expire time error:",err)
+				return rdonly,err
+			}
+			tmnow:=time.Now()
+			if tmnow.After(tmexp){
+				fmt.Println("The shared data has expired at :",sinfo.Expire)
+				return rdonly,errors.New("Data expired")
+			}
+
 		case core.ENCDATA:
-			/*dinfo,err:=GetEncDataInfo(st.Name())
+			dinfo,err:=GetEncDataInfo(st.Name())
 			if dinfo.OwnerId!=linfo.Id{
 				return rdonly, errors.New(idata+" does not belong to current user")
-			}*/
-			continue
+			}
 		default:
 			return rdonly, errors.New("Invalid inputdata:"+idata)
 		}
 	}
 	return rdonly,nil
+}
+
+func MountCSDFile(filepath string)(string,string,error){
+	head,err:=core.LoadShareInfoHead(filepath)
+	if err!=nil{
+		fmt.Println("Load share info head in MountFile error:",err)
+		return err
+	}
+	sinfo,err:=GetShareInfoFromHead(head,linfo,1)
+	if err!=nil{
+		fmt.Println("Load share info from head error:",err)
+		return err
+	}
+	sinfo.FileUri=filepath
+	return PrepareCSDFileDir(filepath,sinfo)
+}
+
+func MountEncDir(dirname string)(string,string,error){
+	tag,err:=core.LoadTagFromDisk(dirname)
+	if err!=nil{
+		fmt.Println("LoadTagFromDisk error in MountDir:",err)
+		return "","",err
+	}
+/*	
+	process:
+	1. get enc passwd
+	2. mkdir tmpdir 
+	3. mount encdir -> tmpdir with passwd
+*/
+	passwd:=make([]byte,16)
+	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,passwd,16)
+	dstuuid,_:=core.GetUuid()
+	tmpdir:=LocalTempDir(dirname)+"."+dstuuid
+	err=os.MkdirAll(tmpdir,0755)
+	err=MountDirInC(dirname,tmpdir,passwd,"ro")
+	if err!=nil{
+		fmt.Println("mount dir in c error:",err)
+		return "","",err
+	}
+	return "",tmpdir,nil // trick here: srcdir should be "" , avoid  being deleted later
+}
+
+func MountEncFile(filepath string)(string,string,error){
+	tag,err:=core.LoadTagFromDisk(filepath)
+	if err!=nil{
+		fmt.Println("LoadTagFromDisk error in MountEncFile:",err)
+		return err
+	}
+	dinfo,err:=GetDataInfo(tag)
+	if err!=nil{
+		fmt.Println("GetDataInfo in MountEncFile error:",err)
+		return err
+	}
+/*	
+	process:
+	get enc passwd
+	mkdir tmpdir ->srcdir,dstdir
+	mount srcdir -> dstdir with passwd
+*/
+	passwd:=make([]byte,16)
+	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,passwd,16)
+
+	srcdir,dstdir,err:=PrepareEncFileDir(filepath,dinfo.OrgName)
+
+	if err!=nil{
+		fmt.Println("Prepare dir error:",err)
+		return err
+	}
+	err=MountDirInC(srcdir,dstdir,passwd,"ro")
+	if err!=nil{
+		fmt.Println("mount dir in c error:",err)
+		return srcdir,dstdir,err
+	}
+	return srcdir,dstdir,nil
 }
 
 func MountEncData(linfo *core.LoginInfo,inputs []string)([]string,[]string,error){
@@ -256,32 +323,30 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 		return
 	}
 
+	// check if there is any readonly(and time-limit?) csd files
 	rdonly,err:=ValidateInputs(linfo,inputs)
 	if err!=nil{
 		fmt.Println("Input source error:",err)
 		return
 	}
 	if rdonly && outpath!=""{
-		fmt.Println("There is readonly data, output path should not be set")
+		fmt.Println("There is readonly or open-time-limited data , exporting is forbidden")
 		return
 	}
 
-	outsrc,outdst,outkey,err:=PrepareOutput(outpath)
-	if err!=nil{
-		fmt.Println("Output dir validation error:",err)
-		return
-	}
-	if outdst!=""{
-		defer os.Remove(outdst)// outsrc may be remained or removed according to if output data is a single file
-	}
-	if err!=nil{
-		if outsrc!=""{
-			os.RemoveAll(outsrc)
+	// establish output dir, and mount to a temp dir with random passwd
+	var outsrc,outdst string
+	var outkey []byte
+	if outpath!=""{
+		outsrc,outdst,outkey,err=PrepareOutputDir(outpath)
+		if err!=nil{
+			fmt.Println("Output dir validation error:",err)
+			return
 		}
-		fmt.Println("Prepare outdir error:",err)
-		return err
+		if outdst!=""{
+			defer os.Remove(outdst)// outsrc may be remained or removed according to if output data is a single file
+		}
 	}
-
 
 	fmt.Println("Processing input data...")
 	insrcs,indsts,err:=MountEncData(linfo,inputs)
@@ -303,28 +368,39 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 		return
 	}
 
+	// fill input,output and tool dir mount info to MountOpt map
 	opts:=PrepareMntOpts(indsts,tool,outdst)
-	rc:=CreateOrgRC(linfo,indsts,tlinfo,BaseImg)
+
+	// need not send to server now
+	rc:=CreateOrgRC(linfo,indsts,tlinfo,podimg)// TODO 
 	fmt.Println("Creating container...")
-	err=CreatePod("cmit",opts)
+	err=CreatePod(podimg,opts)
 	if err!=nil{
 		fmt.Println("Create container error:",err)
 		return
-	}
-	outuuid,err:=ProcOutputData(outsrc) // will umount and check single file or multi file(dir), return new data uuid 
-
-	if err==nil && outuuid!=""{
-		fmt.Println("Processing output data...")
-		err=RecordDataInfo(linfo,outuuid,outkey,oname,rc) // invoke createrc and newdata
-		if err!=nil{
-			fmt.Println("UpdateMetaInfo error:",err)
-//      return err
-		}
 	}
 	err=CleanInDirs(indsts)
 	if err!=nil{
 		fmt.Println("Clear temp input dirs error:",err)
 	}
+
+	if outpath!="" && outsrc!=""{
+		outuuid,err:=ProcOutputData(outsrc) // will umount and check single file or multi file(dir), return new data uuid (outsrc may be renamed or removed, according to if output data is a dir or empty)
+		if err==nil && outuuid!=""{
+			fmt.Println("Processing output data...")
+			err=RegisterRC(linfo,rc,outuuid)
+			if err==nil{
+				err=RecordDataInfo(linfo,outuuid,outkey,oname,rc) // invoke createrc and newdata
+				if err!=nil{
+					fmt.Println("UpdateMetaInfo error:",err)
+				}
+			}else{
+					fmt.Println("Register rc error:",err)
+			}
+		}
+	}
+
+	// tools dir need not be cleaned now, but when it is implemented by a COW filesystem, clean work need to be done here
 }
 
 func MountDirInC(src,dst string,passwd []byte,mode string)error{
@@ -401,29 +477,28 @@ func CreatePod(imgname string,dirmap map[string]MountOpt) error{
 	return nil
 }
 
-func PrepareInDir(sinfo *core.ShareInfo)(string,string,error){
-	fmt.Println("Preparing container environment...")
+func PrepareCSDFileDir(filepath string, sinfo *core.ShareInfo)(string,string,error){
+//	fmt.Println("Preparing container environment...")
     uuid,_:=core.GetUuid()
-    tmpdir:=LocalTempDir(inpath)+"."+uuid
-    //tmpdir:=os.TempDir()+"/"+uuid
+    tmpdir:=LocalTempDir(filepath)+"."+uuid
 	err:=os.MkdirAll(tmpdir,0755)
 	if err!=nil{
-		fmt.Println("mkdir error in PrepareDir:",err)
+		fmt.Println("mkdir error in PrepareCSDFileDir:",err)
 		return tmpdir,"",err
 	}
 	if sinfo.IsDir!=0{
-	    st,_:=os.Stat(sinfo.FileUri) // we have read fileheader from it before, so Stat should return no error
-		size:=st.Size()-60  // the format of fileheader has been validated before, so the result should not be negtive
-		zfile,_:=os.Open(sinfo.FileUri)
+	    st,_:=os.Stat(filepath) // we have read fileheader from it before, so Stat should return no error
+		size:=st.Size()-core.CSDV2HDSize  // the format of fileheader has been validated before, so the result should not be negtive
+		zfile,_:=os.Open(filepath)
 		csdrd:=NewCSDReader(zfile)
 		err:=core.UnzipFromFile(csdrd,size,tmpdir)
 		if err!=nil{
-			fmt.Println("Unzip from",sinfo.FileUri,"to",tmpdir,"error:",err)
+			fmt.Println("Unzip from",filepath,"to",tmpdir,"error:",err)
 			return tmpdir,"",err
 		}
 		zfile.Close()
 	}else{
-		err=exec.Command("dd","if="+sinfo.FileUri,"of="+tmpdir+"/"+sinfo.OrgName,"bs=1","skip=60").Run()
+		err=exec.Command("dd","if="+filepath,"of="+tmpdir+"/"+sinfo.OrgName,"bs=4M",fmt.Sprintf("skip=%d",core.CSDV2HDSize),"iflag=skip_bytes").Run()
 		if err!=nil{
 			fmt.Println("exec error:",err)
 		}
@@ -431,8 +506,7 @@ func PrepareInDir(sinfo *core.ShareInfo)(string,string,error){
 	orgkey:=make([]byte,16)
 	DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
 	uuid,_=core.GetUuid()
-	plaindir:=LocalTempDir(inpath)+"."+uuid
-	//plaindir:=os.TempDir()+"/"+uuid
+	plaindir:=LocalTempDir(filepath)+"."+uuid
 	err=os.MkdirAll(plaindir,0755)
 	if err!=nil{
 		fmt.Println("Mkdir ",plaindir,"error:",err)
@@ -446,6 +520,7 @@ func PrepareInDir(sinfo *core.ShareInfo)(string,string,error){
 	return tmpdir,plaindir,nil
 }
 
+/*
 func PrepareOutDir(odir string,key []byte)(string,string,error){
 	uuidsrc,_:=core.GetUuid()
 	uuiddst,_:=core.GetUuid()
@@ -456,14 +531,27 @@ func PrepareOutDir(odir string,key []byte)(string,string,error){
 	os.MkdirAll(dstdir,0755)
 	MountDirInC(srcdir,dstdir,key,"rw")
 	return uuidsrc,dstdir,nil
-}
+}*/
 
 func SingleFileInDir(dirname string)(string, bool){
 	cont,err:=ioutil.ReadDir(dirname)
 	if err==nil && len(cont)==1{
-		return strings.TrimSuffix(dirname,"/")+"/"+cont[0].Name(),true
+		sname=cont[0].Name()
+		if oname==""{
+			oname=sname
+		}
+		if !cont[0].IsDir(){
+			return strings.TrimSuffix(dirname,"/")+"/"+sname,true
+		}
 	}
 	return "",false
+}
+
+func RecordDataInfo(linfo *core.LoginInfo,outuuid string ,outkey []byte, oname string ,rc *api.RCInfo)error{
+	if oname==""{
+		oname=outuuid
+	}
+	return nil
 }
 
 func RecordNewDataInfo(opath,datauuid string ,passwd []byte,linfo *core.LoginInfo,sinfo *core.ShareInfo)error{
@@ -631,19 +719,17 @@ func MountFile(ipath string, linfo *core.LoginInfo)error {
 	return nil
 }
 
-func PrepareSingleFileDir(ipath string,fname string)(string,string,error){
+func PrepareEncFileDir(ipath string,fname string)(string,string,error){
 	srcuuid,_:=core.GetUuid()
 	dstuuid,_:=core.GetUuid()
 	tmpdir:=LocalTempDir(ipath)
 	srcdir:=tmpdir+"."+srcuuid
-	//srcdir:=os.TempDir()+"/"+srcuuid
 	dstdir:=tmpdir+"."+dstuuid
-//	dstdir:=os.TempDir()+"/"+dstuuid
 	os.MkdirAll(srcdir,0755)
 	os.MkdirAll(dstdir,0755)
 	return srcdir,dstdir,os.Link(ipath,srcdir+"/"+fname)
 }
-
+/*
 func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 	tag,err:=core.LoadTagFromDisk(ipath)
 	if err!=nil{
@@ -660,7 +746,7 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 		fmt.Println("The data does not belong to",linfo.Name)
 		return errors.New("Invalid user")
 	}
-
+*/
 /*	
 	process:
 	0. get enc passwd
@@ -668,8 +754,8 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 	2. create pod with tmpdir->/mnt
 	3. waiting for pod exit and umount tmpdir,rm tmpdir
 */
-	passwd:=make([]byte,16)
-	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,passwd,16)
+//	passwd:=make([]byte,16)
+//	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,passwd,16)
 		/* mount a encrypted local datus
 		0. not a dir, so mkdir tmpdir and hard link data after ShareInfoHeader into it
 		1. checkperm
@@ -678,7 +764,7 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 			2. startcontainer
 			3. delete tmpdir
 		*/
-	srcdir,dstdir,err:=PrepareSingleFileDir(ipath,dinfo.OrgName)
+/*	srcdir,dstdir,err:=PrepareSingleFileDir(ipath,dinfo.OrgName)
 	if srcdir!=""{
 		defer os.RemoveAll(srcdir)
 	}
@@ -702,15 +788,8 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 		fmt.Println("Create pod error:",err)
 		return err
 	}
-	/*
-	err=UpdateMetaInfo(ipath,tag,dinfo,linfo)
-	if err!=nil{
-		fmt.Println("UpdateMetaInfo error:",err)
-//		return err
-	}
-	*/
 	return err
-}
+}*/
 
 
 // TODO  the function should be removed, since modify an encrypted file will create a new encrypted file, instead of update the original one

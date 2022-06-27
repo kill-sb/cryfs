@@ -93,7 +93,7 @@ func NewCSDReader(ifile* os.File)*CSDReader{
 }
 
 func (rdr *CSDReader)ReadAt(p[]byte, off int64)(int,error){
-	return rdr.orgfile.ReadAt(p, off+60)
+	return rdr.orgfile.ReadAt(p, off+core.CSDV2HDSize)
 }
 
 func DecodeCSDToDir(ifile,opath string, passwd []byte)error{
@@ -102,7 +102,7 @@ func DecodeCSDToDir(ifile,opath string, passwd []byte)error{
 	2. walk dstdir and decode every file
 */
 	st,_:=os.Stat(ifile) // we have read fileheader from it before, so Stat should return no error
-	size:=st.Size()-60	// the format of fileheader has been validated before, so the result should not be negtive
+	size:=st.Size()-core.CSDV2HDSize	// the format of fileheader has been validated before, so the result should not be negtive
 	zfile,_:=os.Open(ifile)
 	csdrd:=NewCSDReader(zfile)
 	err:=core.UnzipFromFile(csdrd,size,opath)

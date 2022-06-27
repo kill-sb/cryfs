@@ -185,11 +185,14 @@ func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
 }
 
 func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
+	if ainfo,ok:=uuidmap[uuid];ok{
+		return ainfo,nil
+	}
 	ainfo,err:=GetDataInfo_API(uuid)
 	if err!=nil{
 		return nil,err
 	}
-
+	uuidmap[uuid]=ainfo
 	return FillEncDataInfo(ainfo),nil
 }
 
