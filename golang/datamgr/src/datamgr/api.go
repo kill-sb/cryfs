@@ -98,7 +98,7 @@ func GetShareInfo_Public_API(uuid string)(*api.ShareInfoData,error){
     return ack.Data,nil
 }
 
-func GetShareInfo_User_API(token string, uuid string,needkey int)(*api.ShareInfoData,error){
+func GetShareInfo_User_API(token string, uuid string,needkey byte)(*api.ShareInfoData,error){
     req:=&api.ShareInfoReq{Token:token,Uuid:uuid,NeedKey:needkey}
     ack:=api.NewShareInfoAck()
     err:=HttpAPIPost(req,ack,"getshareinfo")

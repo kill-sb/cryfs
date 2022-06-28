@@ -328,7 +328,7 @@ func WriteCSDHead(sinfo *core.ShareInfo, sign []byte,fw *os.File)(*core.ShareInf
 	return head,nil
 }
 
-func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo,needkey int)(*core.ShareInfo,error){
+func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo,needkey byte)(*core.ShareInfo,error){
 	uuid:=string(head.Uuid[:])
 //	enckey:=head.EncryptedKey[:]
 	var err error

@@ -35,7 +35,7 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
     ofile:=opath+"/"+pdata.Uuid
 	finfo,_:=os.Stat(ipath)
 	os.MkdirAll(ofile,finfo.Mode())
-    RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
+    RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,linfo.Token)
 
 	filepath.Walk(ipath, func (pathname string,info os.FileInfo, err error) error{
 		if ipath==pathname{

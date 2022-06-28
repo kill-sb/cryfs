@@ -185,15 +185,16 @@ func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
 }
 
 func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
-	if ainfo,ok:=uuidmap[uuid];ok{
-		return ainfo,nil
+	if dinfo,ok:=uuidmap[uuid];ok{
+		return dinfo,nil
 	}
 	ainfo,err:=GetDataInfo_API(uuid)
 	if err!=nil{
 		return nil,err
 	}
-	uuidmap[uuid]=ainfo
-	return FillEncDataInfo(ainfo),nil
+	dinfo:=FillEncDataInfo(ainfo)
+	uuidmap[uuid]=dinfo
+	return dinfo,nil
 }
 
 func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error){

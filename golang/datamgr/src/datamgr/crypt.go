@@ -281,7 +281,7 @@ func DoDecodeInC(src, passwd, dst []byte,length int){
 	C.decode(csrc,cpasswd,cdst,C.int(length))
 }
 
-func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,ipath string, opath string,token string)error{
+func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,token string)error{
 	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
 	// RecordLocal && Record Remote
 	savedkey:=make([]byte,128/8)
@@ -340,7 +340,7 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	*/
 	DoEncodeFileInC(ipath,ofile,passwd)
 //	pdata.HashMd5,_=GetFileMd5(ofile)
-	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,ipath,opath,linfo.Token)
+	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,linfo.Token)
 	return pdata.Uuid,nil
 }
 
