@@ -43,6 +43,39 @@ type MountOpt struct{
 	access string
 }
 
+type InputDataInfo struct{
+	datatype int
+	uuid string
+	srcdir string
+	dstdir string
+	orgname string
+}
+
+
+func PrepareMntOpts(inputs []*InputDataInfo, tool string, output string) map[string]*MountOpt{
+	podmntroot:="/mnt"
+	retmap:=make(map[string]*MountOpt)
+	for i,idata:=range inputs{
+		opt=new(MountOpt)
+		opt.dstpt=podmntroot+fmt.Sprintf("/input/%d-%s",i+1,idata.orgname)
+		opt.access="ro"
+		retmap[idata.dstdir]=opt
+	}
+	if tool!=""{
+		topt=new(MountOpt)
+		topt.dstpt=podmntroot+"/tool"
+		topt.access="ro"
+		retmap[tool]=topt
+	}
+	if output!=""{
+		oopt=new(MountOpt)
+		oopt.dstpt=podmntroot+"/output"
+		oopt.access="rw"
+		retmap[output]=oopt
+	}
+	return retmap
+}
+
 func LocalTempDir(ipath string)string{
 	// return a dir that must be in the same block device with given path, invoker will add a unique name to the dirname later
 	finfo,err:=os.Stat(ipath)
@@ -200,7 +233,7 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 	return rdonly,nil
 }
 
-func MountCSDFile(filepath string)(string,string,error){
+func MountCSDFile(filepath string)(*InputDataInfo,error){
 	head,err:=core.LoadShareInfoHead(filepath)
 	if err!=nil{
 		fmt.Println("Load share info head in MountFile error:",err)
@@ -211,16 +244,34 @@ func MountCSDFile(filepath string)(string,string,error){
 		fmt.Println("Load share info from head error:",err)
 		return err
 	}
+	ret=new(InputDataInfo)
+	ret.datatype=core.CSDFILE
+	ret.uuid=sinfo.Uuid
+	ret.orgname=sinfo.OrgName
+
 	sinfo.FileUri=filepath
-	return PrepareCSDFileDir(filepath,sinfo)
+	ret.srcdir,ret.dstdir,err=PrepareCSDFileDir(filepath,sinfo)
+	return ret,err
 }
 
-func MountEncDir(dirname string)(string,string,error){
+func MountEncDir(dirname string)(*InputDataInfo,error){
 	tag,err:=core.LoadTagFromDisk(dirname)
 	if err!=nil{
 		fmt.Println("LoadTagFromDisk error in MountDir:",err)
 		return "","",err
 	}
+
+	dinfo,err:=GetDataInfo(tag)
+	if err!=nil{
+		fmt.Println("GetDataInfo in MountEncFile error:",err)
+		return err
+	}
+
+	ret=new(InputDataInfo)
+	ret.datatype=core.ENCDATA
+	ret.uuid=dinfo.Uuid
+	ret.orgname=dinfo.OrgName
+
 /*	
 	process:
 	1. get enc passwd
@@ -235,12 +286,13 @@ func MountEncDir(dirname string)(string,string,error){
 	err=MountDirInC(dirname,tmpdir,passwd,"ro")
 	if err!=nil{
 		fmt.Println("mount dir in c error:",err)
-		return "","",err
+		return ret,err
 	}
-	return "",tmpdir,nil // trick here: srcdir should be "" , avoid  being deleted later
+	ret.dstdir=tmpdir
+	return ret,nil // trick here: srcdir should be "" , avoid  being deleted later
 }
 
-func MountEncFile(filepath string)(string,string,error){
+func MountEncFile(filepath string)(*InputDataInfo,error){
 	tag,err:=core.LoadTagFromDisk(filepath)
 	if err!=nil{
 		fmt.Println("LoadTagFromDisk error in MountEncFile:",err)
@@ -251,6 +303,10 @@ func MountEncFile(filepath string)(string,string,error){
 		fmt.Println("GetDataInfo in MountEncFile error:",err)
 		return err
 	}
+	ret=new(InputDataInfo)
+	ret.datatype=core.ENCDATA
+	ret.uuid=dinfo.Uuid
+	ret.orgname=dinfo.OrgName
 /*	
 	process:
 	get enc passwd
@@ -260,7 +316,7 @@ func MountEncFile(filepath string)(string,string,error){
 	passwd:=make([]byte,16)
 	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,passwd,16)
 
-	srcdir,dstdir,err:=PrepareEncFileDir(filepath,dinfo.OrgName)
+	ret.srcdir,ret.dstdir,err=PrepareEncFileDir(filepath,dinfo.OrgName)
 
 	if err!=nil{
 		fmt.Println("Prepare dir error:",err)
@@ -271,28 +327,27 @@ func MountEncFile(filepath string)(string,string,error){
 		fmt.Println("mount dir in c error:",err)
 		return srcdir,dstdir,err
 	}
-	return srcdir,dstdir,nil
+	return ret,nil
 }
 
-func MountEncData(linfo *core.LoginInfo,inputs []string)([]string,[]string,error){
+func MountEncData(linfo *core.LoginInfo,inputs []string)([]string,[]string,[]string,error){
 	var err error
-	srcs:=make([]string,0,20)
-	dsts:=make([]string,0,20)
+	inputdata:=make([]*InputDataInfo,0,20)
 	for _,idata:=range inputs{
 		dtype:=GetDataType(idata)
-		var src,dst string
+		var idata *InputDataInfo
 		switch dtype{
 		case core.CSDFILE:
-			src,dst,err=MountCSDFile(idata)
+			idata,err=MountCSDFile(idata)
 			if err!=nil{
 				return nil,nil,err
 			}
 		case core.ENCDATA:
 			st,_:=os.Stat(idata)
 			if st.IsDir(){
-				src,dst,err=MountEncDir(idata)
+				idata,err=MountEncDir(idata)
 			}else{
-				src,dst,err=MountEncFile(idata)
+				idata,err=MountEncFile(idata)
 			}
 			if err!=nil{
 				return nil,nil,err
@@ -300,10 +355,33 @@ func MountEncData(linfo *core.LoginInfo,inputs []string)([]string,[]string,error
 		default:
 			return rdonly, errors.New("Invalid inputdata:"+idata)
 		}
-		srcs=append(srcs,src)
-		dsts=append(dsts,dst)
+		inputdata=append(inputdata,idata)
 	}
-	return srcs,dsts,nil
+	return inputdata,nil
+}
+
+func CreateOrgRC(linfo *core.LoginInfo,inputdata []*InputDataInfo, tlinfo []* api.ImportFile,podimg string)*api.RCInfo{
+	ninput:=len(inputdata)
+	rcinfo:=new api.RCInfo
+	rcinfo.UserId=linfo.Id
+	rcinfo.InputData=make([]*api.SourceObj,ninput,ninput)
+	for i:=0;i<ninput;i++{
+		iinfo=new (api.SourceObj)
+		iinfo.DataType=inputdata[i].datatype
+		iinfo.DataUuid=inputdata[i].uuid
+		rcinfo.InputData[i]=iinfo
+	}
+	rcinfo.ImportPlain=tlinfo
+	rcinfo.OS="linux"
+	rcinfo.BaseImg=podimg
+	rcinfo.StartTime=core.GetCurTime()
+	return rcinfo
+}
+
+func RegisterRC(linfo *core.LoginInfo, rc *api.RCInfo , outuuid string)error{
+	rc.OutputUuid=uuid
+	rc.EndTime=core.GetCurTime()
+	return CreateRunContext_API(linfo.Token,rc)
 }
 
 func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
@@ -349,16 +427,16 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 	}
 
 	fmt.Println("Processing input data...")
-	insrcs,indsts,err:=MountEncData(linfo,inputs)
+	inputinfo,err:=MountEncData(linfo,inputs)
 
     defer func(){
-		for i,indst:=range indsts{
-			if indst!=""{
-				exec.Command("umount",indst).Run()
-				os.RemoveAll(indst)
+		for _,idata:=range inputinfo{
+			if idata.dstdir!=""{
+				exec.Command("umount",idata.dstdir).Run()
+				os.RemoveAll(idata.dstdir)
 			}
-			if insrcs[i]!=""{
-				os.RemoveAll(insrc[i])
+			if idata.srcdir!=""{
+				os.RemoveAll(idata.srcdir)
 			}
 		}
     }()
@@ -369,20 +447,20 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 	}
 
 	// fill input,output and tool dir mount info to MountOpt map
-	opts:=PrepareMntOpts(indsts,tool,outdst)
+	opts:=PrepareMntOpts(inputinfo,tool,outdst)
 
 	// need not send to server now
-	rc:=CreateOrgRC(linfo,indsts,tlinfo,podimg)// TODO 
+	rc:=CreateOrgRC(linfo,inputdata,tlinfo,podimg)
 	fmt.Println("Creating container...")
-	err=CreatePod(podimg,opts)
+	err=RunPod(podimg,opts)
 	if err!=nil{
 		fmt.Println("Create container error:",err)
 		return
 	}
-	err=CleanInDirs(indsts)
+	/*err=CleanInDirs(indsts)
 	if err!=nil{
 		fmt.Println("Clear temp input dirs error:",err)
-	}
+	}*/
 
 	if outpath!="" && outsrc!=""{
 		outuuid,err:=ProcOutputData(outsrc) // will umount and check single file or multi file(dir), return new data uuid (outsrc may be renamed or removed, according to if output data is a dir or empty)
@@ -401,6 +479,36 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 	}
 
 	// tools dir need not be cleaned now, but when it is implemented by a COW filesystem, clean work need to be done here
+}
+
+func ProcOutputData(outsrc string)(string,error){
+	if dataname,single:=SingleFileInDir(opath+"/"+datauuid);single{
+		newuuid,_:=core.GetUuid()
+		finfo,_=os.Stat(dataname)
+		pdata.Uuid=newuuid
+		pdata.OrgName=finfo.Name()
+		pdata.Descr="cmit encrypted data"
+		os.Link(dataname,opath+"/"+newuuid)
+		os.Remove(dataname)
+		if err:=os.Remove(opath+"/"+datauuid);err!=nil{
+			fmt.Println("Error in RecordNewDataInfo(dir not empty):",err)
+			return err
+		}
+		pdata.IsDir=0
+	}
+}
+
+func RunPod(podimg string,opts map[string]*MountOpt)error{
+	ctcmd:="docker run -it --rm --privileged=true "
+	for k,v:=range dirmap{
+		ctcmd=ctcmd+" -v "+k+":"+v.dstpt+":"+v.access
+	}
+	ctcmd=ctcmd+" "+podimg+" /bin/bash"
+
+	ccmd:=C.CString(ctcmd)
+	defer C.free(unsafe.Pointer(ccmd))
+	C.system(ccmd)
+	return nil
 }
 
 func MountDirInC(src,dst string,passwd []byte,mode string)error{
@@ -792,18 +900,6 @@ func MountSingleEncFile(ipath string,linfo *core.LoginInfo)error{
 }*/
 
 
-// TODO  the function should be removed, since modify an encrypted file will create a new encrypted file, instead of update the original one
-/*func UpdateMetaInfo(ipath string,tag *core.TagInFile,dinfo *core.EncryptedData, linfo *core.LoginInfo)error{
-	dinfo.HashMd5,_=GetFileMd5(ipath)
-    for i,j:=range []byte(dinfo.HashMd5){
-        tag.Md5Sum[i]=j
-    }
-    tag.Time=time.Now().Unix()
-	tag.SaveTagToDisk(strings.TrimSuffix(ipath,".tag")+".tag")
-	return UpdateDataInfo_API(dinfo,linfo)
-	//return dbop.UpdateMeta(dinfo)
-}*/
-
 func CreateRunContext(token string,baseimg string,srcobj []*api.SourceObj, tools []*api.ImportFile)(*api.RCInfo,error){
 //	rc:=new (core.RunContext)
 	rc:=new (api.RCInfo)
@@ -823,9 +919,6 @@ func UpdateRunContext(token string, rc *api.RCInfo, datauuid string) error{
 // add datauuid, EndTime
 	rc.EndTime=core.GetCurTime()
 	rc.OutputUuid=datauuid
-	if err:=UpdateRunContext_API(token,rc);err!=nil{
-		return err
-	}
-	return nil
+	return UpdateRunContext_API(token,rc)
 }
 
