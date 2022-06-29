@@ -1,13 +1,2 @@
-1. combine cmro,cmrw,cmit to a unique docker image
-2. add csd sha256 check and digital sign
-3. multi source mount
-4. trace after multi source mount
-5. outside tool dir import(record in db) 
-6. encrypt keys saved in db
-
-logical problem:
-shared data with limit time should be readonly
-
-----------------------
-demo2.0
-fix unecessary reduce of leftuse in GetShareDataInfo(client) 
+trace(import, tool details)
+docker import - cmit <cmit_img.tar
