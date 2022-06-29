@@ -909,14 +909,14 @@ func NewExport(data *api.DataObj,userid int32, comment *string)(*api.ExportProcI
 	if err!=nil || epinfo.ProcQueue==nil{
 		return nil,err
 	}
-
+	epinfo.Comment=*comment
 	epinfo.CrTime=core.GetCurTime()
 	if len(epinfo.ProcQueue)==0{ // from raw data or from data ownered by self
 		epinfo.Status=api.AGREE
 	}
 	epinfo.Status=api.WAITING
 	db:=GetDB()
-	query:=fmt.Sprintf("insert into exports (requid,status,datatype,datauuid,crtime) values (%d,%d,%d,'%s','%s')",userid,epinfo.Status,epinfo.DstData.Type,epinfo.DstData.Uuid,epinfo.CrTime)
+	query:=fmt.Sprintf("insert into exports (requid,status,datatype,datauuid,crtime,comment) values (%d,%d,%d,'%s','%s','%s')",userid,epinfo.Status,epinfo.DstData.Type,epinfo.DstData.Uuid,epinfo.CrTime,epinfo.Comment)
     if result, err := db.Exec(query); err == nil{
 		epinfo.ExpId, _ = result.LastInsertId()
 		if err=RecordProcQueue(epinfo.ExpId,epinfo.ProcQueue,comment);err!=nil{
@@ -935,14 +935,14 @@ func GetExportInfo(expid int64)(*api.ExportProcInfo,error){
 	epinfo.DstData=new (api.ProcDataObj)
 	epinfo.ExpId=expid
 	db:=GetDB()
-	query:=fmt.Sprintf("select requid,status,datatype,datauuid,crtime from exports where expid=%d",expid)
+	query:=fmt.Sprintf("select requid,status,datatype,datauuid,crtime,comment from exports where expid=%d",expid)
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("select from exports error:",err)
 		return nil,err
 	}
 	if res.Next(){
-		err=res.Scan(&epinfo.DstData.UserId,&epinfo.Status,&epinfo.DstData.Type,&epinfo.DstData.Uuid,&epinfo.CrTime)
+		err=res.Scan(&epinfo.DstData.UserId,&epinfo.Status,&epinfo.DstData.Type,&epinfo.DstData.Uuid,&epinfo.CrTime,&epinfo.Comment)
 		if err!=nil{
 			return nil,err
 		}
@@ -987,12 +987,12 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
 	db:=GetDB()
 	query:=""
 	if req.ToUid>0{
-		query=fmt.Sprintf("select exports.expid, exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime from exports,exprocque where (exprocque.procuid=%d and exprocque.expid=exports.expid) ", req.ToUid)
+		query=fmt.Sprintf("select exports.expid, exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime,exports.comment from exports,exprocque where (exprocque.procuid=%d and exprocque.expid=exports.expid) ", req.ToUid)
 		if req.FromUid>0{
 			query+=fmt.Sprintf("and exports.requid=%d ",req.FromUid)
 		}
 	}else{ //no ToUid, FromUid must be >0
-		query=fmt.Sprintf("select exports.expid,exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime from exports where exports.requid=%d ",req.FromUid)
+		query=fmt.Sprintf("select exports.expid,exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime,exports.comment from exports where exports.requid=%d ",req.FromUid)
 	}
 	if req.Status!=0{
 		query+=fmt.Sprintf(" and exports.Status=%d ",req.Status)
@@ -1013,7 +1013,7 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
 		info:=new(api.ExportProcInfo)
 // exports.expid,exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime 
 		info.DstData=new (api.ProcDataObj)
-		err=res.Scan(&info.ExpId,&info.DstData.UserId,&info.Status,&info.DstData.Type,&info.DstData.Uuid,&info.CrTime)
+		err=res.Scan(&info.ExpId,&info.DstData.UserId,&info.Status,&info.DstData.Type,&info.DstData.Uuid,&info.CrTime,&info.Comment)
 		if err!=nil{
 			return nil,err
 		}
