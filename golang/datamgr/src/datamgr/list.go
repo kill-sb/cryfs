@@ -105,14 +105,11 @@ func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
 		result+=fmt.Sprintf("\tData Owner :%s(%d)\n",user,data.OwnerId)
 	}
 
-    // should be replaced later because of multi-source processing
-/*	if data.FromType==core.RAWDATA{
-		result+=fmt.Sprintf("\tFrom Type: Plain Local File\n")
-		result+=fmt.Sprintf("\tOrginal filename :%s\n",data.OrgName)
+	if data.FromRCId==0{
+		result+="\tFrom: local plain data\n"
 	}else{
-		result+=fmt.Sprintf("\tFrom Type: Shared Data\n")
-		result+=fmt.Sprintf("\tFrom Shared Data Infomation :\n\t\tUuid :%s\n\t\tFileName:%s\n",data.FromObj,strings.TrimSuffix(data.OrgName,".outdata"))
-	}*/
+		result+="\tFrom: data reprocessed in container\n"
+	}
 	result+=fmt.Sprintf("\tDescription :%s\n",data.Descr)
 	if data.IsDir==1{
 		result+=fmt.Sprintf("\tIs Directory :yes\n")
@@ -298,6 +295,13 @@ func doTraceAll(){
 func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	result:=fmt.Sprintf("\t%d\n\tShared tag Uuid :%s\n",index,sinfo.Uuid)
 	result+=fmt.Sprintf("\tFilename :%s\n",sinfo.FileUri)
+	result+=fmt.Sprintf("\tFrom data:")
+	if sinfo.FromType==core.ENCDATA{
+		result+="Encoded Data, "
+	}else if sinfo.FromType==core.CSDFILE{
+		result+="CSD File, "
+	}
+	result+=fmt.Sprintf("UUID: %s\n",sinfo.FromUuid)
 	user,err:=GetUserName(sinfo.OwnerId)
 	if err==nil{
 		result+=fmt.Sprintf("\tShared tag create user :%s(%d)\n",user,sinfo.OwnerId)
@@ -349,6 +353,7 @@ func GetUserName(id int32)(ret string,err error){
 	namemap[ret]=id
 	return ret,nil
 }
+
 /*
 func GetUserInfo_API(ids []int32)(*api.IUserInfoAck,error){
 	req:=&api.GetUserReq{Token:"0",Id:ids}

@@ -99,9 +99,9 @@ type EncryptedData struct{
 	IsDir	byte
 	OwnerName string
 
-    FromRCId int64 // -1 means from local plain, >0 indicates a run-context id in database, from which FromContext can be created, 
+    FromRCId int64 // 0 means from local plain, >0 indicates a run-context id in database, from which FromContext can be created, 
 
-	// if FromRCId==-1, OrgName is plain data filename/dirname; otherwize, it comes from a mount operation, and a new name(with -dataname cmdline parameter should be set as OrgName)
+	// if FromRCId==0, OrgName is plain data filename/dirname; otherwize, it comes from a mount operation, and a new name(with -dataname cmdline parameter should be set as OrgName)
 	OrgName string
 	FromContext *api.RCInfo
 

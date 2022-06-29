@@ -377,7 +377,7 @@ func CreateOrgRC(linfo *core.LoginInfo,inputdata []*InputDataInfo, tlinfo []* ap
 	return rcinfo
 }
 
-func RegisterRC(linfo *core.LoginInfo, rc *api.RCInfo , outuuid string)error{
+func RegisterRC(linfo *core.LoginInfo, rc *api.RCInfo , outuuid string)(*api.RCInfo,error){
 	rc.OutputUuid=outuuid
 	rc.EndTime=core.GetCurTime()
 	return CreateRunContext_API(linfo.Token,rc)
@@ -472,7 +472,7 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 		}
 		if outuuid!="" && outitems!=0{
 			fmt.Println("Processing output data...")
-			err=RegisterRC(linfo,rc,outuuid)
+			rc,err=RegisterRC(linfo,rc,outuuid)
 			outorgname:=outuuid
 			if err==nil{
 				if oname!=""{
@@ -627,7 +627,6 @@ func RecordDataInfo(linfo *core.LoginInfo,outuuid string ,outkey []byte, orgname
 	}
 	pdata.FromRCId=rc.RCId
 	pdata.FromContext=rc
-
 	return RecordMetaFromRaw(pdata,linfo.Keylocalkey,outkey,linfo.Token)
 }
 
@@ -650,7 +649,7 @@ func CreateRunContext(token string,baseimg string,srcobj []*api.SourceObj, tools
 	rc.InputData=srcobj
 	rc.ImportPlain=tools
 	rc.StartTime=core.GetCurTime()
-	err:=CreateRunContext_API(token,rc)
+	rc,err:=CreateRunContext_API(token,rc)
 	if err!=nil{
 		return nil,err
 	}

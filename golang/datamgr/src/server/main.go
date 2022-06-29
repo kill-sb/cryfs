@@ -102,7 +102,7 @@ func DistroFunc(w http.ResponseWriter, r *http.Request){
 	}
 	if r.Method=="POST"{
 		if proc,ok:=routemap[r.RequestURI];ok{
-			w.Header().Set("Access-Control-Allow-Origin","*")
+//			w.Header().Set("Access-Control-Allow-Origin","*")
 			proc(w,r)
 		}else{
 			Debug("Warining: Unknown request url ->",r.RequestURI)

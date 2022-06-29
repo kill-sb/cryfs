@@ -128,18 +128,18 @@ func ShareData_API(token string,sinfo *core.ShareInfo)(error){
     return nil
 }
 
-func CreateRunContext_API(token string, rc *api.RCInfo)(error){
+func CreateRunContext_API(token string, rc *api.RCInfo)(*api.RCInfo,error){
 	req:=&api.CreateRCReq{Token:token,Data:rc}
 	ack:=api.NewRCInfoAck()
 	err:=HttpAPIPost(req,ack,"createrc")
     if err!=nil{
         fmt.Println("call updaterc error:",err)
-        return err
+        return nil,err
     }
     if ack.Code!=0{
-        return errors.New(ack.Msg)
+        return nil,errors.New(ack.Msg)
     }
-	return nil
+	return ack.Data,nil
 }
 
 func UpdateRunContext_API(token string, rc *api.RCInfo) error{

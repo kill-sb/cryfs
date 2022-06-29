@@ -226,10 +226,9 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	login:
 	curl -H "Content-Type: application/json" -X POST -d '{"name":"wang2","passwd":"654321","primask":0}' -k https://apisvr:8080/api/v1/login
 	call:
-  	curl -H "Content-Type: application/json" -X POST -d '{"token":"aaebe36decfcf10dc77088650ae7c435","data":{"type":1,"obj":"2e888dcf-7e68-4665-910a-eb906995b60f"},"comment":"political order"}' -k https://apisvr:8080/api/v1/exportdata
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"1cf59749fb9c7a87d78d5200f3f0c0d2","data":{"type":1,"obj":"7ff9419a-d54e-4f17-8baf-cd3d9a7d9c92"},"comment":"international communication"}' -k https://apisvr:8080/api/v1/exportdata
 	return ok:
-	{"code":0,"message":"OK","data":{"expid":16,"status":2,"dataobj":{"uuid":"2e888dcf-7e68-4665-910a-eb906995b60f","type":1,"userid":3},"crtime":"2022-05-27 09:29:51","procqueue":[{"procuid":1,"srcdata":[{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","type":0,"userid":1}],"status":2,"comment":"","proctime":""}]}}
-
+	{"code":0,"message":"OK","data":{"expid":19,"status":2,"dataobj":{"uuid":"7ff9419a-d54e-4f17-8baf-cd3d9a7d9c92","type":1,"userid":3},"crtime":"2022-06-29 15:22:03","comment":"international communication","procqueue":[{"procuid":1,"srcdata":[{"uuid":"fb457b85-029b-49c8-ae36-5c5492bc6a7f","type":0,"userid":1}],"status":2,"comment":"","proctime":""}]}}	
 27. searchexports
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"36b23a3558fa64cfa767a3cd6b7e7ee2","touid":1,"status":1,"startdate":"2022-05-23"}' -k https://apisvr:8080/api/v1/searchexports
