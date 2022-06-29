@@ -19,6 +19,8 @@ var usernamecache map[string] *api.UserInfoData
 var userinfocache map[int32] *api.UserInfoData
 var curdb *sql.DB
 
+const COMMENT_INIT="Pending..."
+
 func init() {
 	//useridcache=make(map[int32]string)
 	userinfocache=make(map[int32] *api.UserInfoData)
@@ -821,7 +823,7 @@ func SearchNotifies(fromuid,touid,ntype, isnew int32)([]*api.NotifyInfo,error){
 	return ret,nil
 }
 
-func RecordProcQueue(expid int64, queue []*api.ExProcNode,comment *string) error{
+func RecordProcQueue(expid int64, queue []*api.ExProcNode) error{
 	var err error=nil
 	if len(queue)==0{
 		return err
@@ -834,7 +836,7 @@ func RecordProcQueue(expid int64, queue []*api.ExProcNode,comment *string) error
 		}
 	}()
 	for _,v:=range queue{
-		query:=fmt.Sprintf("insert into exprocque (expid,procuid,status,comment) values (%d,%d,%d,'%s')",expid,v.ProcUid,v.Status,*comment)
+		query:=fmt.Sprintf("insert into exprocque (expid,procuid,status,comment) values (%d,%d,%d,'%s')",expid,v.ProcUid,v.Status,COMMENT_INIT)
 		var result sql.Result
 	    if result, err = db.Exec(query); err == nil{
 			nodeid, _:= result.LastInsertId()
@@ -888,6 +890,7 @@ func CreateProcQueue(selfid int32,data *api.DataObj)([]*api.ExProcNode,error){
 			authors[owner]=user
 			user.ProcUid=owner
 			user.Status=api.WAITING
+			user.Comment=COMMENT_INIT
 			user.SrcData=make([]*api.ProcDataObj,1,20)
 			user.SrcData[0]=curobj
 			nodes=append(nodes,user)
@@ -919,7 +922,7 @@ func NewExport(data *api.DataObj,userid int32, comment *string)(*api.ExportProcI
 	query:=fmt.Sprintf("insert into exports (requid,status,datatype,datauuid,crtime,comment) values (%d,%d,%d,'%s','%s','%s')",userid,epinfo.Status,epinfo.DstData.Type,epinfo.DstData.Uuid,epinfo.CrTime,epinfo.Comment)
     if result, err := db.Exec(query); err == nil{
 		epinfo.ExpId, _ = result.LastInsertId()
-		if err=RecordProcQueue(epinfo.ExpId,epinfo.ProcQueue,comment);err!=nil{
+		if err=RecordProcQueue(epinfo.ExpId,epinfo.ProcQueue);err!=nil{
 			db.Exec(fmt.Sprintf("delete from exports where expid=%d",epinfo.ExpId))
 			return nil,err
 		}

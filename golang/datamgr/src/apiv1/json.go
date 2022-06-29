@@ -81,7 +81,6 @@ type ShareInfoData struct{
 	FromType    int `json:"fromtype"`
 	FromUuid    string `json:"fromuuid"`
 	CrTime  string `json:"crtime"`
-//	FileUri string `json:"fileuri"`
 	OrgName string `json:"orgname"`
 	IsDir byte `json:"isdir"`
 }

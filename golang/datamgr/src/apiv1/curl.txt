@@ -224,11 +224,15 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 
 26. exportdata
 	login:
-	curl -H "Content-Type: application/json" -X POST -d '{"name":"wang2","passwd":"654321","primask":0}' -k https://apisvr:8080/api/v1/login
+	curl -H "Content-Type: application/json" -X POST -d '{"name":"li4","passwd":"123123","primask":0}' -k https://apisvr:8080/api/v1/login
+	login ok:
+	{"code":0,"message":"OK","data":{"id":2,"token":"767707d60ae8019c1095cab2ca9bd8fe","key":"4297f44b13955235245b2497399d7a93","timeout":900}}
+
 	call:
-	curl -H "Content-Type: application/json" -X POST -d '{"token":"1cf59749fb9c7a87d78d5200f3f0c0d2","data":{"type":1,"obj":"7ff9419a-d54e-4f17-8baf-cd3d9a7d9c92"},"comment":"international communication"}' -k https://apisvr:8080/api/v1/exportdata
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"767707d60ae8019c1095cab2ca9bd8fe","data":{"type":1,"obj":"129d3257-7696-4e3b-8ba3-9e609a7142d9"},"comment":"international communication"}' -k https://apisvr:8080/api/v1/exportdata
 	return ok:
-	{"code":0,"message":"OK","data":{"expid":19,"status":2,"dataobj":{"uuid":"7ff9419a-d54e-4f17-8baf-cd3d9a7d9c92","type":1,"userid":3},"crtime":"2022-06-29 15:22:03","comment":"international communication","procqueue":[{"procuid":1,"srcdata":[{"uuid":"fb457b85-029b-49c8-ae36-5c5492bc6a7f","type":0,"userid":1}],"status":2,"comment":"","proctime":""}]}}	
+	{"code":0,"message":"OK","data":{"expid":18,"status":2,"dataobj":{"uuid":"129d3257-7696-4e3b-8ba3-9e609a7142d9","type":1,"userid":2},"crtime":"2022-06-29 19:29:31","comment":"international communication","procqueue":[{"procuid":1,"srcdata":[{"uuid":"b16ba0cc-b5e0-42d1-ad13-242488a1bcb8","type":0,"userid":1}],"status":2,"comment":"Pending...","proctime":""}]}}
+
 27. searchexports
 	call:
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"36b23a3558fa64cfa767a3cd6b7e7ee2","touid":1,"status":1,"startdate":"2022-05-23"}' -k https://apisvr:8080/api/v1/searchexports
