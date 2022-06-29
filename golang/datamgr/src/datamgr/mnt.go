@@ -105,16 +105,6 @@ func doMount(){
 			multisrc=append(multisrc,str)
 		}
 	}
-/*	tools:=make([]string,0,10)
-	if mntimport!=""{
-		paths=strings.Split(mntimport,",")
-		for _,str:=range paths{
-			if str=strings.TrimSpace(str);str!=""{
-				tools=append(tools,str)
-			}
-		}
-	}
-*/
 /*
     if outpath=="" {
         fmt.Println("You should set outpath explicitly")
@@ -152,7 +142,7 @@ func PrepareOutputDir(opath string)(string,string,[]byte,error){
 	os.MkdirAll(srcdir,0755)
 	os.MkdirAll(dstdir,0755)
 	MountDirInC(srcdir,dstdir,key,"rw")
-	return uuidsrc,dstdir,key,nil
+	return srcdir,dstdir,key,nil
 }
 
 func ValidateImports(toolpath string)([]*api.ImportFile,error){
@@ -345,6 +335,7 @@ func MountEncData(linfo *core.LoginInfo,inputs []string)([]*InputDataInfo,error)
 	for _,srcdata:=range inputs{
 		dtype:=GetDataType(srcdata)
 		var idata *InputDataInfo
+fmt.Println("data type:",dtype)
 		switch dtype{
 		case core.CSDFILE:
 			idata,err=MountCSDFile(linfo,srcdata)
@@ -364,6 +355,7 @@ func MountEncData(linfo *core.LoginInfo,inputs []string)([]*InputDataInfo,error)
 		default:
 			return inputdata, errors.New("Invalid inputdata:"+srcdata)
 		}
+fmt.Println("data:",*idata)
 		inputdata=append(inputdata,idata)
 	}
 	return inputdata,nil
@@ -441,7 +433,6 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 			}()
 		}
 	}
-
 	fmt.Println("Processing input data...")
 	inputinfo,err:=MountEncData(linfo,inputs)
 
@@ -477,7 +468,6 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 	if err!=nil{
 		fmt.Println("Clear temp input dirs error:",err)
 	}*/
-
 	if outpath!="" && outdst!=""{
 		var outuuid string
 		var isdir bool
@@ -501,6 +491,7 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 			}else{
 					fmt.Println("Register rc error:",err)
 			}
+			fmt.Println("New data generated:",outuuid)
 		}else{
 			fmt.Println("Empyt output,outuuid:",outuuid,"items:",outitems)
 		}
@@ -601,6 +592,7 @@ func PrepareCSDFileDir(filepath string, sinfo *core.ShareInfo)(string,string,err
 }
 
 func ItemsInDir(dirname string)(/*single filename*/ string,/*items*/ int,/*singlefile*/ bool){
+
 	cont,err:=ioutil.ReadDir(dirname)
 	if err!=nil{
 		return "",0,false

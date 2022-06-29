@@ -25,7 +25,7 @@ var uuidmap map[string]*core.EncryptedData
 
 func LoadConfig(){
 	definpath=os.Getenv("DATA_IN_PATH")
-	defoutpath=os.Getenv("HOME")+"/.cmitdata"
+//	defoutpath=os.Getenv("HOME")+"/.cmitdata"
 	defuser=os.Getenv("DATA_DEF_USER")
 }
 
@@ -140,13 +140,12 @@ func main(){
 		doShare()
 	case core.LIST:
 		doList()
-/*	case core.MOUNT:
+	case core.MOUNT:
 		doMount()
+		/*
 	case core.TRACE:
 		doTraceAll()
-	case core.SEPERATE:
-		doSep()*/
-
+*/
 	case core.DECODE:
 		doDecode()
 	default:

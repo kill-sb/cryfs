@@ -99,6 +99,7 @@ func ListTags(tags[]string){
 func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
 	result:=fmt.Sprintf("\t%d\n\tData Uuid :%s\n",index,data.Uuid)
 	result+=fmt.Sprintf("\tFilename :%s\n",inpath+"/"+data.Uuid)
+	result+=fmt.Sprintf("\tOrgname :%s\n",data.OrgName)
 	user,err:=GetUserName(data.OwnerId)
 	if err==nil{
 		result+=fmt.Sprintf("\tData Owner :%s(%d)\n",user,data.OwnerId)
