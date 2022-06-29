@@ -198,7 +198,7 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 				return rdonly,err
 			}
 			sinfo,err:=GetShareInfoFromHead(head,linfo,0)
-			if sinfo.Perm & 1==0 || sinfo.Perm!=-1{
+			if sinfo.Perm & 1==0 || sinfo.LeftUse!=-1{
 				rdonly=true
 			}
 			// check readonly
@@ -335,7 +335,6 @@ func MountEncData(linfo *core.LoginInfo,inputs []string)([]*InputDataInfo,error)
 	for _,srcdata:=range inputs{
 		dtype:=GetDataType(srcdata)
 		var idata *InputDataInfo
-fmt.Println("data type:",dtype)
 		switch dtype{
 		case core.CSDFILE:
 			idata,err=MountCSDFile(linfo,srcdata)
@@ -355,7 +354,6 @@ fmt.Println("data type:",dtype)
 		default:
 			return inputdata, errors.New("Invalid inputdata:"+srcdata)
 		}
-fmt.Println("data:",*idata)
 		inputdata=append(inputdata,idata)
 	}
 	return inputdata,nil
@@ -464,10 +462,6 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 		fmt.Println("Create container error:",err)
 		return
 	}
-	/*err=CleanInDirs(indsts)
-	if err!=nil{
-		fmt.Println("Clear temp input dirs error:",err)
-	}*/
 	if outpath!="" && outdst!=""{
 		var outuuid string
 		var isdir bool
