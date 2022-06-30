@@ -201,13 +201,13 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (i
     for i:=0;i<level;i++{
         fmt.Print("\t")
     }
-    fmt.Print("-->")
+   // fmt.Print("-->")
     var result string
     if dinfo.FromRCId==-1{
-        result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
+		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  Details :",dinfo.Uuid)
         result+=fmt.Sprintf("From Local Plain Data->%s",dinfo.OrgName)
     }else {
-        result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
+		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  Details :",dinfo.Uuid)
 		result+=fmt.Sprintf("From Encrypted/Shared Data, Original Name: %s",strings.TrimSuffix(dinfo.OrgName,".outdata"))
     }
     result+=fmt.Sprintf(", Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
@@ -228,9 +228,9 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, keyword string,getuser func(
     for i:=0;i<level;i++{
         fmt.Print("\t")
     }
-    fmt.Print("-->")
+  //  fmt.Print("-->")
 
-    result:=fmt.Sprintf("Shared Data(UUID :%s)  Details :",sinfo.Uuid)
+	result:=fmt.Sprintf("Data Obj :%s (Type: Shared Data) Details :",sinfo.Uuid)
     result+=fmt.Sprintf("Owner->%s(uid :%d)",getuser(sinfo.OwnerId),sinfo.OwnerId)
     result+=fmt.Sprintf(", Send to->%s",sinfo.Receivers)
     if sinfo.Perm==0{

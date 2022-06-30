@@ -99,9 +99,9 @@ func ListTags(tags[]string){
 func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
 	var result string
 	if index>0{
-		result=fmt.Sprintf("\t%d\n\tData Uuid :%s\n",index,data.Uuid)
+		result=fmt.Sprintf("%d. Data Uuid :%s (Type: Local Encrypted Data)\n",index,data.Uuid)
 	}else{
-		result=fmt.Sprintf("Data Info:\n\tData Uuid :%s\n",data.Uuid)
+		result=fmt.Sprintf("Data Uuid :%s (Type: Local Encrypted Data)\n",data.Uuid)
 	}
 	result+=fmt.Sprintf("\tFilename :%s\n",inpath+"/"+data.Uuid)
 	result+=fmt.Sprintf("\tOrgname :%s\n",data.OrgName)
@@ -244,18 +244,6 @@ func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error
 		return nil,errors.New("Unknown FromType")
 	}*/
 }
-/*
-func TraceBack(token string,data *api.DataObj)([]*api.DataObj,error){
-	return TraceData_API(token,data,api.TRACE_BACK)
-}
-
-func TraceForward(token string, data* api.DataObj)([]*api.DataObj,error){
-	return TraceData_API(token,data,api.TRACE_FORWARD)
-}
-
-func TraceSource(token string,data* api.DataObj)([]*api.DataObj,error){
-
-}*/
 
 func TraceEncData(token string,fname string){
 	st,err:=os.Stat(fname);
@@ -361,26 +349,33 @@ func DisplayResult(dinfo* api.EncDataInfo,pobjs,bobjs,fobjs []*api.DataObj,info 
 	lookupid:=func(id int32)string{
 		return idmap[id]
 	}
-	fmt.Println("Data Info:\n")
-	dinfo.PrintDataInfo(0,keyword,lookupid)
+	fmt.Println("Data Info:")
+	dinfo.PrintDataInfo(1,keyword,lookupid)
 	// Show all obj's info
-	fmt.Println("\nParent Objs:\n")
+	if len(pobjs)>0{
+		fmt.Println("\nParent Objs:")
+	}
 	for _,v:=range pobjs{
 		if v.Type==core.RAWDATA{
-			fmt.Println("\tLocal Plaine Data: ",v.Obj)
+			fmt.Println("\tData Obj: "+v.Obj+" (Type: Local Plain Data)")
 		}else{
 			info[v.Obj].PrintDataInfo(1,keyword,lookupid)
 		}
 	}
-	fmt.Println("\nTrace back result:\n")
+
+	if len(bobjs)>0{
+		fmt.Println("\nTrace back result:")
+	}
 	for _,v:=range bobjs{
 		if v.Type==core.RAWDATA{
-			fmt.Println("\tLocal Plaine Data: ",v.Obj)
+			fmt.Println("\tData Obj: "+v.Obj+" (Type: Local Plain Data)")
 		}else{
 			info[v.Obj].PrintDataInfo(1,keyword,lookupid)
 		}
 	}
-	fmt.Println("\nTrace forward result:\n")
+	if len(fobjs)>0{
+		fmt.Println("\nTrace forward result:")
+	}
 	for _,v:=range fobjs{
 		info[v.Obj].PrintDataInfo(1,keyword,lookupid)
 	}
@@ -407,7 +402,6 @@ func doTraceAll(){
     defer Logout(linfo)
 
 	ftype:=GetDataType(inpath)
-	fmt.Println("type:",ftype)
 	switch ftype{
 	case core.ENCDATA:
 		TraceEncData(linfo.Token,inpath)
@@ -473,7 +467,12 @@ func doTraceAll(){
 */
 
 func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
-	result:=fmt.Sprintf("\t%d\n\tShared tag Uuid :%s\n",index,sinfo.Uuid)
+	var result string
+	if index>0{
+		result=fmt.Sprintf("\t%d. Uuid :%s (Type: Shared Data)\n",index,sinfo.Uuid)
+	}else{
+		result=fmt.Sprintf("\t%d. Uuid :%s (Type: ShareData)\n",index,sinfo.Uuid)
+	}
 	result+=fmt.Sprintf("\tFilename :%s\n",sinfo.FileUri)
 	result+=fmt.Sprintf("\tFrom data:")
 	if sinfo.FromType==core.ENCDATA{

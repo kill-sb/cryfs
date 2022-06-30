@@ -192,6 +192,16 @@ func TraceData_API(token string,data *api.DataObj,level int)([]*api.DataObj,erro
 func QueryObj_API(token string, objs []*api.DataObj)([]api.IFDataDesc,error){
 	req:=&api.QueryObjsReq{Token:token,Data:objs}
 	ack:=api.NewQueryObjsAck(objs)
+	for _,obj:=range objs{
+		switch obj.Type{
+		case core.ENCDATA:
+			ack.Data=append(ack.Data,new(api.EncDataInfo))
+		case core.CSDFILE:
+			ack.Data=append(ack.Data,new(api.ShareInfoData))
+		default:
+			return nil,errors.New("Unknown data format")
+		}
+	}
 	err:=HttpAPIPost(req,ack,"queryobjs")
 	if err!=nil{
 		fmt.Println("can't queryobjs error:",err)
