@@ -193,6 +193,10 @@ func NewGetContactsAck() *IGetContactsAck {
 	return gca
 }
 
+func (dinfo * EncDataInfo)GetOwnerId()int32{
+	return dinfo.OwnerId
+}
+
 func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (int32)string)error{
     for i:=0;i<level;i++{
         fmt.Print("\t")
@@ -214,6 +218,10 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (i
     }
     fmt.Print(result)
     return nil
+}
+
+func (sinfo* ShareInfoData)GetOwnerId()int32{
+	return sinfo.OwnerId
 }
 
 func (sinfo* ShareInfoData)PrintDataInfo(level int, keyword string,getuser func(int32)string)error{

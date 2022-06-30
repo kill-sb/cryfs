@@ -97,7 +97,12 @@ func ListTags(tags[]string){
 }
 
 func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
-	result:=fmt.Sprintf("\t%d\n\tData Uuid :%s\n",index,data.Uuid)
+	var result string
+	if index>0{
+		result=fmt.Sprintf("\t%d\n\tData Uuid :%s\n",index,data.Uuid)
+	}else{
+		result=fmt.Sprintf("Data Info:\n\tData Uuid :%s\n",data.Uuid)
+	}
 	result+=fmt.Sprintf("\tFilename :%s\n",inpath+"/"+data.Uuid)
 	result+=fmt.Sprintf("\tOrgname :%s\n",data.OrgName)
 	user,err:=GetUserName(data.OwnerId)
@@ -263,18 +268,121 @@ func TraceEncData(token string,fname string){
 		fmt.Println(fname,"is not valid encoded data")
 		return
 	}
+	dinfo,err:=GetDataInfo_API(uuid)
+	if err!=nil{
+		fmt.Println("Get data brief info error:",err)
+		return
+	}
+	/*
+	 1. Get traceparent,traceback,traceforword results in different obj slices
+	 2. put objs into a map(objmap) with uuid-key, obj-value
+	 3. put all elements in map into a slice, and use queryobjs to get objinfo
+	 4. put queryobjs results into a map(infomap) with uuid-key, objinfo-value
+	 5. show detail info in each element in obj slice in step1 by lookup infomap
+	*/
+
+	objmap:=make(map[string]*api.DataObj)
+	infomap:=make(map[string]api.IFDataDesc)
 	data:=&api.DataObj{Obj:uuid,Type:core.ENCDATA}
-	objs,err:=TraceData_API(token,data,api.TRACE_PARENTS)
+
+	// step 1 & 2
+	pobjs,err:=TraceData_API(token,data,api.TRACE_PARENTS)
 	if err!=nil{
 		fmt.Println("Trace source of ",uuid," error:",err.Error())
 		return
 	}
-	if len(objs)>0{
-		fmt.Println("From:")
-
-		for _,obj:=range objs{
-			fmt.Println("Uuid:",obj.Obj,"Type:",obj.Type)
+	for _,obj:=range pobjs{
+		if obj.Type>=0{
+			objmap[obj.Obj]=obj
 		}
+	}
+
+	bobjs,err:=TraceData_API(token,data,api.TRACE_BACK)
+	if err!=nil{
+		fmt.Println("Trace back of ",uuid," error:",err.Error())
+		return
+	}
+	for _,obj:=range bobjs{
+		if obj.Type>=0{
+			objmap[obj.Obj]=obj
+		}
+	}
+	fobjs,err:=TraceData_API(token,data,api.TRACE_FORWARD)
+	if err!=nil{
+		fmt.Println("Trace forward of ",uuid," error:",err.Error())
+		return
+	}
+	for _,obj:=range fobjs{
+		objmap[obj.Obj]=obj
+	}
+	cnt:=len(objmap)
+	if cnt<1{
+		return
+	}
+
+	// step3
+	allobjs:=make([]*api.DataObj,0,len(objmap))
+	for _,v:=range objmap{
+		allobjs=append(allobjs,v)
+	}
+	retobjs,err:=QueryObj_API(token,allobjs)
+	if err!=nil{
+		fmt.Println("QueryObjs error:",err.Error())
+		return
+	}
+
+	// step 4
+	for i,v:=range retobjs{
+		infomap[allobjs[i].Obj]=v
+	}
+	// step 5
+	DisplayResult(dinfo,pobjs,bobjs,fobjs,infomap,dinfo.FromRCId)
+}
+
+func DisplayResult(dinfo* api.EncDataInfo,pobjs,bobjs,fobjs []*api.DataObj,info map[string]api.IFDataDesc,rcid int64){
+	// gen userid - user map
+	idmap:=make(map[int32]string)
+	for _,v:=range info{
+		idmap[v.GetOwnerId()]="unknown"
+	}
+	ids:=make([]int32,1,len(idmap)+1)
+	ids[0]=dinfo.OwnerId
+	for k,_:=range idmap{
+		ids=append(ids,k)
+	}
+	users,err:=GetUserInfo_API(ids)
+	if err!=nil{
+		fmt.Println("GetUserInfo error:",err)
+		return
+	}
+	for i,v:=range ids{
+		idmap[v]=users[i].Name
+	}
+	lookupid:=func(id int32)string{
+		return idmap[id]
+	}
+	fmt.Println("Data Info:\n")
+	dinfo.PrintDataInfo(0,keyword,lookupid)
+	// Show all obj's info
+	fmt.Println("\nParent Objs:\n")
+	for _,v:=range pobjs{
+		if v.Type==core.RAWDATA{
+			fmt.Println("\tLocal Plaine Data: ",v.Obj)
+		}else{
+			info[v.Obj].PrintDataInfo(1,keyword,lookupid)
+		}
+	}
+	fmt.Println("\nTrace back result:\n")
+	for _,v:=range bobjs{
+		if v.Type==core.RAWDATA{
+			fmt.Println("\tLocal Plaine Data: ",v.Obj)
+		}else{
+			info[v.Obj].PrintDataInfo(1,keyword,lookupid)
+		}
+	}
+	fmt.Println("\nTrace forward result:\n")
+	for _,v:=range fobjs{
+		info[v.Obj].PrintDataInfo(1,keyword,lookupid)
 	}
 }
 
@@ -287,13 +395,24 @@ func doTraceAll(){
 		fmt.Println("use -in to set filename need to be traced")
 		return
 	}
+	if loginuser==""{
+		fmt.Println("use parameter -user=NAME to set login user")
+        return
+	}
+	linfo,err:=Login(loginuser)
+    if err!=nil{
+        fmt.Println("login error:",err)
+        return
+    }
+    defer Logout(linfo)
+
 	ftype:=GetDataType(inpath)
 	fmt.Println("type:",ftype)
 	switch ftype{
 	case core.ENCDATA:
-		TraceEncData("",inpath) // do not verify user
+		TraceEncData(linfo.Token,inpath)
 	case core.CSDFILE:
-		TraceCSDFile("",inpath)
+		TraceCSDFile(linfo.Token,inpath)
 	default:
 		fmt.Println(inpath+" does not have valid data type.")
 	}

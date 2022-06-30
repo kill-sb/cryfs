@@ -243,6 +243,7 @@ type IQueryObjsAck struct{
 
 type IFDataDesc interface{
 	PrintDataInfo(int,string,func (int32)string) error
+	GetOwnerId() int32
 }
 
 
