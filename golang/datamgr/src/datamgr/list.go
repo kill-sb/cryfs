@@ -239,7 +239,67 @@ func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error
 		return nil,errors.New("Unknown FromType")
 	}*/
 }
+/*
+func TraceBack(token string,data *api.DataObj)([]*api.DataObj,error){
+	return TraceData_API(token,data,api.TRACE_BACK)
+}
 
+func TraceForward(token string, data* api.DataObj)([]*api.DataObj,error){
+	return TraceData_API(token,data,api.TRACE_FORWARD)
+}
+
+func TraceSource(token string,data* api.DataObj)([]*api.DataObj,error){
+
+}*/
+
+func TraceEncData(token string,fname string){
+	st,err:=os.Stat(fname);
+	if err!=nil{
+		fmt.Println(fname," not found")
+		return
+	}
+	uuid:=st.Name()
+	if (!core.IsValidUuid(uuid)){
+		fmt.Println(fname,"is not valid encoded data")
+		return
+	}
+	data:=&api.DataObj{Obj:uuid,Type:core.ENCDATA}
+	objs,err:=TraceData_API(token,data,api.TRACE_PARENTS)
+	if err!=nil{
+		fmt.Println("Trace source of ",uuid," error:",err.Error())
+		return
+	}
+	if len(objs)>0{
+		fmt.Println("From:")
+
+		for _,obj:=range objs{
+			fmt.Println("Uuid:",obj.Obj,"Type:",obj.Type)
+		}
+	}
+}
+
+func TraceCSDFile(token string,fname string){
+
+}
+
+func doTraceAll(){
+	if inpath==""{
+		fmt.Println("use -in to set filename need to be traced")
+		return
+	}
+	ftype:=GetDataType(inpath)
+	fmt.Println("type:",ftype)
+	switch ftype{
+	case core.ENCDATA:
+		TraceEncData("",inpath) // do not verify user
+	case core.CSDFILE:
+		TraceCSDFile("",inpath)
+	default:
+		fmt.Println(inpath+" does not have valid data type.")
+	}
+}
+
+/*
 func doTraceAll(){
 	if inpath==""{
 		fmt.Println("use -in to set filename need to be traced")
@@ -291,6 +351,7 @@ func doTraceAll(){
 		}
 	}
 }
+*/
 
 func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	result:=fmt.Sprintf("\t%d\n\tShared tag Uuid :%s\n",index,sinfo.Uuid)
@@ -354,33 +415,3 @@ func GetUserName(id int32)(ret string,err error){
 	return ret,nil
 }
 
-/*
-func GetUserInfo_API(ids []int32)(*api.IUserInfoAck,error){
-	req:=&api.GetUserReq{Token:"0",Id:ids}
-    ack:=api.NewUserInfoAck()
-    err:=HttpAPIPost(req,ack,"getuser")
-    if err!=nil{
-        fmt.Println("call api info error:",err)
-        return nil,err
-    }
-	if ack.Code!=0{
-		fmt.Println("request error:",ack.Msg)
-		return nil,errors.New(ack.Msg)
-	}
-    return ack,nil
-}
-
-func FindUserName_API(names []string)(*api.IUserInfoAck,error){
-	req:=&api.FindUserNameReq{Token:"0",Name:names}
-	ack:=api.NewUserInfoAck()
-	err:=HttpAPIPost(req,ack,"findusername")
-	if err!=nil{
-		fmt.Println("call api info error:",err)
-		return nil,err
-	}
-	if ack.Code!=0{
-		fmt.Println("request error:",ack.Msg)
-		return nil,errors.New(ack.Msg)
-	}
-	return ack,nil
-}*/

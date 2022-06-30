@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"crypto/rand"
 	"os/exec"
+	"regexp"
 	"strings"
 	"fmt"
 	"os"
@@ -245,7 +246,8 @@ func GetSelfPath()string{
 }
 
 func IsValidUuid(uuid string)bool{
-	return true
+    pat,_:=regexp.Compile("^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$")
+    return pat.MatchString(uuid)
 }
 
 func RandPasswd()([]byte,error){

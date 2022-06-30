@@ -49,11 +49,6 @@ func FindUserName_API(names []string)([]api.UserInfoData,error){
         fmt.Println("request error:",ack.Msg)
         return nil,errors.New(ack.Msg)
     }
-    /*
-    fmt.Println("listing result:")
-    for _,v:=range ack.Data{
-        fmt.Println(v.Id,v.Name)
-    }*/
     return ack.Data,nil
 }
 
@@ -169,6 +164,19 @@ func GetRCInfo_API(rcid int64)(*api.RCInfo,error){
 		return nil,errors.New(ack.Msg)
 	}
     return ack.Data,nil
+}
+
+func TraceData_API(token string,data *api.DataObj,level int)([]*api.DataObj,error){
+	req:=&api.CommonTraceReq{Token:token,Level:level,Data:data}
+	ack:=api.NewTraceAck()
+	err:=HttpAPIPost(req,ack,"trace")
+	if err!=nil{
+		return nil,err
+	}
+	if ack.Code!=0{
+		return nil,errors.New(ack.Msg)
+	}
+	return ack.Data,nil
 }
 
 func Logout_API(token string)error{

@@ -105,12 +105,12 @@ func doMount(){
 			multisrc=append(multisrc,str)
 		}
 	}
-/*
-    if outpath=="" {
+
+    if outpath=="" && oname!="" {
         fmt.Println("You should set outpath explicitly")
 		return
     }
-*/
+
 	if loginuser==""{
 		fmt.Println("use parameter -user=NAME to set login user")
 		return

@@ -46,15 +46,16 @@ func doShare(){
 
 func GetDataType(ipath string /* .tag or .csd stand for local encrypted data or data shared from other user */) int{
 
-    // should be replaced later because of multi-source processing
-
-	if strings.HasSuffix(ipath,".csd") || strings.HasSuffix(ipath,".CSD"){
-		return core.CSDFILE
-	}else if core.IsValidUuid(strings.TrimSuffix(ipath,".tag"))|| core.IsValidUuid(strings.TrimSuffix(ipath,".TAG")) {
-		return core.ENCDATA
-	}else{
-		return core.UNKNOWN
+	st,err:=os.Stat(ipath)
+	if err==nil{
+		fname:=st.Name()
+		if strings.HasSuffix(fname,".csd") || strings.HasSuffix(fname,".CSD"){
+			return core.CSDFILE
+		}else if core.IsValidUuid(strings.TrimSuffix(fname,".tag"))|| core.IsValidUuid(strings.TrimSuffix(fname,".TAG")) {
+			return core.ENCDATA
+		}
 	}
+		return core.UNKNOWN
 }
 
 func shareDir(ipath,opath string, linfo *core.LoginInfo){

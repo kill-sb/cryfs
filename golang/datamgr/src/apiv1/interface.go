@@ -26,6 +26,13 @@ const (
     EXPORTDATA
 )
 
+const (
+	TRACE_PARENTS=-1
+	TRACE_CHILDREN=1
+	TRACE_BACK=-0xffff
+	TRACE_FORWARD=0xffff
+)
+
 func NewSimpleAck() *ISimpleAck{
 	sa:=new (ISimpleAck)
 	sa.Code=-1
@@ -121,7 +128,7 @@ func NewLoginStatAck() *ILoginStatAck{
 	return lsa
 }
 
-func NewQueryObjsAck(reqinfo []DataObj)*IQueryObjsAck {
+func NewQueryObjsAck(reqinfo []*DataObj)*IQueryObjsAck {
 	cnt:=len(reqinfo)
 	data:=make([]IFDataDesc,0,cnt)
 	qda:=new (IQueryObjsAck)
@@ -194,15 +201,12 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (i
     var result string
     if dinfo.FromRCId==-1{
         result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
+        result+=fmt.Sprintf("From Local Plain Data->%s",dinfo.OrgName)
     }else {
         result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
+		result+=fmt.Sprintf("From Encrypted/Shared Data, Original Name: %s",strings.TrimSuffix(dinfo.OrgName,".outdata"))
     }
-    result+=fmt.Sprintf("Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
-    if dinfo.FromRCId==-1{
-        result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
-    }else {
-		result+=fmt.Sprintf(", From Encrypted/Shared Data, Original Name: %s",strings.TrimSuffix(dinfo.OrgName,".outdata"))// UUID->%s(Orginal Filename :%s)",dinfo.FromObj,strings.TrimSuffix(dinfo.OrgName,".outdata"))
-    }
+    result+=fmt.Sprintf(", Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
 
     result+=fmt.Sprintf(", Create at->%s\n",dinfo.CrTime)
     if keyword!=""{
@@ -226,11 +230,11 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, keyword string,getuser func(
     }else{
         result+=fmt.Sprintf(", Perm->Resharable")
     }
-/*    if sinfo.FromRCId==-1{
+    if sinfo.FromType==ENCDATA{
         result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
-    }else{
+    }else if sinfo.FromType==CSDFILE{
         result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
-    }*/
+	}
     result+=fmt.Sprintf(", Create at->%s\n",sinfo.CrTime)
 
     if keyword!=""{

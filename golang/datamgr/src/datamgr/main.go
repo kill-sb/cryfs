@@ -35,9 +35,8 @@ func GetFunction() int {
 	flag.BoolVar(&bShare,"share",false,"share data to other users")
 	flag.BoolVar(&bMnt,"mnt",false,"mount encrypted data")
 	flag.BoolVar(&bDec,"dec",false,"decrypted local data(test only)")
-	flag.BoolVar(&bTrace,"trace",false,"trace source of data")
+	flag.BoolVar(&bTrace,"trace",false,"trace details of data")
 	flag.BoolVar(&bList,"list",false,"list local encrypted data")
-//	flag.BoolVar(&bSep,"sep",false,"seperate a file from encrypted dir")
 	flag.BoolVar(&bLogin,"login",false,"seperate a file from encrypted dir")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",defoutpath,"output data path")
@@ -142,10 +141,8 @@ func main(){
 		doList()
 	case core.MOUNT:
 		doMount()
-		/*
 	case core.TRACE:
 		doTraceAll()
-*/
 	case core.DECODE:
 		doDecode()
 	default:

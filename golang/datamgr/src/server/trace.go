@@ -40,11 +40,11 @@ func TraceFunc(w http.ResponseWriter, r *http.Request){
 		var objs []*api.DataObj
 			//objs,err:=dbop.GetDataParent(&v)
 		switch {
-		case tbreq.Level==-1:
+		case tbreq.Level==api.TRACE_PARENTS:
 			objs,err=dbop.GetDataParents(tbreq.Data)
 		case tbreq.Level < -1:
 			objs,err=dbop.TraceBack(tbreq.Data)
-		case tbreq.Level==1:
+		case tbreq.Level==api.TRACE_CHILDREN:
 			objs,err=dbop.GetDataChildren(tbreq.Data)
 		case tbreq.Level > 1:
 			objs,err=dbop.TraceForward(tbreq.Data)
