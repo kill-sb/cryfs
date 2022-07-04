@@ -245,6 +245,20 @@ func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error
 	}*/
 }
 
+func TraceCSDFile(token string,fname string){
+	head,err:=core.LoadShareInfoHead(fname)
+	if err!=nil{
+		fmt.Println("Load share info head error in TraceCSDFile:",err)
+		return
+	}
+	uuid:=string(head.Uuid[:])
+	sinfo,err:=GetShareInfo_User_API(token,uuid,0)
+	fmt.Println("Data Info:")
+	sinfo.PrintDataInfo(1,keyword,func (id int32)string{
+		return "zhang3"
+	})
+}
+
 func TraceEncData(token string,fname string){
 	st,err:=os.Stat(fname);
 	if err!=nil{
@@ -381,9 +395,7 @@ func DisplayResult(dinfo* api.EncDataInfo,pobjs,bobjs,fobjs []*api.DataObj,info 
 	}
 }
 
-func TraceCSDFile(token string,fname string){
 
-}
 
 func doTraceAll(){
 	if inpath==""{

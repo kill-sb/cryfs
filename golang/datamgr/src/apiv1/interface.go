@@ -197,9 +197,9 @@ func (dinfo * EncDataInfo)GetOwnerId()int32{
 	return dinfo.OwnerId
 }
 
-func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (int32)string)error{
+func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)string)error{
     for i:=0;i<level;i++{
-        fmt.Print("\t")
+        fmt.Print("    ")
     }
    // fmt.Print("-->")
     var result string
@@ -213,8 +213,8 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, keyword string,getuser func (i
     result+=fmt.Sprintf(", Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
 
     result+=fmt.Sprintf(", Create at->%s\n",dinfo.CrTime)
-    if keyword!=""{
-        result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
+    if kw!=""{
+        result=strings.Replace(result,kw,"\033[7m"+kw+"\033[0m", -1)
     }
     fmt.Print(result)
     return nil
@@ -224,20 +224,24 @@ func (sinfo* ShareInfoData)GetOwnerId()int32{
 	return sinfo.OwnerId
 }
 
-func (sinfo* ShareInfoData)PrintDataInfo(level int, keyword string,getuser func(int32)string)error{
+func (sinfo* ShareInfoData)PrintDataInfo(level int, kw string,getuser func(int32)string)error{
     for i:=0;i<level;i++{
-        fmt.Print("\t")
+        fmt.Print("    ")
     }
   //  fmt.Print("-->")
 
 	result:=fmt.Sprintf("Data Obj :%s (Type: Shared Data) Details :",sinfo.Uuid)
     result+=fmt.Sprintf("Owner->%s(uid :%d)",getuser(sinfo.OwnerId),sinfo.OwnerId)
     result+=fmt.Sprintf(", Send to->%s",sinfo.Receivers)
+	if sinfo.Expire!="2999:12:31 00:00:00"{
+		result+=fmt.Sprintf(", Expire date:%s",sinfo.Expire)
+	}
     if sinfo.Perm==0{
         result+=fmt.Sprintf(", Perm->ReadOnly")
-    }else{
-        result+=fmt.Sprintf(", Perm->Resharable")
     }
+    if sinfo.MaxUse!=-1{
+		result+=fmt.Sprintf(", Left/Max open times:%d/%d",sinfo.LeftUse,sinfo.MaxUse)
+	}
     if sinfo.FromType==ENCDATA{
         result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
     }else if sinfo.FromType==CSDFILE{
@@ -245,8 +249,8 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, keyword string,getuser func(
 	}
     result+=fmt.Sprintf(", Create at->%s\n",sinfo.CrTime)
 
-    if keyword!=""{
-        result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
+    if kw!=""{
+        result=strings.Replace(result,kw,"\033[7m"+kw+"\033[0m", -1)
     }
     fmt.Print(result)
     return nil

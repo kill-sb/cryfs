@@ -246,7 +246,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	fmt.Println("expire time(Press 'Enter' for no expire time limit):")
 	fmt.Scanf("%s",&sinfo.Expire)
 	if sinfo.Expire==""{
-		sinfo.Expire="2999:12:31 0:00:00"
+		sinfo.Expire="2999:12:31 00:00:00"
 	}
 	fmt.Println("limit open times(-1 for no limit):")
 	fmt.Scanf("%d",&sinfo.MaxUse)

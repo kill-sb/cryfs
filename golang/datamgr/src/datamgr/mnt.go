@@ -77,14 +77,14 @@ func PrepareMntOpts(inputs []*InputDataInfo, tool string, output string) map[str
 	return retmap
 }
 
-func LocalTempDir(ipath string)string{
+func LocalTempDir(ipath string,usepdir bool)string{
 	// return a dir that must be in the same block device with given path, invoker will add a unique name to the dirname later
 	finfo,err:=os.Stat(ipath)
 	if err!=nil{
 		fmt.Println(ipath, "not exists")
 		return ipath
 	}
-	if finfo.IsDir(){
+	if !usepdir{
 		return strings.TrimSuffix(ipath,"/")+"/"
 	}
 	return strings.TrimSuffix(ipath,finfo.Name())
@@ -280,7 +280,7 @@ func MountEncDir(linfo *core.LoginInfo, dirname string)(*InputDataInfo,error){
 	passwd:=make([]byte,16)
 	DoDecodeInC(tag.EKey[:],linfo.Keylocalkey,passwd,16)
 	dstuuid,_:=core.GetUuid()
-	tmpdir:=LocalTempDir(dirname)+"."+dstuuid
+	tmpdir:=LocalTempDir(dirname,true)+"."+dstuuid
 	err=os.MkdirAll(tmpdir,0755)
 	err=MountDirInC(dirname,tmpdir,passwd,"ro")
 	if err!=nil{
@@ -545,7 +545,7 @@ func MountDirInC(src,dst string,passwd []byte,mode string)error{
 func PrepareCSDFileDir(filepath string, sinfo *core.ShareInfo)(string,string,error){
 //	fmt.Println("Preparing container environment...")
     uuid,_:=core.GetUuid()
-    tmpdir:=LocalTempDir(filepath)+"."+uuid
+    tmpdir:=LocalTempDir(filepath,true)+"."+uuid
 	err:=os.MkdirAll(tmpdir,0755)
 	if err!=nil{
 		fmt.Println("mkdir error in PrepareCSDFileDir:",err)
@@ -571,7 +571,7 @@ func PrepareCSDFileDir(filepath string, sinfo *core.ShareInfo)(string,string,err
 	orgkey:=make([]byte,16)
 	DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
 	uuid,_=core.GetUuid()
-	plaindir:=LocalTempDir(filepath)+"."+uuid
+	plaindir:=LocalTempDir(filepath,true)+"."+uuid
 	err=os.MkdirAll(plaindir,0755)
 	if err!=nil{
 		fmt.Println("Mkdir ",plaindir,"error:",err)
@@ -633,7 +633,7 @@ func RecordDataInfo(linfo *core.LoginInfo,outuuid string ,outkey []byte, orgname
 func PrepareEncFileDir(ipath string,fname string)(string,string,error){
 	srcuuid,_:=core.GetUuid()
 	dstuuid,_:=core.GetUuid()
-	tmpdir:=LocalTempDir(ipath)
+	tmpdir:=LocalTempDir(ipath,true)
 	srcdir:=tmpdir+"."+srcuuid
 	dstdir:=tmpdir+"."+dstuuid
 	os.MkdirAll(srcdir,0755)
