@@ -836,7 +836,7 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
 	}else if req.FromUid!=0{
 		query+=fmt.Sprintf("where  fromuid=%d ",req.FromUid)
 	}else{
-		query+=fmt.Sprintf("where touid=%d ",req.FromUid)
+		query+=fmt.Sprintf("where touid=%d ",req.ToUid)
 	}
 	if req.Type!=0{
 		query+=fmt.Sprintf(" and type=%d ",req.Type)
