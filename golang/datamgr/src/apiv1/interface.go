@@ -138,6 +138,14 @@ func NewQueryObjsAck(reqinfo []*DataObj)*IQueryObjsAck {
 	return qda
 }
 
+func NewSearchEncAck(result []*EncDataNode) *ISearchEncAck{
+	sea:=new (ISearchEncAck)
+	sea.Code=-1
+	sea.Msg=INIT_MSG
+	sea.Data=result
+	return sea
+}
+
 func NewSearchDataAck(result []*ShareDataNode) *ISearchDataAck{
 	sda:=new (ISearchDataAck)
 	sda.Code=-1

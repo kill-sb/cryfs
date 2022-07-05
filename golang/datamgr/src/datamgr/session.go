@@ -102,3 +102,49 @@ func Login(user string)(*core.LoginInfo, error){
 func Logout(linfo *core.LoginInfo) error{
 	return Logout_API(linfo.Token)
 }
+
+var todomap map[int32] bool=nil
+
+func AddUserIdList(id int32){
+	if _,ok:=useridmap[id];!ok{
+		if todomap==nil{
+			todomap=make(map[int32]bool)
+		}
+		if _,ok=todomap[id];!ok{
+			todomap[id]=true
+		}
+	}
+}
+
+func ClearTodoList(){
+	if todomap!=nil{
+		l:=len(todomap)
+		if l==0{
+			return
+		}
+		ulist:=make([]int32,0,l)
+		for k,_:=range todomap{
+			ulist=append(ulist,k)
+		}
+		uinfo,err:=GetUserInfo_API(ulist)
+		if err==nil{
+			for _,v:=range uinfo{
+				useridmap[v.Id]=v.Name
+			}
+		}else{
+			fmt.Println("GetUserInfo_API error:",err)
+		}
+		todomap=nil
+	}
+}
+
+// should be use anywhere in client, "" means no such user
+func GlobalGetUserName(id int32)string{
+	name,ok:=useridmap[id]
+	if !ok{
+		AddUserIdList(id)
+		ClearTodoList()
+		name,_=useridmap[id]
+	}
+	return name
+}

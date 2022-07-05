@@ -22,6 +22,7 @@ var namemap map[string]int32
 var idmap map[int32]string
 
 var uuidmap map[string]*core.EncryptedData
+var useridmap map[int32] string
 
 func LoadConfig(){
 	definpath=os.Getenv("DATA_IN_PATH")
@@ -37,7 +38,7 @@ func GetFunction() int {
 	flag.BoolVar(&bDec,"dec",false,"decrypted local data(test only)")
 	flag.BoolVar(&bTrace,"trace",false,"trace details of data")
 	flag.BoolVar(&bList,"list",false,"list local encrypted data")
-	flag.BoolVar(&bLogin,"login",false,"seperate a file from encrypted dir")
+	flag.BoolVar(&bLogin,"login",false,"login and get a token")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",defoutpath,"output data path")
 	flag.StringVar(&oname,"oname","","output new data org-name(default named with uuid")
@@ -78,10 +79,6 @@ func GetFunction() int {
 		ret=core.MOUNT
 		count++
 	}
-/*	if bSep{
-		ret=core.SEPERATE
-		count++
-	}*/
 	if count!=1{
 		ret=core.INVALID
 	}
@@ -126,6 +123,7 @@ func main(){
 	idmap=make(map[int32]string)
 
 	uuidmap =make(map[string]*core.EncryptedData)
+	useridmap=make(map[int32]string)
 	fun:=GetFunction()
 	inpath=strings.TrimSuffix(inpath,"/")
 	outpath=strings.TrimSuffix(outpath,"/")

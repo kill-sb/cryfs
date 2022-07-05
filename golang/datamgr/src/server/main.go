@@ -129,6 +129,7 @@ func SetupHandler() error{
     routemap[prefix+"logout"]=LogoutFunc
     routemap[prefix+"refreshtoken"]=RefreshTokenFunc
 	routemap[prefix+"searchsharedata"]=SearchShareDataFunc
+	routemap[prefix+"searchencdata"]=SearchEncDataFunc
 	routemap[prefix+"createrc"]=CreateRCFunc
 	routemap[prefix+"updaterc"]=UpdateRCFunc
 	routemap[prefix+"getrcinfo"]=GetRCInfoFunc

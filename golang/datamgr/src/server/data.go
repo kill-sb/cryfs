@@ -102,6 +102,53 @@ func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+func SearchEncDataFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		w.Header().Set("Content-Type","application/json")
+		var sedreq api.SearchEncDataReq
+		sedack:=api.NewSearchEncAck(make([]*api.EncDataNode,0,0))
+		err:=json.NewDecoder(r.Body).Decode(&sedreq)
+		if err!=nil{
+			log.Println("Decode json error:",err)
+			json.NewEncoder(w).Encode(sedack)
+			return
+		}
+
+		uinfo,err:=GetLoginUserInfo(sedreq.Token)
+        if err!=nil{
+            sedack.Code=1
+            sedack.Msg="You should login first"
+            json.NewEncoder(w).Encode(sedack)
+            return
+        }
+		if uinfo.Id!=sedreq.UserId {
+			sedack.Code=3
+			sedack.Msg="You should login as the userid you searched for"
+			json.NewEncoder(w).Encode(sedack)
+			return
+		}
+
+		objs,err:=dbop.SearchEncData(&sedreq)
+		if err!=nil{
+			sedack.Code=2
+			sedack.Msg=err.Error()
+		}else{
+			sedack=api.NewSearchEncAck(objs)
+			sedack.Code=0
+			sedack.Msg="OK"
+		}
+		json.NewEncoder(w).Encode(sedack)
+        if g_config.Debug{
+            DebugJson("Request:",&sedreq)
+            DebugJson("Response:",sedack)
+        }
+		/*
+		var linfo *LoginUserInfo
+		linfo,err=GetLoginUserInfo(sifreq.Token)
+		*/
+	}
+}
+
 // check token/ownerid later, valid only when ownerid==fromid || owner==toid
 func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{

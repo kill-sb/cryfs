@@ -24,7 +24,6 @@ const (
 	TRACE
 	LIST
     MOUNT
-	SEPERATE
 	LOGIN
 )
 

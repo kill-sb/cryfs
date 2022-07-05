@@ -489,6 +489,40 @@ func LookupPasswdSHA(user string)(int32,string,string,error){
 	return -1,"","",errors.New("No such user")
 }
 
+func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
+	db:=GetDB()
+	query:=fmt.Sprintf("select uuid, crtime from efilemeta where ownerid=%d",req.UserId)
+	if req.Start!=""{
+		query+=fmt.Sprintf(" and crtime >= '%s' ",req.Start+" 00:00:00")
+	}
+	if req.End!=""{
+		query+=fmt.Sprintf(" and crtime <= '%s' ",req.End+" 23.59:59")
+	}
+	if req.Latest==1{
+		query+=" order by crtime desc"
+	}else{
+		query+=" order by crtime asc"
+	}
+	res,err:=db.Query(query)
+	if err!=nil{
+		log.Println("select from db error:",err)
+		return nil,err
+	}
+	ret:=make([]*api.EncDataNode,0,50)
+	for res.Next(){
+		node:=new(api.EncDataNode)
+		node.UserId=req.UserId
+		err=res.Scan(&node.Uuid,&node.Crtime)
+		if err!=nil{
+			return nil,err
+		}
+		ret=append(ret,node)
+	}
+	return ret,nil
+}
+
+
+
 func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	if req.FromId<=0 && req.ToId<=0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
@@ -508,6 +542,11 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	}
 	if req.End!=""{
 		query+=fmt.Sprintf("and sharetags.crtime <= '%s' ",req.End+" 23.59:59")
+	}
+	if req.Latest==1{
+		query+="order by sharetags.crtime desc"
+	}else{
+		query+="order by sharetags.crtime asc"
 	}
 	res,err:=db.Query(query)
 	if err!=nil{
@@ -786,26 +825,30 @@ func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
 	}
 }
 
-func SearchNotifies(fromuid,touid,ntype, isnew int32)([]*api.NotifyInfo,error){
-	if fromuid==0 && touid==0{
+func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
+	if req.FromUid==0 && req.ToUid==0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
 	db:=GetDB()
 	query:="select id,type,content,descr,crtime,fromuid,touid,isnew from notifies "
-	if fromuid!=0 && touid!=0{
-		query+=fmt.Sprintf("where fromuid=%d and touid=%d ",fromuid,touid)
-	}else if fromuid!=0{
-		query+=fmt.Sprintf("where  fromuid=%d ",fromuid)
+	if req.FromUid!=0 && req.ToUid!=0{
+		query+=fmt.Sprintf("where fromuid=%d and touid=%d ",req.FromUid,req.ToUid)
+	}else if req.FromUid!=0{
+		query+=fmt.Sprintf("where  fromuid=%d ",req.FromUid)
 	}else{
-		query+=fmt.Sprintf("where touid=%d ",touid)
+		query+=fmt.Sprintf("where touid=%d ",req.FromUid)
 	}
-	if ntype!=0{
-		query+=fmt.Sprintf(" and type=%d ",ntype)
+	if req.Type!=0{
+		query+=fmt.Sprintf(" and type=%d ",req.Type)
 	}
-	if isnew!=-1{
-		query+=fmt.Sprintf(" and isnew=%d ",isnew)
+	if req.IsNew!=-1{
+		query+=fmt.Sprintf(" and isnew=%d ",req.IsNew)
 	}
-	query+=" order by crtime"
+	if req.Latest==1{
+		query+=" order by crtime desc"
+	}else{
+		query+=" order by crtime asc"
+	}
 	res,err:=db.Query(query)
 	if err!=nil{
 		log.Println("select from db error:",err)

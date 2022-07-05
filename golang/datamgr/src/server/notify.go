@@ -252,7 +252,7 @@ func SearchNotifiesFunc(w http.ResponseWriter, r *http.Request){
 		}
 
 		// user info checked ok
-		if snack.Data,err=dbop.SearchNotifies(snreq.FromUid,snreq.ToUid,snreq.Type,snreq.IsNew);err!=nil{
+		if snack.Data,err=dbop.SearchNotifies(&snreq);err!=nil{
 			snack.Code=1
 			snack.Msg=err.Error()
 			snack.Data=nil

@@ -246,6 +246,24 @@ type IFDataDesc interface{
 	GetOwnerId() int32
 }
 
+type SearchEncDataReq struct{
+	Token string `json:"token"`
+	UserId int32 `json:"userid"`
+	Start string `json:"startdate"`
+	End string `json:"enddate"`
+	Latest int32 `json:"latest"`
+}
+
+type EncDataNode struct{
+	Uuid string `json:"uuid"`
+	UserId int32 `json:"userid"`
+	Crtime string `json:"crtime"`
+}
+
+type ISearchEncAck struct{
+	RetStat
+	Data []*EncDataNode `json:"data"`
+}
 
 type SearchShareDataReq struct{
 	Token string `json:"token"`
@@ -253,6 +271,7 @@ type SearchShareDataReq struct{
 	ToId int32 `json:"toid"`
 	Start string `json:"startdate"`
 	End string `json:"enddate"`
+	Latest int32 `json:"latest"`
 }
 
 type ShareDataNode struct{
@@ -357,6 +376,7 @@ type SearchNotifiesReq struct{
 	FromUid int32 `json:"fromuid"`
 	Type int32 `json:"type"`
 	IsNew int32 `json:"isnew"`
+	Latest int32 `json:"latest"`
 }
 
 type ISearchNotifiesAck struct{
