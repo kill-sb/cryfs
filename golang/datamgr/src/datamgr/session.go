@@ -116,11 +116,11 @@ func AddUserIdList(id int32){
 	}
 }
 
-func ClearTodoList(){
+func ClearTodoList()error{
 	if todomap!=nil{
 		l:=len(todomap)
 		if l==0{
-			return
+			return nil
 		}
 		ulist:=make([]int32,0,l)
 		for k,_:=range todomap{
@@ -135,7 +135,9 @@ func ClearTodoList(){
 			fmt.Println("GetUserInfo_API error:",err)
 		}
 		todomap=nil
+		return err
 	}
+	return nil
 }
 
 // should be use anywhere in client, "" means no such user

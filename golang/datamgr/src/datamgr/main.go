@@ -19,7 +19,7 @@ var keyword string
 var podimg string
 
 var namemap map[string]int32
-var idmap map[int32]string
+//var idmap map[int32]string
 
 var uuidmap map[string]*core.EncryptedData
 var useridmap map[int32] string
@@ -120,7 +120,7 @@ func main(){
 	}
 	LoadConfig()
 	namemap=make(map[string]int32)
-	idmap=make(map[int32]string)
+//	idmap=make(map[int32]string)
 
 	uuidmap =make(map[string]*core.EncryptedData)
 	useridmap=make(map[int32]string)

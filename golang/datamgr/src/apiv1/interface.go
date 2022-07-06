@@ -212,11 +212,11 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)
    // fmt.Print("-->")
     var result string
     if dinfo.FromRCId==-1{
-		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  Details :",dinfo.Uuid)
+		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  ",dinfo.Uuid)
         result+=fmt.Sprintf("From Local Plain Data->%s",dinfo.OrgName)
     }else {
-		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  Details :",dinfo.Uuid)
-		result+=fmt.Sprintf("From Encrypted/Shared Data, Original Name: %s",strings.TrimSuffix(dinfo.OrgName,".outdata"))
+		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  ",dinfo.Uuid)
+		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",strings.TrimSuffix(dinfo.OrgName,".outdata"))
     }
     result+=fmt.Sprintf(", Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
 
@@ -238,7 +238,7 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, kw string,getuser func(int32
     }
   //  fmt.Print("-->")
 
-	result:=fmt.Sprintf("Data Obj :%s (Type: Shared Data) Details :",sinfo.Uuid)
+	result:=fmt.Sprintf("Data Obj :%s (Type: Shared Data)  ",sinfo.Uuid)
     result+=fmt.Sprintf("Owner->%s(uid :%d)",getuser(sinfo.OwnerId),sinfo.OwnerId)
     result+=fmt.Sprintf(", Send to->%s",sinfo.Receivers)
 	if sinfo.Expire!="2999:12:31 00:00:00"{

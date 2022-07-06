@@ -342,11 +342,10 @@ func TraceEncData(token string,fname string){
 }
 
 func DisplayResult(dinfo* api.EncDataInfo,pobjs,bobjs,fobjs []*api.DataObj,info map[string]api.IFDataDesc,rcid int64){
-	// gen userid - user map
-	idmap:=make(map[int32]string)
 	for _,v:=range info{
-		idmap[v.GetOwnerId()]="unknown"
+		AddUserIdList(v.GetOwnerId())
 	}
+	/*
 	ids:=make([]int32,1,len(idmap)+1)
 	ids[0]=dinfo.OwnerId
 	for k,_:=range idmap{
@@ -359,21 +358,19 @@ func DisplayResult(dinfo* api.EncDataInfo,pobjs,bobjs,fobjs []*api.DataObj,info 
 	}
 	for i,v:=range ids{
 		idmap[v]=users[i].Name
-	}
-	lookupid:=func(id int32)string{
-		return idmap[id]
-	}
+	}*/
+	ClearTodoList()
 	fmt.Println("Data Info:")
-	dinfo.PrintDataInfo(1,keyword,lookupid)
+	dinfo.PrintDataInfo(1,keyword,GlobalGetUserName)
 	// Show all obj's info
 	if len(pobjs)>0{
 		fmt.Println("\nParent Objs:")
 	}
 	for _,v:=range pobjs{
 		if v.Type==core.RAWDATA{
-			fmt.Println("\tData Obj: "+v.Obj+" (Type: Local Plain Data)")
+			fmt.Println("    Data Obj: "+v.Obj+" (Type: Local Plain Data)")
 		}else{
-			info[v.Obj].PrintDataInfo(1,keyword,lookupid)
+			info[v.Obj].PrintDataInfo(1,keyword,GlobalGetUserName)
 		}
 	}
 
@@ -382,16 +379,16 @@ func DisplayResult(dinfo* api.EncDataInfo,pobjs,bobjs,fobjs []*api.DataObj,info 
 	}
 	for _,v:=range bobjs{
 		if v.Type==core.RAWDATA{
-			fmt.Println("\tData Obj: "+v.Obj+" (Type: Local Plain Data)")
+			fmt.Println("    Data Obj: "+v.Obj+" (Type: Local Plain Data)")
 		}else{
-			info[v.Obj].PrintDataInfo(1,keyword,lookupid)
+			info[v.Obj].PrintDataInfo(1,keyword,GlobalGetUserName)
 		}
 	}
 	if len(fobjs)>0{
 		fmt.Println("\nTrace forward result:")
 	}
 	for _,v:=range fobjs{
-		info[v.Obj].PrintDataInfo(1,keyword,lookupid)
+		info[v.Obj].PrintDataInfo(1,keyword,GlobalGetUserName)
 	}
 }
 
@@ -530,18 +527,12 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	return true
 }
 
-func GetUserName(id int32)(ret string,err error){
-	if ret,ok:=idmap[id];ok{
-		return ret,nil
-	}
-	ids:=[]int32{id}
-	ud,err:=GetUserInfo_API(ids)
+func GetUserName(id int32)(string,error){
+	AddUserIdList(id)
+	err:=ClearTodoList()
 	if err!=nil{
 		return "",err
 	}
-	ret=ud[0].Name
-	idmap[id]=ret
-	namemap[ret]=id
-	return ret,nil
+	return GlobalGetUserName(id),nil
 }
 
