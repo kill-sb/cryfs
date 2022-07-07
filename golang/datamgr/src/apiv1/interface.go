@@ -205,6 +205,14 @@ func (dinfo * EncDataInfo)GetOwnerId()int32{
 	return dinfo.OwnerId
 }
 
+func (dinfo* EncDataInfo)GetUuid() string{
+	return dinfo.Uuid
+}
+
+func (dinfo* EncDataInfo)GetType() int{
+	return ENCDATA
+}
+
 func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)string)error{
     for i:=0;i<level;i++{
         fmt.Print("    ")
@@ -216,7 +224,8 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)
         result+=fmt.Sprintf("From Local Plain Data->%s",dinfo.OrgName)
     }else {
 		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  ",dinfo.Uuid)
-		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",strings.TrimSuffix(dinfo.OrgName,".outdata"))
+//		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",strings.TrimSuffix(dinfo.OrgName,".outdata"))
+		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",dinfo.OrgName)
     }
     result+=fmt.Sprintf(", Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
 
@@ -231,6 +240,15 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)
 func (sinfo* ShareInfoData)GetOwnerId()int32{
 	return sinfo.OwnerId
 }
+
+func (sinfo* ShareInfoData)GetUuid() string{
+    return sinfo.Uuid
+}
+
+func (sinfo* ShareInfoData)GetType() int{
+    return CSDFILE
+}
+
 
 func (sinfo* ShareInfoData)PrintDataInfo(level int, kw string,getuser func(int32)string)error{
     for i:=0;i<level;i++{

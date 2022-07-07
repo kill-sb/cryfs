@@ -245,6 +245,70 @@ func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error
 	}*/
 }
 
+func MergeQueryObjs(token string, allobjs []*api.DataObj)(map[string]api.IFDataDesc,error){
+	objmap:=make(map[string]*api.DataObj)
+	objs:=make([]*api.DataObj,0,len(allobjs))
+	for _,v:=range allobjs{
+		if v.Type==core.RAWDATA{ // objmap is used for QueryObjs, skip RAWDATA
+			continue
+		}
+		if _,ok:=objmap[v.Obj];!ok{
+			objmap[v.Obj]=v
+			objs=append(objs,v)
+		}
+	}
+	dataret,err:=QueryObj_API(token,objs)
+	if err!=nil{
+		fmt.Println("MergeQueryObjs error:",err)
+		return nil,err
+	}
+	mapret:=make(map[string]api.IFDataDesc)
+	for _,v:=range dataret{
+		mapret[v.GetUuid()]=v
+	}
+	return mapret,nil
+}
+
+func TraceRootObj(token string, root api.IFDataDesc)error{
+	/*
+	 1. Get traceparent,traceback,traceforword results in different obj slices
+	 2. put objs into a map(objmap) with uuid-key, obj-value
+	 3. put all elements in map into a slice, and use queryobjs to get objinfo
+	 4. put queryobjs results into a map(infomap) with uuid-key, objinfo-value
+	 5. show detail info in each element in obj slice in step1 by lookup infomap
+	*/
+
+	data:=&api.DataObj{Obj:root.GetUuid(),Type:root.GetType()}
+	allobjs:=make([]*api.DataObj,0,50)
+
+	bobjs,err:=TraceData_API(token,data,api.TRACE_BACK)
+	if err!=nil{
+		fmt.Println("Trace back of ",data.Obj," error:",err.Error())
+		return err
+	}
+	allobjs=append(allobjs,bobjs...)
+
+	fobjs,err:=TraceData_API(token,data,api.TRACE_FORWARD)
+	if err!=nil{
+		fmt.Println("Trace forward of ",data.Obj," error:",err.Error())
+		return err
+	}
+	allobjs=append(allobjs,fobjs...)
+
+	if len(allobjs)<1{
+		return nil
+	}
+
+	infomap,err:=MergeQueryObjs(token,allobjs)
+	if err!=nil{
+		fmt.Println("TraceCSDFile error:",err.Error())
+		return err
+	}
+
+	DisplayTraceResult(root,bobjs,fobjs,infomap)
+	return nil
+}
+
 func TraceCSDFile(token string,fname string){
 	head,err:=core.LoadShareInfoHead(fname)
 	if err!=nil{
@@ -253,10 +317,15 @@ func TraceCSDFile(token string,fname string){
 	}
 	uuid:=string(head.Uuid[:])
 	sinfo,err:=GetShareInfo_User_API(token,uuid,0)
-	fmt.Println("Data Info:")
-	sinfo.PrintDataInfo(1,keyword,func (id int32)string{
-		return "zhang3"
-	})
+	if err!=nil{
+		fmt.Println("GetShareInfo err:",err)
+		return
+	}
+	AddUserIdList(sinfo.OwnerId)
+	TraceRootObj(token,sinfo)
+}
+
+func TraceEncRCInfo(token string, dinfo *api.EncDataInfo){
 }
 
 func TraceEncData(token string,fname string){
@@ -275,123 +344,46 @@ func TraceEncData(token string,fname string){
 		fmt.Println("Get data brief info error:",err)
 		return
 	}
-	/*
-	 1. Get traceparent,traceback,traceforword results in different obj slices
-	 2. put objs into a map(objmap) with uuid-key, obj-value
-	 3. put all elements in map into a slice, and use queryobjs to get objinfo
-	 4. put queryobjs results into a map(infomap) with uuid-key, objinfo-value
-	 5. show detail info in each element in obj slice in step1 by lookup infomap
-	*/
 
-	objmap:=make(map[string]*api.DataObj)
-	infomap:=make(map[string]api.IFDataDesc)
-	data:=&api.DataObj{Obj:uuid,Type:core.ENCDATA}
+	AddUserIdList(dinfo.OwnerId)
 
-	// step 1 & 2
-	pobjs,err:=TraceData_API(token,data,api.TRACE_PARENTS)
-	if err!=nil{
-		fmt.Println("Trace source of ",uuid," error:",err.Error())
-		return
+	err=TraceRootObj(token,dinfo)
+	if err==nil{
+		TraceEncRCInfo(token,dinfo)
 	}
-	for _,obj:=range pobjs{
-		if obj.Type>=0{
-			objmap[obj.Obj]=obj
-		}
-	}
-
-	bobjs,err:=TraceData_API(token,data,api.TRACE_BACK)
-	if err!=nil{
-		fmt.Println("Trace back of ",uuid," error:",err.Error())
-		return
-	}
-	for _,obj:=range bobjs{
-		if obj.Type>=0{
-			objmap[obj.Obj]=obj
-		}
-	}
-	fobjs,err:=TraceData_API(token,data,api.TRACE_FORWARD)
-	if err!=nil{
-		fmt.Println("Trace forward of ",uuid," error:",err.Error())
-		return
-	}
-	for _,obj:=range fobjs{
-		objmap[obj.Obj]=obj
-	}
-	cnt:=len(objmap)
-	if cnt<1{
-		return
-	}
-
-	// step3
-	allobjs:=make([]*api.DataObj,0,len(objmap))
-	for _,v:=range objmap{
-		allobjs=append(allobjs,v)
-	}
-	retobjs,err:=QueryObj_API(token,allobjs)
-	if err!=nil{
-		fmt.Println("QueryObjs error:",err.Error())
-		return
-	}
-
-	// step 4
-	for i,v:=range retobjs{
-		infomap[allobjs[i].Obj]=v
-	}
-	// step 5
-	DisplayResult(dinfo,pobjs,bobjs,fobjs,infomap,dinfo.FromRCId)
 }
 
-func DisplayResult(dinfo* api.EncDataInfo,pobjs,bobjs,fobjs []*api.DataObj,info map[string]api.IFDataDesc,rcid int64){
+
+func DisplayTraceResult(dinfo api.IFDataDesc,bobjs,fobjs []*api.DataObj,info map[string]api.IFDataDesc){
 	for _,v:=range info{
 		AddUserIdList(v.GetOwnerId())
 	}
-	/*
-	ids:=make([]int32,1,len(idmap)+1)
-	ids[0]=dinfo.OwnerId
-	for k,_:=range idmap{
-		ids=append(ids,k)
-	}
-	users,err:=GetUserInfo_API(ids)
-	if err!=nil{
-		fmt.Println("GetUserInfo error:",err)
-		return
-	}
-	for i,v:=range ids{
-		idmap[v]=users[i].Name
-	}*/
+
 	ClearTodoList()
 	fmt.Println("Data Info:")
 	dinfo.PrintDataInfo(1,keyword,GlobalGetUserName)
-	// Show all obj's info
-	if len(pobjs)>0{
-		fmt.Println("\nParent Objs:")
-	}
-	for _,v:=range pobjs{
-		if v.Type==core.RAWDATA{
-			fmt.Println("    Data Obj: "+v.Obj+" (Type: Local Plain Data)")
-		}else{
-			info[v.Obj].PrintDataInfo(1,keyword,GlobalGetUserName)
-		}
-	}
 
 	if len(bobjs)>0{
 		fmt.Println("\nTrace back result:")
 	}
-	for _,v:=range bobjs{
+
+	for i,v:=range bobjs{
+		fmt.Printf("    %d. ",i+1)
 		if v.Type==core.RAWDATA{
-			fmt.Println("    Data Obj: "+v.Obj+" (Type: Local Plain Data)")
+			fmt.Println("Data Obj: "+v.Obj+" (Type: Local Plain Data)")
 		}else{
-			info[v.Obj].PrintDataInfo(1,keyword,GlobalGetUserName)
+			info[v.Obj].PrintDataInfo(0,keyword,GlobalGetUserName)
 		}
 	}
+
 	if len(fobjs)>0{
 		fmt.Println("\nTrace forward result:")
 	}
-	for _,v:=range fobjs{
-		info[v.Obj].PrintDataInfo(1,keyword,GlobalGetUserName)
+	for i,v:=range fobjs{
+		fmt.Printf("    %d. ",i+1)
+		info[v.Obj].PrintDataInfo(0,keyword,GlobalGetUserName)
 	}
 }
-
 
 
 func doTraceAll(){
