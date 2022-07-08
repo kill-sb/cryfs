@@ -1051,6 +1051,12 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
 	if req.End!=""{
 		query+=fmt.Sprintf(" and exports.crtime <= '%s' ",req.End+" 23.59:59")
 	}
+    if req.Latest==1{
+        query+=" order by exports.crtime desc"
+    }else{
+        query+=" order by exports.crtime asc"
+    }
+
 	res,err:=db.Query(query)
 	if err!=nil{
 		log.Println("select from db error:",err)

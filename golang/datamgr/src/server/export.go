@@ -78,7 +78,7 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
             defer DebugJson("Response:",epack)
         }
 
-		_,err=GetLoginUserInfo(epreq.Token)
+		luinfo,err:=GetLoginUserInfo(epreq.Token)
         if err!=nil{
             epack.Code=1
             epack.Msg="You should login first"
@@ -92,22 +92,41 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 			epack.Data=nil
 			epack.Msg=err.Error()
 		}else{
-	/*		if luinfo.Id!=epinfo.DstData.UserId{// fixme: check watiqueue owner later
-				Debug("luid:",luinfo.Id,"epid:",epinfo.DstData.UserId)
-				epack.Code=3
-				epack.Msg="Data not belong to login user"
+			err=dbop.LoadProcQueue(epinfo)
+			if err!=nil{
+				epack.Code=2
 				epack.Data=nil
-			}else{*/
-				err=dbop.LoadProcQueue(epinfo)
-				if err!=nil{
-					epack.Code=2
-					epack.Msg=err.Error()
+				epack.Msg=err.Error()
+			}else{
+				if luinfo.Id!=epinfo.DstData.UserId{ // check receiver
+					if epinfo.ProcQueue==nil || len(epinfo.ProcQueue)==0{
+						epack.Code=3
+						epack.Msg="Invalid query user"
+						epack.Data=nil
+					}else{ // now check receive list
+						bfind:=false
+						for _,node:=range epinfo.ProcQueue{
+							if node.ProcUid==luinfo.Id{
+								bfind=true
+								break
+							}
+						}
+						if bfind{
+							epack.Code=0
+							epack.Msg="OK"
+							epack.Data=epinfo
+						}else{
+							epack.Code=3
+							epack.Msg="Invalid query user"
+							epack.Data=nil
+						}
+					}
 				}else{
 					epack.Code=0
 					epack.Msg="OK"
 					epack.Data=epinfo
 				}
-	//		}
+			}
 		}
         json.NewEncoder(w).Encode(epack)
 	}else{

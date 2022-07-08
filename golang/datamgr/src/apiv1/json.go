@@ -337,6 +337,7 @@ type SearchExpReq struct{
 	Status int32 `json:"status"`
 	Start string `json:"startdate"`
 	End string `json:"enddate"`
+	Latest int32 `json:"latest"`
 }
 
 type ISearchExpAck struct{
