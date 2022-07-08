@@ -121,7 +121,6 @@ func SetupHandler() error{
     routemap[prefix+"getdatainfo"]=GetDataInfoFunc
     routemap[prefix+"trace"]=TraceFunc
     routemap[prefix+"traceback"]=TraceBackFunc
-//    routemap[prefix+"updatedata"]=UpdateDataFunc
     routemap[prefix+"traceforward"]=TraceForwardFunc
     routemap[prefix+"queryobjs"]=QueryObjsFunc
 	routemap[prefix+"traceparents"]=TraceParentsFunc

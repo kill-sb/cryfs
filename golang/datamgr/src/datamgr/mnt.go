@@ -172,7 +172,7 @@ func ValidateImports(toolpath string)([]*api.ImportFile,error){
 			if desc,err:=exec.Command("file",path).Output();err!=nil{
 				imnode.FileDesc=""
 			}else{
-				imnode.FileDesc=string(desc)
+				imnode.FileDesc=strings.TrimSpace(string(desc))
 			}
 			imnode.Size=st.Size()
 			imlist=append(imlist,imnode)

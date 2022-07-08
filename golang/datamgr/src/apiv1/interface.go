@@ -221,15 +221,15 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)
     var result string
     if dinfo.FromRCId==-1{
 		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  ",dinfo.Uuid)
-        result+=fmt.Sprintf("From Local Plain Data->%s",dinfo.OrgName)
+        result+=fmt.Sprintf("From Local Plain Data->%s,  ",dinfo.OrgName)
     }else {
-		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  ",dinfo.Uuid)
+		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data),  ",dinfo.Uuid)
 //		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",strings.TrimSuffix(dinfo.OrgName,".outdata"))
 		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",dinfo.OrgName)
     }
-    result+=fmt.Sprintf(", Owner->%s(uid:%d)",getuser(dinfo.OwnerId),dinfo.OwnerId)
+    result+=fmt.Sprintf("Owner->%s(uid:%d),  ",getuser(dinfo.OwnerId),dinfo.OwnerId)
 
-    result+=fmt.Sprintf(", Create at->%s\n",dinfo.CrTime)
+    result+=fmt.Sprintf("Create at->%s\n",dinfo.CrTime)
     if kw!=""{
         result=strings.Replace(result,kw,"\033[7m"+kw+"\033[0m", -1)
     }

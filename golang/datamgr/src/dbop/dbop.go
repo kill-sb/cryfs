@@ -458,10 +458,10 @@ func GetUserInfo(id int32)(*api.UserInfoData,error){
 	query:=fmt.Sprintf("select descr,name,mobile,email from users where id=%d",id)
 	res,err:=db.Query(query)
 	if err!=nil{
-		return ret,err
+		return nil,err
 	}
 	if !res.Next(){
-		return ret,errors.New("No such user ")
+		return nil,errors.New("No such user ")
 	}else{
 		res.Scan(&ret.Descr,&ret.Name,&ret.Mobile,&ret.Email)
 	}
@@ -992,6 +992,8 @@ func GetExportInfo(expid int64)(*api.ExportProcInfo,error){
 		if err!=nil{
 			return nil,err
 		}
+	}else{
+		return nil, errors.New("No such export id")
 	}
 	return epinfo,nil
 }

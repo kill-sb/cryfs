@@ -5,7 +5,7 @@ import(
 	"fmt"
 	"io/ioutil"
 	"os"
-	"errors"
+//	"errors"
 	"strings"
 	api "apiv1"
 	core "coredata"
@@ -153,22 +153,6 @@ func ListCSDs(csds[]string){
 		}
     }
 }
-/*
-func GetDataInfo_API(uuid string)(*api.IDataInfoAck,error){
-	req:=&api.GetDataInfoReq{Token:"0",Uuid:uuid}
-	ack:=api.NewDataInfoAck()
-	err:=HttpAPIPost(req,ack,"getdatainfo")
-	if err!=nil{
-		fmt.Println("call api info error:",err)
-		return nil,err
-	}
-	if ack.Code!=0{
-		fmt.Println("request error:",ack.Msg)
-		return nil,errors.New(ack.Msg)
-	}
-	return ack,nil
-}
-*/
 
 func FillEncDataInfo(adata *api.EncDataInfo)*core.EncryptedData{
     info:=new (core.EncryptedData)
@@ -200,51 +184,6 @@ func GetEncDataInfo(uuid string)(*core.EncryptedData,error){
 	return dinfo,nil
 }
 
-func traceRawData(tracer []core.InfoTracer,uuid string)([]core.InfoTracer,error){
-	return nil,errors.New("Empty implement in traceRawData")
-	// RAW DATA
-/*	dinfo,err:=GetEncDataInfo(uuid)
-	if err!=nil{
-		fmt.Println("GetEncDataInfo error in traceRAWDATA:",err)
-		return nil,err
-	}
-	tracer=append(tracer,dinfo)
-
-    // should be replaced later because of multi-source processing
-
-	if dinfo.FromType==core.RAWDATA{
-		return tracer,nil
-	}else if dinfo.FromType==core.CSDFILE{
-		return traceCSDFile(tracer,dinfo.FromObj)
-	}else{
-		fmt.Println("Get unknown 'FromType' during tracing:",uuid,":",dinfo.FromType)
-		return nil,errors.New("Unknown FromType")
-	}*/
-}
-
-
-func traceCSDFile(tracer []core.InfoTracer,uuid string)([]core.InfoTracer ,error){
-	return nil,errors.New("Empty implement in traceCSDFile")
-	/*
-	data,err:=GetShareInfo_Public_API(uuid)
-	if err!=nil{
-		fmt.Println("GetShareInfo_Public_API error in traceCSDFile:",err)
-		return nil,err
-	}
-	sinfo:=FillShareInfo(data,uuid,0,0,nil)
-	tracer=append(tracer,sinfo)
-
-    // should be replaced later because of multi-source processing
-	if sinfo.FromType==core.ENCDATA{
-		return traceRawData(tracer,sinfo.FromUuid)
-	}else if sinfo.FromType==core.CSDFILE{
-		return traceCSDFile(tracer,sinfo.FromUuid)
-	}else{
-		fmt.Println("Get unknown 'FromType' during tracing:",uuid,":",sinfo.FromType)
-		return nil,errors.New("Unknown FromType")
-	}*/
-}
-
 func MergeQueryObjs(token string, allobjs []*api.DataObj)(map[string]api.IFDataDesc,error){
 	objmap:=make(map[string]*api.DataObj)
 	objs:=make([]*api.DataObj,0,len(allobjs))
@@ -265,6 +204,7 @@ func MergeQueryObjs(token string, allobjs []*api.DataObj)(map[string]api.IFDataD
 	mapret:=make(map[string]api.IFDataDesc)
 	for _,v:=range dataret{
 		mapret[v.GetUuid()]=v
+		AddUserIdList(v.GetOwnerId())
 	}
 	return mapret,nil
 }
@@ -326,6 +266,43 @@ func TraceCSDFile(token string,fname string){
 }
 
 func TraceEncRCInfo(token string, dinfo *api.EncDataInfo){
+	fmt.Println("\nData Run Context info:")
+	if dinfo.FromRCId==0{
+		fmt.Println("    The data is created from local plain file(s) directly, so there's no run context info.")
+		return
+	}
+	rcinfo,err:=GetRCInfo_API(dinfo.FromRCId)
+	if err!=nil{
+		fmt.Println("Get RCInfo error in TraceEncRCInfo: ",err)
+		return
+	}
+	fmt.Printf("    Environment info:\n\tOS: %s,  Container Image: %s,  Client IP: %s,  Start Time: %s,  End Time: %s", rcinfo.OS,rcinfo.BaseImg,rcinfo.IPAddr,rcinfo.StartTime,rcinfo.EndTime)
+	nsrc:=len(rcinfo.InputData)
+	if nsrc>0{
+		srcobjs:=make([]*api.DataObj,nsrc,nsrc)
+		for i,v:=range rcinfo.InputData{
+			srcobjs[i]=&api.DataObj{Obj:v.DataUuid,Type:v.DataType}
+		}
+		if infomap,err:=MergeQueryObjs("",srcobjs);err==nil{
+			ClearTodoList()
+			fmt.Println("\n    Parent Data Objects:")
+			i:=0
+			for _,v:=range infomap{
+				i++
+				fmt.Printf("\t%d. ",i)
+				v.PrintDataInfo(0,"",GlobalGetUserName)
+			}
+		}
+	}
+	if len(rcinfo.ImportPlain)>0{
+		fmt.Println("    Imported plain files info:")
+		for i,v:=range rcinfo.ImportPlain{
+			fmt.Printf("\t%d. File: %s,  Content description: %s,  Size: %d,  SHA256 sum: %s\n",i+1,v.RelName,v.FileDesc,v.Size,v.Sha256)
+		}
+	}else{
+		fmt.Println("    Imported plain files info:  (Empty)")
+	}
+
 }
 
 func TraceEncData(token string,fname string){
@@ -355,16 +332,19 @@ func TraceEncData(token string,fname string){
 
 
 func DisplayTraceResult(dinfo api.IFDataDesc,bobjs,fobjs []*api.DataObj,info map[string]api.IFDataDesc){
+/*	should be done in MergeQueryObjs already, even if no yet, it will be done in GloblGetUserName as need
 	for _,v:=range info{
 		AddUserIdList(v.GetOwnerId())
 	}
-
+*/
 	ClearTodoList()
 	fmt.Println("Data Info:")
-	dinfo.PrintDataInfo(1,keyword,GlobalGetUserName)
+	dinfo.PrintDataInfo(1,"",GlobalGetUserName)
 
 	if len(bobjs)>0{
 		fmt.Println("\nTrace back result:")
+	}else{
+		fmt.Println("\nTrace back result:  (Empty)")
 	}
 
 	for i,v:=range bobjs{
@@ -372,16 +352,18 @@ func DisplayTraceResult(dinfo api.IFDataDesc,bobjs,fobjs []*api.DataObj,info map
 		if v.Type==core.RAWDATA{
 			fmt.Println("Data Obj: "+v.Obj+" (Type: Local Plain Data)")
 		}else{
-			info[v.Obj].PrintDataInfo(0,keyword,GlobalGetUserName)
+			info[v.Obj].PrintDataInfo(0,"",GlobalGetUserName)
 		}
 	}
 
 	if len(fobjs)>0{
 		fmt.Println("\nTrace forward result:")
+	}else{
+		fmt.Println("\nTrace forward result:  (Empty)")
 	}
 	for i,v:=range fobjs{
 		fmt.Printf("    %d. ",i+1)
-		info[v.Obj].PrintDataInfo(0,keyword,GlobalGetUserName)
+		info[v.Obj].PrintDataInfo(0,"",GlobalGetUserName)
 	}
 }
 
@@ -412,60 +394,6 @@ func doTraceAll(){
 		fmt.Println(inpath+" does not have valid data type.")
 	}
 }
-
-/*
-func doTraceAll(){
-	if inpath==""{
-		fmt.Println("use -in to set filename need to be traced")
-		return
-	}
-	ftype:=GetDataType(inpath)
-	var tracer =make([]core.InfoTracer,0,20)
-	switch ftype{
-// should be replaced later because of multi-source processing, more cases like  core.ENCDATA
-
-	case core.ENCDATA:
-	    if tag,err:=core.LoadTagFromDisk(inpath);err!=nil{
-			fmt.Println("Load tag info error in traceAll:",err)
-			return
-		}else{
-			tracer,err=traceRawData(tracer,string(tag.Uuid[:]))
-			if err!=nil{
-				fmt.Println("trace Rawdata error:",err)
-				return
-			}
-		}
-	case core.CSDFILE:
-		if head,err:=core.LoadShareInfoHead(inpath);err!=nil{
-			fmt.Println("Load share info head error in traceAll:",err)
-			return
-		}else{
-			tracer,err=traceCSDFile(tracer,string(head.Uuid[:]))
-		}
-	default:
-		fmt.Println("Unknown data type.")
-		return
-	}
-	length:=len(tracer)
-	for i:=length-1;i>=0;i--{
-		tab:=length-1-i
-		if err:=tracer[i].PrintTraceInfo(tab,keyword);err!=nil{
-			return
-		}else{
-			if i!=0{
-				for j:=0;j<=tab;j++{
-					fmt.Print("\t")
-				}
-				fmt.Println("|")
-				for j:=0;j<=tab;j++{
-					fmt.Print("\t")
-				}
-				fmt.Println("|")
-			}
-		}
-	}
-}
-*/
 
 func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 	var result string

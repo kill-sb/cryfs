@@ -324,58 +324,6 @@ func ShareDataFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
-/*
-func UpdateDataFunc(w http.ResponseWriter, r *http.Request){
-	if r.Method=="POST"{
-		ack:=api.NewSimpleAck()
-		w.Header().Set("Content-Type","application/json")
-		var udreq api.UpdateDataInfoReq
-		err:=json.NewDecoder(r.Body).Decode(&udreq)
-		if err!=nil{
-			log.Println("Decode json error:",err)
-			json.NewEncoder(w).Encode(ack)
-			return
-		}
-        if g_config.Debug{
-            DebugJson("Request:",&udreq)
-            defer DebugJson("Response:",ack)
-        }
-		luinfo,err:=GetLoginUserInfo(udreq.Token)
-		if err!=nil{
-			ack.Code=1
-			ack.Msg=err.Error()
-			json.NewEncoder(w).Encode(ack)
-			return
-		}
-		dinfo,err:=dbop.GetEncDataInfo(udreq.Uuid)
-		if err!=nil{
-			ack.Code=2
-			ack.Msg=err.Error()
-			json.NewEncoder(w).Encode(ack)
-			return
-		}
-		if luinfo.Id!=dinfo.OwnerId{
-			ack.Code=2
-			ack.Msg="Invalid user"
-			json.NewEncoder(w).Encode(ack)
-			return
-		}
-
-		// user info checked ok
-		// reference crypt.go:dbop.SaveMeta
-		if err=dbop.UpdateMeta(&udreq);err!=nil{
-			ack.Code=1
-			ack.Msg=err.Error()
-		}else{
-			ack.Code=0
-			ack.Msg="OK"
-		}
-		json.NewEncoder(w).Encode(ack)
-	}else{
-		http.NotFound(w,r)
-	}
-}*/
-
 func CreateRCFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		rcack:=api.NewRCInfoAck()
