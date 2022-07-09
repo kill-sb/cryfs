@@ -38,11 +38,11 @@ int get_passwd(char *buf,int len)
 import "C"
 
 //var APIServer string="https://127.0.0.1:8080/api/v1/"
-var APIServer string="https://apisvr:8080/api/v1/"
 
 func HttpAPIPost(param interface{},ret interface{},entry string)error{
+	apiserver:="https://"+apisvr+"/api/v1/"
 	obj,_:=json.Marshal(param)
-	req,err:=http.NewRequest("POST",APIServer+entry,bytes.NewBuffer(obj))
+	req,err:=http.NewRequest("POST",apiserver+entry,bytes.NewBuffer(obj))
 	if err!=nil{
 		fmt.Println("New request error:",err)
 		return err

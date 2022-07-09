@@ -18,7 +18,7 @@ var defuser, loginuser string
 var config string
 var keyword string
 var podimg string
-
+var apisvr string
 var CheckSum string
 
 var namemap map[string]int32
@@ -45,9 +45,10 @@ func GetFunction() int {
 	flag.BoolVar(&bLogin,"login",false,"login and get a token")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",defoutpath,"output data path")
-	flag.StringVar(&oname,"oname","","output new data org-name(default named with uuid")
+	flag.StringVar(&oname,"oname","","output new data org-name(default named with uuid)")
 	flag.StringVar(&podimg,"img","cmit","container base image")
 	flag.StringVar(&mntimport,"import","", "import plain data dir into container")
+	flag.StringVar(&apisvr,"apisvr","apisvr:8080", "api server address (ip:port)")
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
 	flag.StringVar(&config,"config","", "use config file to decribe share info")
 	flag.StringVar(&keyword,"search","", "used with -list or -trace.(When used with -list,search data records contain the keyword only, and when used with -trace, highlight the keyword)")

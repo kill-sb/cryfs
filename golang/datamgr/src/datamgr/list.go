@@ -290,7 +290,7 @@ func TraceEncRCInfo(token string, dinfo *api.EncDataInfo){
 			for _,v:=range infomap{
 				i++
 				fmt.Printf("\t%d. ",i)
-				v.PrintDataInfo(0,"",GlobalGetUserName)
+				v.PrintDataInfo(0,keyword,GlobalGetUserName)
 			}
 		}
 	}
@@ -339,7 +339,7 @@ func DisplayTraceResult(dinfo api.IFDataDesc,bobjs,fobjs []*api.DataObj,info map
 */
 	ClearTodoList()
 	fmt.Println("Data Info:")
-	dinfo.PrintDataInfo(1,"",GlobalGetUserName)
+	dinfo.PrintDataInfo(1,keyword,GlobalGetUserName)
 
 	if len(bobjs)>0{
 		fmt.Println("\nTrace back result:")
@@ -350,9 +350,13 @@ func DisplayTraceResult(dinfo api.IFDataDesc,bobjs,fobjs []*api.DataObj,info map
 	for i,v:=range bobjs{
 		fmt.Printf("    %d. ",i+1)
 		if v.Type==core.RAWDATA{
-			fmt.Println("Data Obj: "+v.Obj+" (Type: Local Plain Data)")
+			result:="Data Obj: "+v.Obj+" (Type: Local Plain Data)"
+			if keyword!=""{
+				result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
+			}
+			fmt.Println(result)
 		}else{
-			info[v.Obj].PrintDataInfo(0,"",GlobalGetUserName)
+			info[v.Obj].PrintDataInfo(0,keyword,GlobalGetUserName)
 		}
 	}
 
@@ -363,7 +367,7 @@ func DisplayTraceResult(dinfo api.IFDataDesc,bobjs,fobjs []*api.DataObj,info map
 	}
 	for i,v:=range fobjs{
 		fmt.Printf("    %d. ",i+1)
-		info[v.Obj].PrintDataInfo(0,"",GlobalGetUserName)
+		info[v.Obj].PrintDataInfo(0,keyword,GlobalGetUserName)
 	}
 }
 

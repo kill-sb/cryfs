@@ -35,7 +35,9 @@ func ConnDB() {
 		fmt.Println("Open database error:", err)
 		os.Exit(1)
 	}
-	curdb.SetConnMaxLifetime(time.Second * 500)
+	curdb.SetMaxOpenConns(0)
+	curdb.SetMaxIdleConns(1000)
+	curdb.SetConnMaxLifetime(time.Second * 60*20)
 }
 
 func GetDB() *sql.DB {
