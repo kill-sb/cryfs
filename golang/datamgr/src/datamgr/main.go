@@ -3,6 +3,7 @@ package main
 import(
 	"fmt"
 	"strings"
+	"errors"
 	"flag"
 	"os"
 	core "coredata"
@@ -18,6 +19,8 @@ var config string
 var keyword string
 var podimg string
 
+var CheckSum string
+
 var namemap map[string]int32
 //var idmap map[int32]string
 
@@ -31,11 +34,12 @@ func LoadConfig(){
 }
 
 func GetFunction() int {
-	var bList,bEnc,bTrace,bShare,bMnt,bDec,bLogin bool
+	//var bList,bEnc,bTrace,bShare,bMnt,bDec,bLogin bool
+	var bList,bEnc,bTrace,bShare,bMnt,bLogin bool
 	flag.BoolVar(&bEnc,"enc",false,"encrypt raw data")
 	flag.BoolVar(&bShare,"share",false,"share data to other users")
 	flag.BoolVar(&bMnt,"mnt",false,"mount encrypted data")
-	flag.BoolVar(&bDec,"dec",false,"decrypted local data(test only)")
+//	flag.BoolVar(&bDec,"dec",false,"decrypted local data(test only)")
 	flag.BoolVar(&bTrace,"trace",false,"trace details of data")
 	flag.BoolVar(&bList,"list",false,"list local encrypted data")
 	flag.BoolVar(&bLogin,"login",false,"login and get a token")
@@ -63,10 +67,10 @@ func GetFunction() int {
 		ret=core.TRACE
 		count++
 	}
-	if(bDec){
+/*	if(bDec){
 		ret=core.DECODE
 		count++
-	}
+	}*/
 	if bEnc{
 		ret= core.ENCODE
 		count++
@@ -86,18 +90,24 @@ func GetFunction() int {
 	return ret
 }
 
-func CheckParent()bool{
+func CheckParent()error{
 	ppid:=os.Getppid()
 	pidfile:=fmt.Sprintf("/proc/%d/exe",ppid)
 	str,err:=os.Readlink(pidfile)
 	if err!=nil{
-		fmt.Println("Readlink error")
-		return false
+//		fmt.Println("Readlink error")
+		return errors.New("'datamgr' is a inner module, use 'dtdfs' instead")
 	}
 	if strings.HasSuffix(str,"/dtdfs"){
-		return true
+		sum:=strings.Split(CheckSum," ")[0]
+		result,err:=GetFileSha256(str)
+		if err==nil && result==sum{
+			return nil
+		}else{
+			return errors.New("Invalid dtdfs file")
+		}
 	}
-	return false
+	return errors.New("'datamgr' is a inner module, use 'dtdfs' instead")
 }
 
 func testlogin(){
@@ -114,8 +124,8 @@ func testlogin(){
 }
 
 func main(){
-	if !CheckParent(){
-		fmt.Println("'datamgr' is a inner module, use 'dtdfs' instead")
+	if err:=CheckParent();err!=nil{
+		fmt.Println(err)
 		return
 	}
 	LoadConfig()
@@ -141,8 +151,8 @@ func main(){
 		doMount()
 	case core.TRACE:
 		doTraceAll()
-	case core.DECODE:
-		doDecode()
+//	case core.DECODE:
+//		doDecode()
 	default:
 		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
 	}
