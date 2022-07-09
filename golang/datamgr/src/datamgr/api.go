@@ -189,6 +189,19 @@ func TraceData_API(token string,data *api.DataObj,level int)([]*api.DataObj,erro
 	return ack.Data,nil
 }
 
+func GetContacts_API(token string)([]*api.ContactInfo,error){
+	req:=&api.GetContactReq{Token:token}
+	ack:=api.NewGetContactsAck()
+	err:=HttpAPIPost(req,ack,"listcontacts")
+	if err!=nil{
+		return nil,err
+	}
+	if ack.Code!=0{
+		return nil,errors.New(ack.Msg)
+	}
+	return ack.Data,nil
+}
+
 func QueryObj_API(token string, objs []*api.DataObj)([]api.IFDataDesc,error){
 	req:=&api.QueryObjsReq{Token:token,Data:objs}
 	ack:=api.NewQueryObjsAck(objs)

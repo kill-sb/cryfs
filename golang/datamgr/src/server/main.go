@@ -1,7 +1,7 @@
 package main
 
 import (
-	_"dbop"
+	"dbop"
 	"net/http"
 	//"os/exec"
 	"encoding/json"
@@ -189,6 +189,7 @@ func main(){
         os.Exit(0)
     }*/
 	LoadSvrConfig()
+	dbop.GetDB()
 	err:=SetupHandler()
 	if err!=nil{
 		Debug("Setup handler error:",err)
@@ -196,6 +197,9 @@ func main(){
 	}
 	tokenmap=make(map[string]*LoginUserInfo)
 	go TokenCacheMgr()
+	if g_config.Debug{
+		Debug("Server started ok...")
+	}
 	err=http.ListenAndServeTLS(g_config.Port,g_config.CertPem,g_config.KeyPem,nil)
 	if err!=nil{
 		Debug("Listen error:",err)

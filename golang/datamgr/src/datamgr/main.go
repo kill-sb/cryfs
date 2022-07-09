@@ -50,7 +50,7 @@ func GetFunction() int {
 	flag.StringVar(&mntimport,"import","", "import plain data dir into container")
 	flag.StringVar(&apisvr,"apisvr","apisvr:8080", "api server address (ip:port)")
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
-	flag.StringVar(&config,"config","", "use config file to decribe share info")
+//	flag.StringVar(&config,"config","", "use config file to decribe share info")
 	flag.StringVar(&keyword,"search","", "used with -list or -trace.(When used with -list,search data records contain the keyword only, and when used with -trace, highlight the keyword)")
 	flag.Parse()
 	ret:=core.INVALID
@@ -155,6 +155,7 @@ func main(){
 //	case core.DECODE:
 //		doDecode()
 	default:
-		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
+		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
+		//fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
 	}
 }

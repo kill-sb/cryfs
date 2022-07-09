@@ -58,6 +58,16 @@ func GetDataType(ipath string /* .tag or .csd stand for local encrypted data or 
 		return core.UNKNOWN
 }
 
+func ListContacts(token string){
+	users,err:=GetContacts_API(token)
+	if err==nil && len(users)>0{
+		fmt.Println("Available contacts of current user:")
+		for _,user:=range users{
+			fmt.Print(user.Name,"  ")
+		}
+	}
+}
+
 func shareDir(ipath,opath string, linfo *core.LoginInfo){
 /*	fromtype shoud be ENCDATA
 	0. write shareinfo header
@@ -77,6 +87,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 	DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
 
 	if config==""{
+		ListContacts(linfo.Token)
 		err=InputShareInfo(sinfo) // input share info from terminal
 		if(err!=nil){
 			fmt.Println(err)
@@ -178,6 +189,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		DoEncodeInC(orgkey,sinfo.RandKey,sinfo.EncryptedKey,16)
 	}
 	if config==""{
+		ListContacts(linfo.Token)
 		err=InputShareInfo(sinfo) // input share info from terminal
 		if(err!=nil){
 			fmt.Println(err)
@@ -241,17 +253,27 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	}
 //	fmt.Println("input a brief description for the file to be shared:")
 //	fmt.Scanf("%s",&sinfo.Descr)
-	fmt.Println("input permission(0 for readonly, 1 for reshare):")
-	fmt.Scanf("%d",&sinfo.Perm)
-	fmt.Println("expire time(Press 'Enter' for no expire time limit):")
+	fmt.Println("input permission: (Press 'Enter' use default choice 1 for reshare, input 0 for readonly,)")
+	input:=""
+	fmt.Scanf("%s",&input)
+	if input==""{
+		sinfo.Perm=1
+	}else{
+		fmt.Sscanf(input,"%d",&sinfo.Perm)
+	}
+	fmt.Println("expire time: (Press 'Enter' for no expire time limit)")
 	fmt.Scanf("%s",&sinfo.Expire)
 	if sinfo.Expire==""{
 		sinfo.Expire="2999:12:31 00:00:00"
 	}
-	fmt.Println("limit open times(-1 for no limit):")
-	fmt.Scanf("%d",&sinfo.MaxUse)
+	fmt.Println("limit open times: (Press 'Enter' use default value -1 , means no limit)")
+	fmt.Scanf("%s",&input)
+	if input==""{
+		sinfo.MaxUse=-1
+	}else{
+		fmt.Sscanf(input,"%d",&sinfo.MaxUse)
+	}
 	sinfo.LeftUse=sinfo.MaxUse
-	//sinfo.Expire=  set it later
 	return nil
 }
 
