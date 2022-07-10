@@ -14,6 +14,11 @@ datamgr:
 
 apisvr:src/server/*.go src/apiv1/*.go src/dbop/*.go src/coredata/*.go
 	go build -o apisvr server 
+
+testsvr:apisvr
+	ulimit -n 65535
+	./apisvr -d
+
 clean:
 	rm -f datamgr dtdfs apisvr
 
