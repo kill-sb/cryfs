@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dbop"
+//	"dbop"
 	"net/http"
 	//"os/exec"
 	"encoding/json"
@@ -12,6 +12,23 @@ import (
 	"sync"
 	"os"
 )
+
+
+/*
+#include <stdio.h>
+#include <stdlib.h>
+#include <ulimit.h>
+       #include <sys/time.h>
+       #include <sys/resource.h>
+
+
+void SetUlimit(){
+	struct rlimit l;
+	l.rlim_cur=l.rlim_max=65535;
+	setrlimit(RLIMIT_NOFILE,&l);
+}
+*/
+import "C"
 
 const(
 	PASSWD=1
@@ -98,7 +115,7 @@ func DebugJson(tip string,obj interface{}){
 
 func DistroFunc(w http.ResponseWriter, r *http.Request){
 	if g_config.Debug{
-		Debug("\n------ Processing uri:",r.RequestURI,",  Method:",r.Method,"------")
+		Debug("\n\n------ Processing uri:",r.RequestURI,",  Method:",r.Method,"------")
 	}
 	if r.Method=="POST"{
 		if proc,ok:=routemap[r.RequestURI];ok{
@@ -182,6 +199,7 @@ func ParseArgs(){
 }
 
 func main(){
+	C.SetUlimit();
 	ParseArgs()
 	/*if !g_config.Debug && os.Getppid() != 1{
         cmd := exec.Command(os.Args[0], os.Args[1:]...)
@@ -189,7 +207,6 @@ func main(){
         os.Exit(0)
     }*/
 	LoadSvrConfig()
-	dbop.GetDB()
 	err:=SetupHandler()
 	if err!=nil{
 		Debug("Setup handler error:",err)

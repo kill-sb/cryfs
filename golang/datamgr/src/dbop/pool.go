@@ -20,8 +20,13 @@ type ConnInst struct{
 	inuse bool
 	lock *sync.Mutex
 }
+/*
+func GetDB(conn *ConnInst)
+{
+	return conn.dbconn
+}*/
 
-func GetDB()*ConnInst{
+func GetDB() *ConnInst{
 	conn:=<-ConnPool
 	conn.lock.Lock()
 	conn.inuse=true
@@ -74,6 +79,9 @@ func InitPool(){
 			log.Println("Init database error:",err)
 			os.Exit(1)
 		}
+		conn.dbconn.SetMaxOpenConns(0)
+		conn.dbconn.SetMaxIdleConns(1000)
+		conn.dbconn.SetConnMaxLifetime(time.Second * 60*30)
 		ConnPool<-conn
 	}
 }

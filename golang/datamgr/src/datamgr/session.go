@@ -49,7 +49,7 @@ func HttpAPIPost(param interface{},ret interface{},entry string)error{
 	}
     req.Header.Set("Content-Type","application/json")
 	tr:=&http.Transport{TLSClientConfig:&tls.Config{InsecureSkipVerify:true}}
-	client:=&http.Client{Transport:tr, Timeout:time.Second*10}
+	client:=&http.Client{Transport:tr, Timeout:time.Second*30}
 	resp,err:=client.Do(req)
 	if err!=nil{
 		fmt.Println("client do req error:",err)
