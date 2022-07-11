@@ -17,7 +17,7 @@ import (
 //var useridcache map[int32]string
 var usernamecache map[string] *api.UserInfoData
 var userinfocache map[int32] *api.UserInfoData
-var curdb *sql.DB
+var curdb *sql.DB =nil
 
 const dbname="mysql"
 const dbconfig="cmit:123456@tcp(mysqlsvr:3306)/cmit"
@@ -48,15 +48,17 @@ func CheckConnect(timer *time.Timer){
 func ConnDB() {
 	var err error
 	//curdb, err = sql.Open("mysql", "cmit:123456@tcp(mysqlsvr:3306)/cmit")
-	curdb, err = sql.Open(dbname, dbconfig)
-	if err != nil {
-		fmt.Println("Open database error:", err)
-		os.Exit(1)
+	if curdb==nil{
+		curdb, err = sql.Open(dbname, dbconfig)
+		if err != nil {
+			fmt.Println("Open database error:", err)
+			os.Exit(1)
+		}
+		curdb.SetMaxOpenConns(0)
+		curdb.SetMaxIdleConns(1000)
+		curdb.SetConnMaxLifetime(time.Second *5)
+		go CheckConnect(time.NewTimer(time.Second*CHECK_TIME))
 	}
-	curdb.SetMaxOpenConns(0)
-	curdb.SetMaxIdleConns(1000)
-	curdb.SetConnMaxLifetime(time.Second *5)
-	go CheckConnect(time.NewTimer(time.Second*CHECK_TIME))
 }
 
 func GetDB() *sql.DB {
@@ -64,6 +66,9 @@ func GetDB() *sql.DB {
 		curdb.Close()
 		ConnDB()
 	}*/
+	if curdb==nil{
+		ConnDB()
+	}
 	return curdb
 }
 
