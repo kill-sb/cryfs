@@ -154,7 +154,6 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
 //		fmt.Println("encrypted key in csd:",core.BinkeyToString(sinfo.EncryptedKey))
 	}else{
-		// todo: from a csdfile, decrypt key and encode with another random key
 		head,err:=core.LoadShareInfoHead(ipath)
 		if err!=nil{
 			fmt.Println("Load share info during reshare error:",err)
@@ -165,7 +164,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 			fmt.Println("Load share info from head error:",err)
 			return err
 		}
-		if ssinfo.Perm==0{
+		if ssinfo.Perm==0 || ssinfo.MaxUse!=-1 || !strings.HasPrefix(ssinfo.Expire,"2999-12-31"){
 			fmt.Println("The file is not permitted to share.")
 			return errors.New("File forbit to reshare")
 		}
@@ -264,7 +263,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	fmt.Println("expire time: (Press 'Enter' for no expire time limit)")
 	fmt.Scanf("%s",&sinfo.Expire)
 	if sinfo.Expire==""{
-		sinfo.Expire="2999:12:31 00:00:00"
+		sinfo.Expire="2999-12-31 00:00:00"
 	}
 	fmt.Println("limit open times: (Press 'Enter' use default value -1 , means no limit)")
 	fmt.Scanf("%s",&input)

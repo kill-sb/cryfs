@@ -198,13 +198,14 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 				return rdonly,err
 			}
 			sinfo,err:=GetShareInfoFromHead(head,linfo,0)
-			if sinfo.Perm & 1==0 || sinfo.LeftUse!=-1{
+			if sinfo.Perm & 1==0 || sinfo.LeftUse!=-1 || !strings.HasPrefix(sinfo.Expire,"2999-12-31") {
 				rdonly=true
 			}
 			// check readonly
 			if sinfo.LeftUse==0{
 				return rdonly,errors.New(idata+"Invalid user or open times exhaused")
 			}
+
 			strexp:=strings.Replace(sinfo.Expire," ","T",1)+"+08:00"
 			tmexp,err:=time.Parse(time.RFC3339,strexp)
 			if err!=nil{

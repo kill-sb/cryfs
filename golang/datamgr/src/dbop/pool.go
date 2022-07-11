@@ -49,9 +49,11 @@ func Reconnect(conn *ConnInst){
 			if !conn.inuse{
 				conn.dbconn.Close()
 				conn.dbconn, _= sql.Open(dbname, dbconfig)
+				conn.timer.Reset(time.Second*CONN_TIMEOUT)
+			}else{
+				conn.timer.Reset(time.Second*10)
 			}
 			conn.lock.Unlock()
-			conn.timer.Reset(time.Second*CONN_TIMEOUT)
 		}
 	}
 }

@@ -259,7 +259,8 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, kw string,getuser func(int32
 	result:=fmt.Sprintf("Data Obj :%s (Type: Shared Data)  ",sinfo.Uuid)
     result+=fmt.Sprintf("Owner->%s(uid :%d)",getuser(sinfo.OwnerId),sinfo.OwnerId)
     result+=fmt.Sprintf(", Send to->%s",sinfo.Receivers)
-	if sinfo.Expire!="2999:12:31 00:00:00"{
+	//if sinfo.Expire!="2999-12-31 00:00:00"{
+	if !strings.HasPrefix(sinfo.Expire,"2999-12-31"){
 		result+=fmt.Sprintf(", Expire date:%s",sinfo.Expire)
 	}
     if sinfo.Perm==0{

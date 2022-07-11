@@ -35,14 +35,14 @@ func LoadConfig(){
 
 func GetFunction() int {
 	//var bList,bEnc,bTrace,bShare,bMnt,bDec,bLogin bool
-	var bList,bEnc,bTrace,bShare,bMnt,bLogin bool
+	var bList,bEnc,bTrace,bShare,bMnt bool
 	flag.BoolVar(&bEnc,"enc",false,"encrypt raw data")
 	flag.BoolVar(&bShare,"share",false,"share data to other users")
 	flag.BoolVar(&bMnt,"mnt",false,"mount encrypted data")
 //	flag.BoolVar(&bDec,"dec",false,"decrypted local data(test only)")
 	flag.BoolVar(&bTrace,"trace",false,"trace details of data")
 	flag.BoolVar(&bList,"list",false,"list local encrypted data")
-	flag.BoolVar(&bLogin,"login",false,"login and get a token")
+//	flag.BoolVar(&bLogin,"login",false,"login and get a token")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",defoutpath,"output data path")
 	flag.StringVar(&oname,"oname","","output new data org-name(default named with uuid)")
@@ -56,10 +56,10 @@ func GetFunction() int {
 	ret:=core.INVALID
 	count:=0
 
-	if bLogin{
+/*	if bLogin{
 		ret=core.LOGIN
 		count++
-	}
+	}*/
 	if(bList){
 		ret=core.LIST
 		count++
@@ -139,9 +139,10 @@ func main(){
 	inpath=strings.TrimSuffix(inpath,"/")
 	outpath=strings.TrimSuffix(outpath,"/")
 	switch fun{
-	case core.LOGIN:
+/*	case core.LOGIN:
 //		doAuth(loginuser)
 		testlogin()
+		*/
 	case core.ENCODE:
 		doEncode()
 	case core.DISTRIBUTE:
@@ -155,7 +156,7 @@ func main(){
 //	case core.DECODE:
 //		doDecode()
 	default:
-		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
+		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-img container_image] [-import import_tool_path] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
 		//fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
 	}
 }
