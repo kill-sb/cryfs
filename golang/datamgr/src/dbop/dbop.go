@@ -5,6 +5,8 @@ import (
 	_ "MySQL"
 	"database/sql"
 	"errors"
+	"time"
+	"os"
 	"fmt"
 	"log"
 	"strings"
@@ -20,15 +22,29 @@ var curdb *sql.DB
 const dbname="mysql"
 const dbconfig="cmit:123456@tcp(mysqlsvr:3306)/cmit"
 const COMMENT_INIT="Pending..."
+const CHECK_TIME=60*2
 
 func init() {
 	//useridcache=make(map[int32]string)
 	userinfocache=make(map[int32] *api.UserInfoData)
 	usernamecache=make(map[string] *api.UserInfoData)
-	//ConnDB()
-	InitPool()
+	ConnDB()
 }
-/*
+
+func CheckConnect(timer *time.Timer){
+   for{
+        select{
+        case <-timer.C:
+			err:=curdb.Ping()
+            if err!=nil{
+                curdb.Close()
+                curdb, _= sql.Open(dbname, dbconfig)
+                timer.Reset(time.Second*CHECK_TIME)
+            }
+        }
+    }
+}
+
 func ConnDB() {
 	var err error
 	//curdb, err = sql.Open("mysql", "cmit:123456@tcp(mysqlsvr:3306)/cmit")
@@ -39,18 +55,18 @@ func ConnDB() {
 	}
 	curdb.SetMaxOpenConns(0)
 	curdb.SetMaxIdleConns(1000)
-	curdb.SetConnMaxLifetime(time.Second * 60*20)
-	
+	curdb.SetConnMaxLifetime(time.Second *5)
+	go CheckConnect(time.NewTimer(time.Second*CHECK_TIME))
 }
 
 func GetDB() *sql.DB {
-	if err := curdb.Ping(); err != nil {
+/*	if err := curdb.Ping(); err != nil {
 		curdb.Close()
 		ConnDB()
-	}
+	}*/
 	return curdb
 }
-*/
+
 
 func ParseVisitors(recvlist string) ([]string,[]int32,error){
     strret:=strings.Split(recvlist,",")
@@ -67,9 +83,7 @@ func ParseVisitors(recvlist string) ([]string,[]int32,error){
 }
 
 func NewRunContext(rc *api.RCInfo) error{
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("insert into runcontext (userid,os,baseimg,crtime,ipaddr,outputuuid,detime) values (%d,'%s','%s','%s','%s','%s','%s')",rc.UserId,rc.OS,rc.BaseImg,rc.StartTime,rc.IPAddr,rc.OutputUuid,rc.EndTime)
 	if result, err := db.Exec(query); err == nil {
         rc.RCId, _ = result.LastInsertId()
@@ -95,15 +109,14 @@ func NewRunContext(rc *api.RCInfo) error{
 }
 
 func UpdateRunContext(userid int32, rcid int64, datauuid string, endtime string) error{
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select userid from runcontext where id=%d",rcid)
 	res,err:=db.Query(query)
     if err!=nil{
         fmt.Println("select from runcontext error:",err)
         return err
     }
+	defer res.Close()
     if res.Next(){
 		var uid int32
         err=res.Scan(&uid)
@@ -120,15 +133,13 @@ func UpdateRunContext(userid int32, rcid int64, datauuid string, endtime string)
 }
 
 func GetRCInfo(rcid int64)(*api.RCInfo,error){
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
-	//db:=GetDB()
+	db:=GetDB()
 	query:=fmt.Sprintf("select userid,os,baseimg,ipaddr,outputuuid,crtime,detime from runcontext where id=%d",rcid)
 	res,err:=db.Query(query)
 	if err!=nil{
 		return nil,err
 	}
+	defer res.Close()
 	info:=new (api.RCInfo)
 	if res.Next(){
 		err=res.Scan(&info.UserId,&info.OS,&info.BaseImg,&info.IPAddr,&info.OutputUuid,&info.StartTime,&info.EndTime)
@@ -150,10 +161,7 @@ func GetRCInfo(rcid int64)(*api.RCInfo,error){
 }
 
 func SaveEncMeta(pdata *api.EncDataReq) error{
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	if pdata.OrgName==""{
 		pdata.OrgName=pdata.Uuid
 	}
@@ -164,27 +172,15 @@ func SaveEncMeta(pdata *api.EncDataReq) error{
 	}
 	return nil
 }
-/*
-func UpdateMeta(pdata *api.UpdateDataInfoReq) error{
-	db:=GetDB()
-	query:=fmt.Sprintf("update efilemeta set hashmd5='%s' where uuid='%s'",pdata.Hash256,pdata.Uuid)
-	if _, err := db.Exec(query); err != nil {
-		fmt.Println("Update encrypted data info db error:", err)
-		return err
-	}
-	return nil
-}*/
 
 func GetSrcObjs(rcid int64)([]*api.SourceObj,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select srctype,srcuuid from rcinputdata where rcid=%d",rcid)
 	res,err:=db.Query(query)
 	if err!=nil{
 		return nil,err
 	}
+	defer res.Close()
 	objs:=make([]*api.SourceObj,0,10)
 	for res.Next(){
 		obj:=new(api.SourceObj)
@@ -198,15 +194,13 @@ func GetSrcObjs(rcid int64)([]*api.SourceObj,error){
 }
 
 func GetImportInfo(rcid int64)([]*api.ImportFile,error){
-    //db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+    db:=GetDB()
     query:=fmt.Sprintf("select relname,filedesc,sha256,size from rcimport where rcid=%d",rcid)
     res,err:=db.Query(query)
     if err!=nil{
         return nil,err
     }
+	defer res.Close()
     objs:=make([]*api.ImportFile,0,10)
     for res.Next(){
         obj:=new(api.ImportFile)
@@ -233,16 +227,14 @@ func GetDataOwner(obj *api.DataObj)(int32,error){
 	default:
 		return ownerid,errors.New("Invalid Data type")
 	}
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select ownerid from %s where uuid='%s'",tbname,obj.Obj)
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Printf("select from %s error: %s\n",tbname,err.Error())
 		return ownerid,err
 	}
+	defer res.Close()
 	if res.Next(){
 		err=res.Scan(&ownerid)
 		if err!=nil{
@@ -254,10 +246,7 @@ func GetDataOwner(obj *api.DataObj)(int32,error){
 }
 
 func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	data:=new (api.EncDataInfo)
 	data.Uuid=uuid
 	query:=fmt.Sprintf("select descr,fromrcid,ownerid,isdir,orgname,crtime from efilemeta where uuid='%s'",uuid)
@@ -266,6 +255,7 @@ func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
 		fmt.Println("select from efilemeta error:",err)
 		return nil,err
 	}
+	defer res.Close()
 	if res.Next(){
 		err=res.Scan(&data.Descr,&data.FromRCId,&data.OwnerId,&data.IsDir,&data.OrgName,&data.CrTime)
 		if err!=nil{
@@ -284,10 +274,7 @@ func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
 }
 
 func DecreaseOpenTimes(sinfo *api.ShareInfoData, userid int32) error{
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	if sinfo.LeftUse<=0{
 		fmt.Printf("Impossible here, while MaxUse=%d and LeftUse=%d",sinfo.MaxUse,sinfo.LeftUse)
 		return errors.New("Invalid LeftTime")
@@ -302,15 +289,13 @@ func DecreaseOpenTimes(sinfo *api.ShareInfoData, userid int32) error{
 }
 
 func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select sha256, ownerid,descr, receivers,expire,maxuse,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
    res,err:=db.Query(query)
     if err!=nil{
         return nil,err
     }
+	defer res.Close()
 	if res.Next(){
 		info:=new (api.ShareInfoData)
 	// info.FileUri will be filled outside
@@ -334,15 +319,13 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 }
 
 func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select sha256,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
    res,err:=db.Query(query)
     if err!=nil{
         return nil,err
     }
+	defer res.Close()
     if res.Next(){
 		info:=new (api.ShareInfoData)
 		// info.FileUri will be filled outside
@@ -359,11 +342,14 @@ func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
 			return nil,err
 		}
 		query=fmt.Sprintf("select leftuse from shareusers where taguuid='%s' and userid=%d", uuid,userid)
-		res,err=db.Query(query)
-		if err!=nil || !res.Next(){
+		res1,err:=db.Query(query)
+		if res1!=nil{
+			defer res1.Close()
+		}
+		if err!=nil || !res1.Next(){
 			info.LeftUse=0
 		}else{
-			err=res.Scan(&info.LeftUse)
+			err=res1.Scan(&info.LeftUse)
 			if err!=nil{
 				return nil,err
 			}
@@ -379,10 +365,7 @@ func GetOrgFileName(sinfo *core.ShareInfo)(string,error){
 }
 
 func WriteShareInfo(sinfo *api.ShareInfoData) error{
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	recvlist:=""
 	query:=""
 	var err error
@@ -420,10 +403,7 @@ func GetUserNames(uids []int32)([]string,error){
 	if n<1{
 		return nil,errors.New("empty user list in GetUserNames")
 	}
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 
 	ret:=make([]string,n)
 	query:=fmt.Sprintf("select name from users where id='%d'",uids[0])
@@ -434,6 +414,7 @@ func GetUserNames(uids []int32)([]string,error){
 	if err!=nil{
 		return ret,err
 	}
+	defer res.Close()
 	i:=0
 	for res.Next(){
 		err=res.Scan(&ret[i])
@@ -451,15 +432,13 @@ func GetUserNames(uids []int32)([]string,error){
 
 func IsValidUser(user string)(int32,error){
 	var ret int32 =-1
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select id from users where name='%s'",user)
 	res,err:=db.Query(query)
 	if err!=nil{
 		return ret,err
 	}
+	defer res.Close()
 	if !res.Next(){
 		return ret,errors.New("No such user ")
 	}else{
@@ -475,16 +454,14 @@ func GetUserInfoByName(name string)(*api.UserInfoData,error){
 	}
 	ret=new (api.UserInfoData)
 	ret.Name=name
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select descr,id,mobile,email from users where name='%s'",name)
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("Query error:",err)
 		return ret,err
 	}
+	defer res.Close()
 	if !res.Next(){
 		ret.Id=-1
 		fmt.Println("error",err)
@@ -503,15 +480,13 @@ func GetUserInfo(id int32)(*api.UserInfoData,error){
 	}
 	ret=new (api.UserInfoData)
 	ret.Id=id
-//	db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select descr,name,mobile,email from users where id=%d",id)
 	res,err:=db.Query(query)
 	if err!=nil{
 		return nil,err
 	}
+	defer res.Close()
 	if !res.Next(){
 		return nil,errors.New("No such user ")
 	}else{
@@ -522,15 +497,13 @@ func GetUserInfo(id int32)(*api.UserInfoData,error){
 }
 
 func LookupPasswdSHA(user string)(int32,string,string,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select id,pwdsha256,enclocalkey from users where name='%s'",user)
 	res,err:=db.Query(query)
 	if err!=nil{
 		return -1,"","",err
 	}
+	defer res.Close()
 	if res.Next(){
 		var key string
 		var shasum string
@@ -545,10 +518,7 @@ func LookupPasswdSHA(user string)(int32,string,string,error){
 }
 
 func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select uuid, crtime from efilemeta where ownerid=%d",req.UserId)
 	if req.Start!=""{
 		query+=fmt.Sprintf(" and crtime >= '%s' ",req.Start+" 00:00:00")
@@ -566,6 +536,7 @@ func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
 		log.Println("select from db error:",err)
 		return nil,err
 	}
+	defer res.Close()
 	ret:=make([]*api.EncDataNode,0,50)
 	for res.Next(){
 		node:=new(api.EncDataNode)
@@ -585,10 +556,7 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	if req.FromId<=0 && req.ToId<=0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:="select sharetags.uuid, sharetags.ownerid,sharetags.crtime, shareusers.userid, shareusers.leftuse from sharetags,shareusers "
 	if req.FromId>0 && req.ToId>0{
 		query+=fmt.Sprintf("where sharetags.ownerid=%d and shareusers.userid=%d ",req.FromId,req.ToId)
@@ -614,6 +582,7 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 		log.Println("select from db error:",err)
 		return nil,err
 	}
+	defer res.Close()
 	ret:=make([]*api.ShareDataNode,0,50)
 	for res.Next(){
 		node:=new(api.ShareDataNode)
@@ -670,10 +639,7 @@ func TraceBack(obj *api.DataObj)([]*api.DataObj,error){
 }
 
 func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	if obj.Type==core.CSDFILE{
 		cobj:=new (api.DataObj)
 		retobj:=make([]*api.DataObj,1)
@@ -682,6 +648,7 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 		if err!=nil{
 			return nil,err
 		}
+		defer res.Close()
 		if res.Next(){
 			err=res.Scan(&cobj.Type,&cobj.Obj)
 			if err!=nil{
@@ -700,6 +667,7 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 		if err!=nil{
 			return nil,err
 		}
+		defer res.Close()
 		var rcid int64
 		var orgname string
 		if !res.Next(){
@@ -719,14 +687,15 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 		}
 
 		query=fmt.Sprintf("select srcuuid,srctype from rcinputdata where rcid=%d", rcid)
-		res,err=db.Query(query)
+		res1,err:=db.Query(query)
 		if err!=nil{
 			return nil,err
 		}
+		defer res1.Close()
 		retobj:=make([]*api.DataObj,0,10)
-		for res.Next(){
+		for res1.Next(){
 			nobj:=new (api.DataObj)
-			err=res.Scan(&nobj.Obj,&nobj.Type)
+			err=res1.Scan(&nobj.Obj,&nobj.Type)
 			if err!=nil{
 				return nil,err
 			}
@@ -788,17 +757,14 @@ func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
 	if obj.Type!=core.CSDFILE && obj.Type!=core.ENCDATA{
 		return nil,errors.New("Invalid data type")
 	}
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	// search  generated encdata
 	query:=fmt.Sprintf("select efilemeta.uuid from efilemeta, rcinputdata  where rcinputdata.srcuuid='%s' and rcinputdata.srctype=%d and efilemeta.fromrcid=rcinputdata.rcid",obj.Obj,obj.Type)
 	res,err:=db.Query(query)
 	if err!=nil{
 		return nil,err
 	}
-
+	defer res.Close()
 	retobj:=make([]*api.DataObj,0,20)
 	for res.Next(){
 		nobj:=new (api.DataObj)
@@ -813,13 +779,14 @@ func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
 
 	// search generated csd files
 	query=fmt.Sprintf("select uuid from sharetags where datauuid='%s' and fromtype=%d",obj.Obj,obj.Type)
-	res,err=db.Query(query)
+	res1,err:=db.Query(query)
 	if err!=nil{
 		return nil,err
 	}
-	for res.Next(){
+	defer res1.Close()
+	for res1.Next(){
 		nobj:=new (api.DataObj)
-		err=res.Scan(&nobj.Obj)
+		err=res1.Scan(&nobj.Obj)
 		if err!=nil{
 			return nil,err
 		}
@@ -830,10 +797,7 @@ func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
 }
 
 func NewNotify(info *api.NotifyInfo)error{
-    //db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+    db:=GetDB()
     query:=fmt.Sprintf("insert into notifies (type,content,descr,fromuid,touid) values (%d,'%s','%s',%d,%d)",info.Type,info.Content,info.Comment,info.FromUid,info.ToUid)
     if result, err := db.Exec(query); err == nil {
 		info.Id, _ = result.LastInsertId()
@@ -844,10 +808,7 @@ func NewNotify(info *api.NotifyInfo)error{
 }
 
 func SetNotifyStat(id int64, isnew int32)error{
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("update notifies set isnew=%d where id=%d",isnew,id)
 	if _, err := db.Exec(query); err != nil {
 		fmt.Println("db exec error:",query)
@@ -860,10 +821,7 @@ func DelNotifies(ids []int64)error{
 	if len(ids)<1{
 		return nil
 	}
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("delete from notifies where id=%d",ids[0])
 	for _,v:=range ids[1:]{
 		query+=fmt.Sprintf(" or id=%d",v)
@@ -880,10 +838,7 @@ func DelNotifies(ids []int64)error{
 }
 
 func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	ninfo:=new (api.NotifyInfo)
 	ninfo.Id=id
 	query:=fmt.Sprintf("select type,content,descr,crtime,fromuid,touid,isnew from notifies where id=%d",id)
@@ -892,6 +847,7 @@ func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
 		fmt.Println("select from notifies error:",err)
 		return nil,err
 	}
+	defer res.Close()
 	if res.Next(){
 		err=res.Scan(&ninfo.Type,&ninfo.Content,&ninfo.Comment,&ninfo.CrTime,&ninfo.FromUid,&ninfo.ToUid,&ninfo.IsNew)
 		if err!=nil{
@@ -908,10 +864,7 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
 	if req.FromUid==0 && req.ToUid==0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:="select id,type,content,descr,crtime,fromuid,touid,isnew from notifies "
 	if req.FromUid!=0 && req.ToUid!=0{
 		query+=fmt.Sprintf("where fromuid=%d and touid=%d ",req.FromUid,req.ToUid)
@@ -936,6 +889,7 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
 		log.Println("select from db error:",err)
 		return nil,err
 	}
+	defer res.Close()
 	ret:=make([]*api.NotifyInfo,0,50)
 	for res.Next(){
 		node:=new(api.NotifyInfo)
@@ -953,10 +907,7 @@ func RecordProcQueue(expid int64, queue []*api.ExProcNode) error{
 	if len(queue)==0{
 		return err
 	}
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	defer func(){
 		if err!=nil{
 			db.Exec(fmt.Sprintf("delete from exprocque where expid=%d",expid))
@@ -1046,10 +997,7 @@ func NewExport(data *api.DataObj,userid int32, comment *string)(*api.ExportProcI
 		epinfo.Status=api.AGREE
 	}
 	epinfo.Status=api.WAITING
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("insert into exports (requid,status,datatype,datauuid,crtime,comment) values (%d,%d,%d,'%s','%s','%s')",userid,epinfo.Status,epinfo.DstData.Type,epinfo.DstData.Uuid,epinfo.CrTime,epinfo.Comment)
     if result, err := db.Exec(query); err == nil{
 		epinfo.ExpId, _ = result.LastInsertId()
@@ -1068,16 +1016,14 @@ func GetExportInfo(expid int64)(*api.ExportProcInfo,error){
 	epinfo:=new (api.ExportProcInfo)
 	epinfo.DstData=new (api.ProcDataObj)
 	epinfo.ExpId=expid
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select requid,status,datatype,datauuid,crtime,comment from exports where expid=%d",expid)
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("select from exports error:",err)
 		return nil,err
 	}
+	defer res.Close()
 	if res.Next(){
 		err=res.Scan(&epinfo.DstData.UserId,&epinfo.Status,&epinfo.DstData.Type,&epinfo.DstData.Uuid,&epinfo.CrTime,&epinfo.Comment)
 		if err!=nil{
@@ -1090,12 +1036,13 @@ func GetExportInfo(expid int64)(*api.ExportProcInfo,error){
 }
 
 func LoadProcQueue(epinfo *api.ExportProcInfo)error{
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select status,procuid,comment,proctime,nodeid from exprocque where expid=%d",epinfo.ExpId)
 	res,err:=db.Query(query)
+	if err!=nil{
+		return err
+	}
+	defer res.Close()
 	epinfo.ProcQueue=make([]*api.ExProcNode,0,50)
 	for res.Next(){
 		node:=new(api.ExProcNode)
@@ -1108,6 +1055,7 @@ func LoadProcQueue(epinfo *api.ExportProcInfo)error{
 		node.SrcData=make([]*api.ProcDataObj,0,20)
 		query:=fmt.Sprintf("select datauuid,datatype,dataowner from expinvolvedata where nodeid=%d",nodeid)
 		resdata,err:=db.Query(query)
+		defer resdata.Close()
 		for resdata.Next(){
 			srcnode:=new (api.ProcDataObj)
 			err=resdata.Scan(&srcnode.Uuid,&srcnode.Type,&srcnode.UserId)
@@ -1126,10 +1074,7 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
 	if req.FromUid<=0 && req.ToUid<=0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=""
 	if req.ToUid>0{
 		query=fmt.Sprintf("select exports.expid, exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime,exports.comment from exports,exprocque where (exprocque.procuid=%d and exprocque.expid=exports.expid) ", req.ToUid)
@@ -1159,6 +1104,7 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
 		log.Println("select from db error:",err)
 		return nil,err
 	}
+	defer res.Close()
 	ret:=make([]*api.ExportProcInfo,0,50)
 	for res.Next(){
 		info:=new(api.ExportProcInfo)
@@ -1205,10 +1151,7 @@ func RespExportReq(uid int32,req *api.RespExpReq) error{
 		return errors.New("User not in author list")
 	}
 
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("update exprocque set status=%d,comment='%s',proctime='%s' where expid=%d and procuid=%d", req.Status,req.Comment,core.GetCurTime(), req.ExpId, uid)
 	if _,err=db.Exec(query);err!=nil{
 		return err
@@ -1225,16 +1168,14 @@ func RespExportReq(uid int32,req *api.RespExpReq) error{
 }
 
 func NewContact(uid, cid int32)error{
-    //db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+    db:=GetDB()
 	query:=fmt.Sprintf("select count(*) from contacts where userid=%d and contactuserid=%d",uid,cid)
 	res,err:=db.Query(query)
     if err!=nil{
         fmt.Println("select from contacts error:",err)
         return err
     }
+	defer res.Close()
     if res.Next(){
         var count int64
         err=res.Scan(&count)
@@ -1254,16 +1195,14 @@ func NewContact(uid, cid int32)error{
 }
 
 func ListContacts(uid int32)([]*api.ContactInfo,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and users.id=contacts.contactuserid",uid)
 	res, err := db.Query(query)
 	if err != nil {
 		fmt.Println("query contacts error:",query)
 		return nil,err
 	}
+	defer res.Close()
 	clist:=make([]*api.ContactInfo,0,50)
 	for res.Next(){
 		cinfo:=new(api.ContactInfo)
@@ -1277,16 +1216,14 @@ func ListContacts(uid int32)([]*api.ContactInfo,error){
 }
 
 func FuzzySearch(uid int32, keyword string)([]*api.ContactInfo,error){
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and contacts.contactuserid=users.id and users.name like '%s'",uid,"%"+keyword+"%")
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("query error:",query)
 		return nil,err
 	}
+	defer res.Close()
 	clist:=make([]*api.ContactInfo,0,50)
 	for res.Next(){
 		cinfo:=new(api.ContactInfo)
@@ -1300,10 +1237,7 @@ func FuzzySearch(uid int32, keyword string)([]*api.ContactInfo,error){
 }
 
 func DelContact(uid,cid int32 )error{
-	//db:=GetDB()
-	dbcon:=GetDB()
-	defer PutDB(dbcon)
-	db:=dbcon.dbconn
+	db:=GetDB()
 	query:=fmt.Sprintf("delete from contacts where userid=%d and contactuserid=%d",uid,cid)
 	if _,err:= db.Exec(query);err != nil{
 		fmt.Println("DelContact error:",query)
