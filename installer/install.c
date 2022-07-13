@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -16,7 +17,14 @@ void GetSelf(char *path)
 	readlink(link,path,4095);
 }
 
-int main()
+int Installed(){
+	if(system("dtdfs -h >/dev/null 2>/dev/null")==0){
+		return 1;
+	}
+	return 0;
+}
+
+int main(int c, char** v)
 {
 	char bin[4096];
 	int docker;
@@ -24,15 +32,25 @@ int main()
 	char cmd[4096];
 	printf("Checking environment...");
 	fflush(stdout);
+	if (Installed()){
+		printf("FAILED\nData Defense has already been installed\n");
+		exit(1);
+	}
 	docker=system("docker -v 1>/dev/null 2>/dev/null");
 	if (docker!=0){
 		printf("FAILED\nDocker tools not found, if you are using Centos 8.x, type 'yum install podman-docker' to install it, if you are using other OS, try to use dnf/yum/apt to install docker packges first.\n");
 		exit(1);
 	}
-	printf("OK\nInput server IP address:");
-	scanf("%s",IP);
 
-	printf("Checking ip address...");
+	if (c>2 && strcmp(v[1],"-svr")==0){
+		strcpy(IP,v[2]);
+		printf("OK\n");
+	}else{
+		printf("OK\nInput server IP address:");
+		scanf("%s",IP);
+	}
+
+	printf("Checking server address(%s)...",IP);
 	fflush(stdout);
 	sprintf(cmd,"ping -c 1 -W 5 %s >/dev/null 2>/dev/null",IP);
 	if(system(cmd)!=0){
@@ -40,7 +58,7 @@ int main()
 		exit(1);
 	}
 	GetSelf(bin);
-
+exit(0);
 	printf("OK\nUnpacking install files...");
 	fflush(stdout);
 	sprintf(cmd,"dd if=%s of=%s skip=%d iflag=skip_bytes >/dev/null 2>/dev/null",bin,TMPFILE,SKIP_BYTE);
