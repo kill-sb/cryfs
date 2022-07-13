@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#define TMPFILE "/tmp/.dtdfs.tgz"
+#define TMPDIR "/tmp/.dtdfs_files"
+#define INSTALL_DIR "/usr/local/bin"
+
+#define SKIP_BYTE 65536
+
+void GetSelf(char *path)
+{
+	char link[4096];
+	sprintf(link,"/proc/%d/exe",getpid());
+	readlink(link,path,4095);
+}
+
+int main()
+{
+	char bin[4096];
+	int docker;
+	char IP[1024];
+	char cmd[4096];
+	printf("Checking environment...");
+	fflush(stdout);
+	docker=system("docker -v 1>/dev/null 2>/dev/null");
+	if (docker!=0){
+		printf("FAILED\nDocker tools not found, if you are using Centos 8.x, type 'yum install podman-docker' to install it, if you are using other OS, try to use dnf/yum/apt to install docker packges first.\n");
+		exit(1);
+	}
+	printf("OK\nInput server IP address:");
+	scanf("%s",IP);
+
+	printf("Checking ip address...");
+	fflush(stdout);
+	sprintf(cmd,"ping -c 1 -W 5 %s >/dev/null 2>/dev/null",IP);
+	if(system(cmd)!=0){
+		printf("FAILED\n%s is unreachable, please try again later\n",IP);
+		exit(1);
+	}
+	GetSelf(bin);
+
+	printf("OK\nUnpacking install files...");
+	fflush(stdout);
+	sprintf(cmd,"dd if=%s of=%s skip=%d iflag=skip_bytes >/dev/null 2>/dev/null",bin,TMPFILE,SKIP_BYTE);
+	system(cmd);
+	sprintf(cmd,"tar xzvf %s -C /tmp >/dev/null 2>/dev/null",TMPFILE);
+	system(cmd);
+	sprintf(cmd,"rm -f %s >/dev/null 2>/dev/null",TMPFILE);
+	system(cmd);
+
+	printf("OK\nInstalling binary files...");
+	fflush(stdout);
+	system("mkdir -p "INSTALL_DIR);
+	sprintf(cmd,"/bin/cp %s/dtdfs %s/datamgr %s/cmfs %s >/dev/null 2>/dev/null",TMPDIR,TMPDIR,TMPDIR,INSTALL_DIR);
+	system(cmd);
+
+	printf("OK\nInstall default container image...");
+	fflush(stdout);
+	sprintf(cmd,"docker import - cmit <%s/cmit_img.tar >/dev/null 2>/dev/null",TMPDIR);
+	system(cmd);
+
+	printf("OK\nConfiguring system...");
+	fflush(stdout);
+	sprintf(cmd,"cat %s/cert.pem  >>/etc/pki/tls/certs/ca-bundle.crt",TMPDIR);
+	system(cmd);
+	sprintf(cmd,"echo %s  apisvr  apisvr >>/etc/hosts",IP);
+	system(cmd);
+	system("rm -rf "TMPDIR);
+	printf("OK\nInstall finished, run dtdfs -h to get more help.\n");
+	return 0;	
+}
