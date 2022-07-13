@@ -58,7 +58,6 @@ int main(int c, char** v)
 		exit(1);
 	}
 	GetSelf(bin);
-exit(0);
 	printf("OK\nUnpacking install files...");
 	fflush(stdout);
 	sprintf(cmd,"dd if=%s of=%s skip=%d iflag=skip_bytes >/dev/null 2>/dev/null",bin,TMPFILE,SKIP_BYTE);
