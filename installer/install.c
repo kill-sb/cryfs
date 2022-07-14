@@ -24,18 +24,41 @@ int Installed(){
 	return 0;
 }
 
+void Uninstall()
+{
+	printf("OK\nUninstalling..");
+	system("sed -i '/ apisvr /d' /etc/hosts >/dev/null 2>/dev/null");
+	system("docker rmi cmit >/dev/null 2>/dev/null");
+	system("rm -f /usr/local/bin/dtdfs /usr/local/bin/datamgr /usr/local/bin/cmfs >/dev/null 2>/dev/null");
+	printf("OK\nData Defense linux client has been uninstalled from your system\n");
+}
+
 int main(int c, char** v)
 {
 	char bin[4096];
 	int docker;
 	char IP[1024];
 	char cmd[4096];
+	int ins=0;
+
 	printf("Checking environment...");
 	fflush(stdout);
-	if (Installed()){
+	ins=Installed();
+	// unistall
+	if (c==2 && strcmp(v[1],"-u")==0){
+		if (ins)
+			Uninstall();
+		else 
+			printf("FAILED\nData Defense is not found in your system\n");
+		exit(0);
+	}
+
+	// install start
+	if (ins){
 		printf("FAILED\nData Defense has already been installed\n");
 		exit(1);
 	}
+
 	docker=system("docker -v 1>/dev/null 2>/dev/null");
 	if (docker!=0){
 		printf("FAILED\nDocker tools not found, if you are using Centos 8.x, type 'yum install podman-docker' to install it, if you are using other OS, try to use dnf/yum/apt to install docker packges first.\n");
@@ -80,11 +103,16 @@ int main(int c, char** v)
 
 	printf("OK\nConfiguring system...");
 	fflush(stdout);
-	sprintf(cmd,"cat %s/cert.pem  >>/etc/pki/tls/certs/ca-bundle.crt",TMPDIR);
-	system(cmd);
+
+    sprintf(cmd,"grep `sed -n '2,2p' %s/cert.pem` /etc/pki/tls/certs/ca-bundle.crt >/dev/null 2>/dev/null",TMPDIR);
+    if(system(cmd)){ // not found cert content
+        sprintf(cmd,"cat %s/cert.pem  >>/etc/pki/tls/certs/ca-bundle.crt",TMPDIR);
+        system(cmd);
+    }
+
 	sprintf(cmd,"echo %s  apisvr  apisvr >>/etc/hosts",IP);
 	system(cmd);
 	system("rm -rf "TMPDIR);
-	printf("OK\nInstall finished, run dtdfs -h to get more help.\n");
+	printf("OK\nInstall finished, run dtdfs to get more help.\n");
 	return 0;	
 }
