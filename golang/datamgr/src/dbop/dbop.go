@@ -399,7 +399,7 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
 		return err
 	}
-
+	NotifyShareReq(sinfo.OwnerId,sinfo.RcvrIds,sinfo.Uuid);
 	return nil
 }
 
@@ -947,6 +947,15 @@ func NotifyExportReq(userid int32,expid int64, queue []*api.ExProcNode,comment *
 	return nil
 }
 
+func NotifyShareReq(ownerid int32,recvrs []int32, uuid string)error{
+	for _,rcuid:=range recvrs{
+		ni:=&api.NotifyInfo{Type:api.SHAREDATA,FromUid:ownerid,ToUid:rcuid,Content:uuid,Comment:"New Shared Data"}
+		if err:=NewNotify(ni);err!=nil{
+			return err
+		}
+	}
+	return nil
+}
 
 func CreateProcQueue(selfid int32,data *api.DataObj)([]*api.ExProcNode,error){
 	sources,err:=TraceBack(data)

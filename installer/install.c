@@ -26,7 +26,7 @@ int Installed(){
 
 void Uninstall()
 {
-	printf("OK\nUninstalling..");
+	printf("OK\nUninstalling...");
 	system("sed -i '/ apisvr /d' /etc/hosts >/dev/null 2>/dev/null");
 	system("docker rmi cmit >/dev/null 2>/dev/null");
 	system("rm -f /usr/local/bin/dtdfs /usr/local/bin/datamgr /usr/local/bin/cmfs >/dev/null 2>/dev/null");
