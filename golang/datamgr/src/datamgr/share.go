@@ -252,7 +252,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	}
 //	fmt.Println("input a brief description for the file to be shared:")
 //	fmt.Scanf("%s",&sinfo.Descr)
-	fmt.Println("input permission: (Press 'Enter' use default choice 1 for reshare, input 0 for readonly,)")
+	fmt.Println("input permission: (Press 'Enter' use default choice 1 for reshare, input 0 for readonly)")
 	input:=""
 	fmt.Scanf("%s",&input)
 	if input==""{
@@ -265,6 +265,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	if sinfo.Expire==""{
 		sinfo.Expire="2999-12-31 00:00:00"
 	}
+	input=""
 	fmt.Println("limit open times: (Press 'Enter' use default value -1 , means no limit)")
 	fmt.Scanf("%s",&input)
 	if input==""{
