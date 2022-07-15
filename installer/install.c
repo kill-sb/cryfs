@@ -6,7 +6,7 @@
 
 #define TMPFILE "/tmp/.dtdfs.tgz"
 #define TMPDIR "/tmp/.dtdfs_files"
-#define INSTALL_DIR "/usr/local/bin"
+#define INSTALL_DIR "/usr/bin"
 
 #define SKIP_BYTE 65536
 
@@ -26,10 +26,12 @@ int Installed(){
 
 void Uninstall()
 {
+	char cmd[1024];
 	printf("OK\nUninstalling...");
 	system("sed -i '/ apisvr /d' /etc/hosts >/dev/null 2>/dev/null");
 	system("docker rmi cmit >/dev/null 2>/dev/null");
-	system("rm -f /usr/local/bin/dtdfs /usr/local/bin/datamgr /usr/local/bin/cmfs >/dev/null 2>/dev/null");
+	sprintf(cmd,"rm -f %s/dtdfs %s/datamgr %s/cmfs >/dev/null 2>/dev/null",INSTALL_DIR,INSTALL_DIR,INSTALL_DIR);
+	system(cmd);
 	printf("OK\nData Defense linux client has been uninstalled from your system\n");
 }
 
