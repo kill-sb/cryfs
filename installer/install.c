@@ -67,18 +67,17 @@ int main(int c, char** v)
 
 	if (c>2 && strcmp(v[1],"-svr")==0){
 		strcpy(IP,v[2]);
-		printf("OK\n");
+//		printf("OK\n");
 	}else{
 		printf("OK\nInput server IP address:");
 		scanf("%s",IP);
-	}
-
-	printf("Checking server address(%s)...",IP);
-	fflush(stdout);
-	sprintf(cmd,"ping -c 1 -W 5 %s >/dev/null 2>/dev/null",IP);
-	if(system(cmd)!=0){
-		printf("FAILED\n%s is unreachable, please try again later\n",IP);
-		exit(1);
+		printf("Checking server address(%s)...",IP);
+		fflush(stdout);
+		sprintf(cmd,"ping -c 1 -W 5 %s >/dev/null 2>/dev/null",IP);
+		if(system(cmd)!=0){
+			printf("FAILED\n%s is unreachable, please try again later\n",IP);
+			exit(1);
+		}
 	}
 	GetSelf(bin);
 	printf("OK\nUnpacking install files...");
