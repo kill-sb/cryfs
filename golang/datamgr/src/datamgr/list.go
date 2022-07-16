@@ -426,12 +426,10 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 		perm="Resharable"
 	}
 	maxtime:="Infinite"
-	lefttime:="Infinite"
 	if sinfo.MaxUse!=-1{
 		maxtime=fmt.Sprintf("%d",sinfo.MaxUse)
-		lefttime=fmt.Sprintf("%d",sinfo.LeftUse)
 	}
-	result+=fmt.Sprintf("\tPermissions :Data Access Mode(%s), Expire Date(%s), Left/Max Open Times(%s/%s)\n",perm,sinfo.Expire,lefttime,maxtime)
+	result+=fmt.Sprintf("\tPermissions :Data Access Mode(%s), Expire Date(%s), Max Open Times(%s)\n",perm,sinfo.Expire,maxtime)
 
 	result+=fmt.Sprintf("\tOriginal filename :%s\n",sinfo.OrgName)
 	if sinfo.IsDir==1{
