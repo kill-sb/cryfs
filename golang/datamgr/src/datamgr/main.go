@@ -97,7 +97,7 @@ func CheckParent()error{
 	str,err:=os.Readlink(pidfile)
 	if err!=nil{
 //		fmt.Println("Readlink error")
-		return errors.New("'datamgr' is a inner module, use 'dtdfs' instead")
+		return errors.New("'datamgr' is an inner module, use 'dtdfs' instead")
 	}
 	if strings.HasSuffix(str,"/dtdfs"){
 		sum:=strings.Split(CheckSum," ")[0]
@@ -108,7 +108,7 @@ func CheckParent()error{
 			return errors.New("Invalid dtdfs file")
 		}
 	}
-	return errors.New("'datamgr' is a inner module, use 'dtdfs' instead")
+	return errors.New("'datamgr' is an inner module, use 'dtdfs' instead")
 }
 
 func testlogin(){

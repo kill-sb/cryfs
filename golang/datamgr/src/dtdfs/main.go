@@ -18,6 +18,7 @@ func main(){
 	for i:=1;i<nlen;i++{
 		strcmd=strcmd+" "+os.Args[i]
 	}
+	//strcmd+=" 2>/dev/null "
     ccmd:=C.CString(strcmd)
     defer C.free(unsafe.Pointer(ccmd))
     C.system(ccmd)
