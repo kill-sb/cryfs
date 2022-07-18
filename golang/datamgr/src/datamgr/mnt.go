@@ -492,7 +492,7 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 			}
 			fmt.Println("New data generated:",outuuid)
 		}else{
-			fmt.Println("Empyt output,outuuid:",outuuid,"items:",outitems)
+			fmt.Println("Empyt output, no new data registered")
 		}
 	}
 

@@ -322,14 +322,17 @@ func GetClientPublicIP(r *http.Request) string {
 	}
 
 	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+
 	if ip != "" && !HasLocalIPAddr(ip) {
 		return ip
 	}
 
 	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+		/*
 		if !HasLocalIPAddr(ip) {
 			return ip
-		}
+		}*/
+		return ip
 	}
 
 	return ""
