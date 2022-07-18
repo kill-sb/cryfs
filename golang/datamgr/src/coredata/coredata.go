@@ -217,6 +217,17 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 	return nil
 }
 
+func IsUbu()bool{
+	f,err:=os.Open("/etc/issue")
+	if err!=nil{
+		return true
+	}
+	defer f.Close()
+	var os string
+	fmt.Fscanf(f,"%s",&os)
+	return strings.Contains(strings.ToLower(os),"ubuntu")
+}
+
 func GetCurTime()string{
 	tm:=time.Now()
 	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",tm.Year(),tm.Month(),tm.Day(),tm.Hour(),tm.Minute(),tm.Second())

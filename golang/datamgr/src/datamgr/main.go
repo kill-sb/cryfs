@@ -91,17 +91,39 @@ func GetFunction() int {
 	return ret
 }
 
-func CheckParent()error{
-	ppid:=os.Getppid()
-	pidfile:=fmt.Sprintf("/proc/%d/exe",ppid)
+func PathFromPid(pid int)(string,error){
+	pidfile:=fmt.Sprintf("/proc/%d/exe",pid)
 	str,err:=os.Readlink(pidfile)
 	if err!=nil{
 //		fmt.Println("Readlink error")
-		return errors.New("'datamgr' is an inner module, use 'dtdfs' instead")
+		return "",errors.New("'datamgr' is an inner module, use 'dtdfs' instead")
 	}
-	if strings.HasSuffix(str,"/dtdfs"){
+	return str,nil
+}
+
+func CheckParent()error{
+	ppid:=os.Getppid()
+	fpath,err:=PathFromPid(ppid)
+	if err!=nil{
+		return nil
+	}
+	if strings.HasSuffix(fpath,"/bash") || strings.HasSuffix(fpath,"/dash"){
+		stfile:=fmt.Sprintf("/proc/%d/stat",ppid)
+		f,err:=os.Open(stfile)
+		defer f.Close()
+		var tmp string
+		_,err=fmt.Fscanf(f,"%s%s%s%d",&tmp,&tmp,&tmp,&ppid)
+		if err!=nil{
+			return err
+		}
+		fpath,err=PathFromPid(ppid)
+		if err!=nil{
+			return err
+		}
+	}
+	if strings.HasSuffix(fpath,"/dtdfs"){
 		sum:=strings.Split(CheckSum," ")[0]
-		result,err:=GetFileSha256(str)
+		result,err:=GetFileSha256(fpath)
 		if err==nil && result==sum{
 			return nil
 		}else{

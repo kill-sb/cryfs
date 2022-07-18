@@ -13,7 +13,7 @@ int mount_cmfs(const char* src, const char* dst,const char* passwd, const char* 
     if(fork()==0){
         close(fd[1]);
         dup2(fd[0],0);
-        execlp("/usr/local/bin/cmfs","/usr/local/bin/cmfs",src,dst,"-o",opt,NULL); // TODO verify checksum later
+        execlp("cmfs","cmfs",src,dst,"-o",opt,NULL); // TODO verify checksum later
     }else{
         close(fd[0]);
         write(fd[1],passwd,16);
@@ -93,6 +93,10 @@ func LocalTempDir(ipath string,usepdir bool)string{
 }
 
 func doMount(){
+	if core.IsUbu(){
+		fmt.Println("Current OS does not support mount data, try to use CentOS or Fedora Linux")
+		return
+	}
 	if inpath==""{
         fmt.Println("You should set inpath explicitly")
         return
