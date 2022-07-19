@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"encoding/json"
 	"log"
+	"time"
+	"strings"
 	core "coredata"
 //	"os"
 	"dbop"
@@ -201,6 +203,7 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 	//if r.Method=="GET"{
 	if r.Method=="POST"{
 		sifack:=api.NewShareInfoAck()
+		sifack.Data=nil
 		w.Header().Set("Content-Type","application/json")
 		var sifreq api.ShareInfoReq
 		err:=json.NewDecoder(r.Body).Decode(&sifreq)
@@ -258,6 +261,21 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 	        json.NewEncoder(w).Encode(sifack)
 	        return
 		}
+        strexp:=strings.Replace(retdata.Expire," ","T",1)+"+08:00"
+        tmexp,err:=time.Parse(time.RFC3339,strexp)
+        if err!=nil{
+			sifack.Code=5
+			sifack.Msg="bad expire time"
+			json.NewEncoder(w).Encode(sifack)
+			return
+        }
+        tmnow:=time.Now()
+        if tmnow.After(tmexp){
+			sifack.Code=5
+			sifack.Msg="shared data has expired at:"+retdata.Expire
+			json.NewEncoder(w).Encode(sifack)
+            return
+        }
 
 		if retdata.LeftUse>0{
 			err=dbop.DecreaseOpenTimes(retdata,linfo.Id)
@@ -267,7 +285,6 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
                 json.NewEncoder(w).Encode(sifack)
 	            return
 			}
-			// check expired time later
 		}// otherwise, LeftUse==-1, ulimited
 	}
 	sifack.Code=0

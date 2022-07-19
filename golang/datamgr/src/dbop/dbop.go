@@ -346,6 +346,10 @@ func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
 			fmt.Println("Parse visitor from db error",err)
 			return nil,err
 		}
+		if userid==-1{ // export data use only
+			return info,nil
+		}
+
 		query=fmt.Sprintf("select leftuse from shareusers where taguuid='%s' and userid=%d", uuid,userid)
 		res1,err:=db.Query(query)
 		if res1!=nil{

@@ -122,6 +122,14 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 						}
 					}
 				}else{
+					// sender , if agreed , get enckey
+					if epinfo.Status==api.AGREE{
+						sinfo,err:=dbop.GetUserShareInfoData(epinfo.DstData.Uuid,-1)
+						if err==nil && sinfo!=nil{
+							epinfo.EncKey=sinfo.EncKey
+						}
+					}
+
 					epack.Code=0
 					epack.Msg="OK"
 					epack.Data=epinfo

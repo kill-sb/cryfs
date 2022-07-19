@@ -99,21 +99,28 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
    // sinfo.IsDir=1 has already been determined in NewShareInfo
     sinfo.OrgName=dinfo.OrgName
 
-	sinfo.CrTime=core.GetCurTime()
-	sign,err:=WriteShareInfo(linfo.Token,sinfo)
-	if err!=nil{
-		fmt.Println(err)
-		return
-	}
 	st,err:=os.Stat(opath)
 	dst:=opath
 	if err==nil && st.IsDir(){
 		dst=opath+"/"+sinfo.Uuid+".csd"
 	}
-	err=CreateCSDFile(sinfo,sign,dst)
+	err=CreateCSDFile(sinfo,dst)
 	if err!=nil{
 		return
 	}
+	sinfo.Sha256,err=GetFileSha256(dst)
+	if err!=nil{
+		fmt.Println(err)
+		os.RemoveAll(dst)
+		return
+	}
+	sinfo.CrTime=core.GetCurTime()
+	err=WriteShareInfo(linfo.Token,sinfo)
+	if err!=nil{
+		fmt.Println(err)
+		return
+	}
+
 	fmt.Println(dst," created ok, you can share it to ", sinfo.Receivers)
 	return
 
@@ -197,21 +204,29 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 	}else{
 		LoadShareInfoConfig(sinfo) // TODO implement share config file
 	}
-	sinfo.CrTime=core.GetCurTime()
-	sign,err:=WriteShareInfo(linfo.Token,sinfo)
-	if err!=nil{
-		fmt.Println(err)
-		return err
-	}
 	st,err:=os.Stat(opath)
 	dst:=opath
 	if err==nil && st.IsDir(){
 		dst=opath+"/"+sinfo.Uuid+".csd"
 	}
-	err=CreateCSDFile(sinfo,sign,dst) // local or remote uri will be processed in diffrent way in CreateCSDFile
+	err=CreateCSDFile(sinfo,dst) // local or remote uri will be processed in diffrent way in CreateCSDFile
 	if err!=nil{
 		return err
 	}
+	sinfo.Sha256,err=GetFileSha256(dst)
+	if err!=nil{
+		fmt.Println(err)
+		os.RemoveAll(dst)
+		return err
+	}
+
+	sinfo.CrTime=core.GetCurTime()
+	err=WriteShareInfo(linfo.Token,sinfo)
+	if err!=nil{
+		fmt.Println(err)
+		return err
+	}
+
 	fmt.Println(dst," created ok, you can share it to ", sinfo.Receivers)
 	return nil
 }
@@ -260,7 +275,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	}else{
 		fmt.Sscanf(input,"%d",&sinfo.Perm)
 	}
-	fmt.Println("expire time: (Press 'Enter' for no expire time limit)")
+	fmt.Println("expire time: YYYY-MM-DD (Press 'Enter' for no expire time limit)")
 	fmt.Scanf("%s",&sinfo.Expire)
 	if sinfo.Expire==""{
 		sinfo.Expire="2999-12-31 00:00:00"
@@ -277,7 +292,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 	return nil
 }
 
-func CreateCSDFile(sinfo *core.ShareInfo,sign []byte, dstfile string)error{
+func CreateCSDFile(sinfo *core.ShareInfo,dstfile string)error{
 	fw,err:=os.Create(dstfile) // fixme: file mode should be assigned later
 	if err!=nil{
 		fmt.Println("CreateCSDFile error:",err)
@@ -285,7 +300,7 @@ func CreateCSDFile(sinfo *core.ShareInfo,sign []byte, dstfile string)error{
 	}
 	defer fw.Close()
 	if sinfo.FromType==core.ENCDATA{
-		if _,err=WriteCSDHead(sinfo,sign,fw);err==nil{
+		if _,err=WriteCSDHead(sinfo,fw);err==nil{
 			if sinfo.IsDir==0{
 				fr,err:=os.Open(sinfo.FileUri)
 				if err!=nil{
@@ -301,7 +316,7 @@ func CreateCSDFile(sinfo *core.ShareInfo,sign []byte, dstfile string)error{
 			fw.Write([]byte(sinfo.FileUri))
 		}
 	}else{
-		if hd,er:=WriteCSDHead(sinfo,sign,fw); er==nil{
+		if hd,er:=WriteCSDHead(sinfo,fw); er==nil{
             fr,err:=os.Open(sinfo.FileUri)
             if err!=nil{
                 fmt.Println("Open FileUri error:",err)
@@ -319,7 +334,7 @@ func CreateCSDFile(sinfo *core.ShareInfo,sign []byte, dstfile string)error{
 }
 
 
-func WriteCSDHead(sinfo *core.ShareInfo, sign []byte,fw *os.File)(*core.ShareInfoHeader_V2, error) {
+func WriteCSDHead(sinfo *core.ShareInfo, fw *os.File)(*core.ShareInfoHeader_V2, error) {
 /*	head:=new (ShareInfoHeader)
 	copy(head.MagicStr[:],[]byte("CMITFS"))
 	copy(head.Uuid[:],[]byte(sinfo.Uuid))
@@ -372,13 +387,13 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo,ne
 	return sinfo,nil
 }
 
-func WriteShareInfo(token string, sinfo* core.ShareInfo)([]byte,error){
+func WriteShareInfo(token string, sinfo* core.ShareInfo)error{
 //func WriteShareInfo(token string, sinfo* core.ShareInfo)(error){
 	err:=ShareData_API(token,sinfo)
 	if err!=nil{
-		return nil,err
+		return err
 	}
-	return nil,nil // TODO: sign
+	return nil
 }
 
 func FillShareInfo(apidata *api.ShareInfoData, encryptedkey []byte)*core.ShareInfo{
@@ -397,6 +412,7 @@ func FillShareInfo(apidata *api.ShareInfoData, encryptedkey []byte)*core.ShareIn
     sinfo.EncryptedKey=encryptedkey
     sinfo.FromType=apidata.FromType
     sinfo.FromUuid=apidata.FromUuid
+	sinfo.Sha256=apidata.Sha256
 //    sinfo.ContentType=ctype
 
 	sinfo.IsDir=apidata.IsDir
@@ -422,6 +438,7 @@ func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
     asi.FromType=sinfo.FromType
     asi.FromUuid=sinfo.FromUuid
     asi.CrTime=sinfo.CrTime
+	asi.Sha256=sinfo.Sha256
    // asi.FileUri=sinfo.FileUri
     asi.OrgName=sinfo.OrgName
 	asi.IsDir=sinfo.IsDir

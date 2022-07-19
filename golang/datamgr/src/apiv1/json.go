@@ -317,6 +317,7 @@ type ExportProcInfo struct{
 	DstData *ProcDataObj `json:"dataobj"`
 	CrTime string `json:"crtime"`
 	Comment string `json:"comment"`
+	EncKey    string `json:"enckey"`
 	ProcQueue []*ExProcNode `json:"procqueue"`
 }
 
