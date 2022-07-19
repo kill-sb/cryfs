@@ -123,7 +123,7 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 					}
 				}else{
 					// sender , if agreed , get enckey
-					if epinfo.Status==api.AGREE{
+					if epinfo.Status==api.AGREE && epinfo.DstData.Type==api.CSDFILE{
 						sinfo,err:=dbop.GetUserShareInfoData(epinfo.DstData.Uuid,-1)
 						if err==nil && sinfo!=nil{
 							epinfo.EncKey=sinfo.EncKey
