@@ -181,8 +181,8 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 			return errors.New("File forbit to reshare")
 		}
 		inlist:=false
-		for _,user:=range ssinfo.Receivers{
-			if linfo.Name==user{
+		for _,userid:=range ssinfo.RcvrIds{
+			if linfo.Id==userid{
 				inlist=true
 				break
 			}
@@ -431,7 +431,6 @@ func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
 	asi:=new (api.ShareInfoData)
 	asi.Uuid=sinfo.Uuid
     asi.OwnerId=sinfo.OwnerId
-  //  asi.OwnerName=sinfo.OwnerName
     asi.Descr=sinfo.Descr
     asi.Perm=sinfo.Perm
     asi.Receivers=sinfo.Receivers

@@ -223,50 +223,6 @@ func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.EncDataT
 	return tag,nil
 }
 
-/*
-func SaveLocalFileTag(pdata* core.EncryptedData, savedkey []byte)(*core.TagInFile,error){
-	tag:=new (core.TagInFile)
-	tag.OwnerId=pdata.OwnerId
-	for k,v:=range []byte(pdata.Uuid){
-		tag.Uuid[k]=v
-	}
-	for i,j:=range []byte(pdata.HashMd5){
-		tag.Md5Sum[i]=j
-	}
-	tag.FromType=byte(pdata.FromType)
-	for k,v:=range []byte(pdata.FromObj){
-		tag.FromObj[k]=v
-	}
-
-	for k,v:=range []byte(pdata.OrgName){
-		tag.OrgName[k]=v
-	}
-
-	tag.IsDir=pdata.IsDir
-	tag.Time=time.Now().Unix()
-	for k,v:=range []byte(savedkey){
-		tag.EKey[k]=v
-	}
-
-	copy(tag.Descr[:],[]byte(pdata.Descr))
-	//copy(tag.Descr[:],"cmit encrypted raw data")
-	tag.SaveTagToDisk(pdata.Path+"/"+pdata.Uuid+".tag")
-	return tag,nil
-}
-
-func SendMetaToServer_API(pdata *core.EncryptedData, token string)error{
-	encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromType:pdata.FromType,FromObj:pdata.FromObj,OwnerId:pdata.OwnerId,Hash256:pdata.HashMd5,OrgName:pdata.OrgName}
-    ack:=new (api.IEncDataAck)
-	err:=HttpAPIPost(&encreq,ack,"newdata")
-    if err!=nil{
-        fmt.Println("call api error:",err)
-    }
-	if ack.Code!=0{
-		return errors.New(ack.Msg)
-	}
-	return err
-}*/
-
 func DoEncodeInC(src,passwd,dst []byte,length int){
 	csrc:=(*C.char)(unsafe.Pointer(&src[0]))
 	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
@@ -411,18 +367,6 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 		return err
 	}
 	sinfo.FileUri=ipath
-/*	Server will check access control, no need to check here any more
-	inlist:=false
-	for _,user:=range sinfo.Receivers{
-		if linfo.Name==user{
-			inlist=true
-			break
-		}
-	}
-	if !inlist{
-		fmt.Println(linfo.Name,"is not in shared user list")
-		return errors.New("Not shared user")
-	}*/
 	ofile:=sinfo.OrgName
 //	fmt.Println("Get ofile ",ofile)
 //	fmt.Println("enc keys:",core.BinkeyToString(sinfo.EncryptedKey),"randkey:",core.BinkeyToString(sinfo.RandKey))
@@ -432,13 +376,6 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 	DoDecodeInC(sinfo.EncryptedKey,sinfo.RandKey,orgkey,16)
 	var ret error
 	if sinfo.IsDir==0{
-/*		cpasswd:=(*C.char)(unsafe.Pointer(&orgkey[0]))
-		cipath:=C.CString(ipath)
-		cofile:=C.CString(ofile)
-		defer C.free(unsafe.Pointer(cipath))
-		defer C.free(unsafe.Pointer(cofile))
-		C.do_decodefile(cipath,cofile,cpasswd,60) // ShareInfoHead offset
-		*/
 		ret=DoDecodeFileInC(ipath,ofile,orgkey,core.CSDV2HDSize)
 	}else{
 			// todo: it's a zipped dir
