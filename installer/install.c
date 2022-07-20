@@ -24,6 +24,23 @@ int Installed(){
 	return 0;
 }
 
+int UseUbtCfg() // return 1, treat as ubuntu >22.04, 0 not ubuntu, -1 ubuntu  but low edition
+{
+	char os[1024],ver[1024];
+	FILE *fp=fopen("/etc/issue","r");
+	if (!fp)
+		return 0;
+	fscanf(fp,"%s%s",os,ver);
+	fclose(fp);
+	if (strncasecmp(os,"ubuntu",6)==0){
+		if(strcmp(ver,"22.04")>=0)
+			return 1;
+		else 	
+			return -1;
+	}else 
+		return 0;
+}
+
 void Uninstall()
 {
 	char cmd[1024];
@@ -37,9 +54,9 @@ void Uninstall()
 
 int main(int c, char** v)
 {
-	char bin[4096];
+	char bin[2048];
 	int docker;
-	char IP[1024];
+	char IP[512];
 	char cmd[4096];
 	int ins=0;
 
@@ -68,7 +85,12 @@ int main(int c, char** v)
 	}
 
 	if (c>2 && strcmp(v[1],"-svr")==0){
-		strcpy(IP,v[2]);
+		if (strlen(v[2])<256)
+			strcpy(IP,v[2]);
+		else{
+			printf("FAILED\nIP address invalid\n");
+			exit(1);
+		}
 //		printf("OK\n");
 	}else{
 		printf("OK\nInput server IP address:");
