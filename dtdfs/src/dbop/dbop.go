@@ -508,6 +508,9 @@ func GetUserInfo(id int32)(*api.UserInfoData,error){
 func LookupPasswdSHA(user string)(int32,string,string,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select id,pwdsha256,enclocalkey from users where name='%s'",user)
+	if strings.Contains(user,"@"){
+		query+=fmt.Sprintf(" or email='%s'",user)
+	}
 	res,err:=db.Query(query)
 	if err!=nil{
 		return -1,"","",err
