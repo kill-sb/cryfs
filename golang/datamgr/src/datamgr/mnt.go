@@ -93,10 +93,6 @@ func LocalTempDir(ipath string,usepdir bool)string{
 }
 
 func doMount(){
-	if core.IsUbu(){
-		fmt.Println("Current OS does not support mount data, try to use CentOS or Fedora Linux")
-		return
-	}
 	if inpath==""{
         fmt.Println("You should set inpath explicitly")
         return

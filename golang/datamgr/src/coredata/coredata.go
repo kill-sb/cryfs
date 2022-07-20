@@ -217,7 +217,7 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 	return nil
 }
 
-func IsUbu()bool{
+func IsUbt()bool{
 	f,err:=os.Open("/etc/issue")
 	if err!=nil{
 		return true
