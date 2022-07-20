@@ -1,8 +1,10 @@
 export GOPATH=$(PWD)
 
 
-all:setenv datamgr dtdfs apisvr 
+all:subdir setenv datamgr dtdfs apisvr
 
+subdir:
+	make -C fs
 
 dtdfs:src/dtdfs/*.go src/coredata/*.go 
 	go build dtdfs
@@ -23,5 +25,6 @@ setenv:
 	go env -w GO111MODULE=off
 
 clean:
+	cd fs && rm -f cmfs *.o
 	rm -f datamgr dtdfs apisvr
 

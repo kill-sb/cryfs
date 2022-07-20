@@ -25,5 +25,6 @@ test:cmfs
 #	./cmfs  /tmp/mnt  /mnt  -o kernel_cache -o auto_cache
 .PHONY: clean
 clean:
+	make clean -C fs
 	rm -f *.o cmfs
 
