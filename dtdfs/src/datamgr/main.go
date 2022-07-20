@@ -19,7 +19,8 @@ var config string
 var keyword string
 var podimg string
 var apisvr string
-var CheckSum string
+var DtdfsSum string
+var CmfsSum string
 
 var namemap map[string]int32
 //var idmap map[int32]string
@@ -101,7 +102,7 @@ func PathFromPid(pid int)(string,error){
 	return str,nil
 }
 
-func CheckParent()error{
+func CheckSums()error{
 	ppid:=os.Getppid()
 	fpath,err:=PathFromPid(ppid)
 	if err!=nil{
@@ -122,7 +123,7 @@ func CheckParent()error{
 		}
 	}
 	if strings.HasSuffix(fpath,"/dtdfs"){
-		sum:=strings.Split(CheckSum," ")[0]
+		sum:=strings.Split(DtdfsSum," ")[0]
 		result,err:=GetFileSha256(fpath)
 		if err==nil && result==sum{
 			return nil
@@ -147,7 +148,7 @@ func testlogin(){
 }
 
 func main(){
-	if err:=CheckParent();err!=nil{
+	if err:=CheckSums();err!=nil{
 		fmt.Println(err)
 		return
 	}

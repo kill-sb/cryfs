@@ -6,14 +6,14 @@ package main
 #include <stdlib.h>
 #include <fcntl.h>
 
-int mount_cmfs(const char* src, const char* dst,const char* passwd, const char* opt){
+int mount_cmfs(const char* cmfsbin,const char* src, const char* dst,const char* passwd, const char* opt){
 
     int fd[2];
     int p=pipe(fd);
     if(fork()==0){
         close(fd[1]);
         dup2(fd[0],0);
-        execlp("cmfs","cmfs",src,dst,"-o",opt,NULL); // TODO verify checksum later
+        execlp(cmfsbin,cmfsbin,src,dst,"-o",opt,NULL); // TODO verify checksum later
     }else{
         close(fd[0]);
         write(fd[1],passwd,16);
@@ -388,6 +388,19 @@ func CreateOrgRC(linfo *core.LoginInfo,inputdata []*InputDataInfo, tlinfo []* ap
 	return rcinfo
 }
 
+func CmfsValid()bool{
+	cmfspath:=core.GetSelfPath()+"/cmfs"
+	cmsum,err:=GetFileSha256(cmfspath)
+	if err!=nil{
+		return false
+	}
+	sum:=strings.Split(CmfsSum," ")[0]
+    if cmsum!=sum{
+		return false
+    }
+	return true
+}
+
 func RegisterRC(linfo *core.LoginInfo, rc *api.RCInfo , outuuid string)(*api.RCInfo,error){
 	rc.OutputUuid=outuuid
 	rc.EndTime=core.GetCurTime()
@@ -422,6 +435,10 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 		return
 	}
 
+	if !CmfsValid(){
+		fmt.Println("Invalid cmfs file")
+		return
+	}
 	// establish output dir, and mount to a temp dir with random passwd
 	var outsrc,outdst string
 	var outkey []byte
@@ -546,10 +563,13 @@ func MountDirInC(src,dst string,passwd []byte,mode string)error{
 	csrc:=C.CString(src)
 	cdst:=C.CString(dst)
 	copt:=C.CString(mode)
+	cmfspath:=core.GetSelfPath()+"/cmfs"
+	cmfsbin:=(C.CString)(cmfspath)
+	defer C.free(unsafe.Pointer(cmfsbin))
 	defer C.free(unsafe.Pointer(csrc))
 	defer C.free(unsafe.Pointer(cdst))
 	defer C.free(unsafe.Pointer(copt))
-	C.mount_cmfs(csrc,cdst,cpasswd,copt)
+	C.mount_cmfs(cmfsbin,csrc,cdst,cpasswd,copt)
 	return nil
 }
 
