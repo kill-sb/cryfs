@@ -160,7 +160,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		sinfo.OrgName=dinfo.OrgName
 		DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
 //		fmt.Println("encrypted key in csd:",core.BinkeyToString(sinfo.EncryptedKey))
-	}else{
+	}else{ // CSDFILE
 		head,err:=core.LoadShareInfoHead(ipath)
 		if err!=nil{
 			fmt.Println("Load share info during reshare error:",err)
@@ -170,6 +170,11 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		if err!=nil{
 			fmt.Println("Load share info from head error:",err)
 			return err
+		}
+		sha256,_:=GetFileSha256(ipath)
+		if ssinfo.Sha256!="" && sha256!=ssinfo.Sha256{
+			fmt.Println("Invalid sha256sum of ",ipath)
+			return errors.New("Invalid sha256sum of csdfile")
 		}
 		if ssinfo.Perm==0 || ssinfo.MaxUse!=-1 || !strings.HasPrefix(ssinfo.Expire,"2999-12-31"){
 			fmt.Println("The file is not permitted to share.")
