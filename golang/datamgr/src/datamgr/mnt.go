@@ -202,6 +202,16 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 				return rdonly,err
 			}
 			sinfo,err:=GetShareInfoFromHead(head,linfo,0)
+			if err!=nil{
+				return rdonly,errors.New("Bad csd file: "+idata)
+			}
+			if sinfo.Sha256!=""{
+				sha256,_:=GetFileSha256(idata)
+				if sha256!=sinfo.Sha256{
+					return rdonly,errors.New(idata+" invalid sha256 sum")
+				}
+			}
+
 			if sinfo.Perm & 1==0 || sinfo.LeftUse!=-1 || !strings.HasPrefix(sinfo.Expire,"2999-12-31") {
 				rdonly=true
 			}
@@ -214,12 +224,12 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 			tmexp,err:=time.Parse(time.RFC3339,strexp)
 			if err!=nil{
 				fmt.Println("Parse expire time error:",err)
-				return rdonly,err
+				return rdonly,errors.New("Invalid expire time format: "+idata)
 			}
 			tmnow:=time.Now()
 			if tmnow.After(tmexp){
 				fmt.Println("The shared data has expired at :",sinfo.Expire)
-				return rdonly,errors.New("Data expired")
+				return rdonly,errors.New(idata+" data expired")
 			}
 
 		case core.ENCDATA:

@@ -227,7 +227,8 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)
 //		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",strings.TrimSuffix(dinfo.OrgName,".outdata"))
 		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",dinfo.OrgName)
     }
-    result+=fmt.Sprintf("Owner->%s(uid:%d),  ",getuser(dinfo.OwnerId),dinfo.OwnerId)
+    result+=fmt.Sprintf("Owner->%s,  ",getuser(dinfo.OwnerId))
+    //result+=fmt.Sprintf("Owner->%s(userid:%d),  ",getuser(dinfo.OwnerId),dinfo.OwnerId)
 
     result+=fmt.Sprintf("Create at->%s\n",dinfo.CrTime)
     if kw!=""{
@@ -257,7 +258,13 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, kw string,getuser func(int32
   //  fmt.Print("-->")
 
 	result:=fmt.Sprintf("Data Obj :%s (Type: Shared Data)  ",sinfo.Uuid)
-    result+=fmt.Sprintf("Owner->%s(uid :%d)",getuser(sinfo.OwnerId),sinfo.OwnerId)
+	if sinfo.Sha256==""{
+		result+=fmt.Sprintf("SHA256sum :(N/A)  ")
+	}else{
+		result+=fmt.Sprintf("SHA256sum :%s  ",sinfo.Sha256)
+	}
+    result+=fmt.Sprintf("Owner->%s",getuser(sinfo.OwnerId))
+    //result+=fmt.Sprintf("Owner->%s(userid :%d)",getuser(sinfo.OwnerId),sinfo.OwnerId)
     result+=fmt.Sprintf(", Send to->%s",sinfo.Receivers)
 	//if sinfo.Expire!="2999-12-31 00:00:00"{
 	if !strings.HasPrefix(sinfo.Expire,"2999-12-31"){

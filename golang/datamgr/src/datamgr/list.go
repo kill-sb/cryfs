@@ -107,7 +107,8 @@ func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
 	result+=fmt.Sprintf("\tOrgname :%s\n",data.OrgName)
 	user,err:=GetUserName(data.OwnerId)
 	if err==nil{
-		result+=fmt.Sprintf("\tData Owner :%s(%d)\n",user,data.OwnerId)
+		result+=fmt.Sprintf("\tData Owner :%s\n",user)
+		//result+=fmt.Sprintf("\tData Owner :%s(userid:%d)\n",user,data.OwnerId)
 	}
 
 	if data.FromRCId==0{
@@ -300,7 +301,7 @@ func TraceEncRCInfo(token string, dinfo *api.EncDataInfo){
 			fmt.Printf("\t%d. File: %s,  Content description: %s,  Size: %d,  SHA256 sum: %s\n",i+1,v.RelName,v.FileDesc,v.Size,v.Sha256)
 		}
 	}else{
-		fmt.Println("    Imported plain files info:  (Empty)")
+		fmt.Println("    Imported plain files info:  (N/A)")
 	}
 
 }
@@ -344,7 +345,7 @@ func DisplayTraceResult(dinfo api.IFDataDesc,bobjs,fobjs []*api.DataObj,info map
 	if len(bobjs)>0{
 		fmt.Println("\nTrace back result:")
 	}else{
-		fmt.Println("\nTrace back result:  (Empty)")
+		fmt.Println("\nTrace back result:  (N/A)")
 	}
 
 	for i,v:=range bobjs{
@@ -363,7 +364,7 @@ func DisplayTraceResult(dinfo api.IFDataDesc,bobjs,fobjs []*api.DataObj,info map
 	if len(fobjs)>0{
 		fmt.Println("\nTrace forward result:")
 	}else{
-		fmt.Println("\nTrace forward result:  (Empty)")
+		fmt.Println("\nTrace forward result:  (N/A)")
 	}
 	for i,v:=range fobjs{
 		fmt.Printf("    %d. ",i+1)
@@ -407,16 +408,22 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 		result=fmt.Sprintf("\t%d. Uuid :%s (Type: ShareData)\n",index,sinfo.Uuid)
 	}
 	result+=fmt.Sprintf("\tFilename :%s\n",sinfo.FileUri)
+	if sinfo.Sha256!=""{
+		result+=fmt.Sprintf("\tSHA256sum: %s\n",sinfo.Sha256)
+	}else{
+		result+=fmt.Sprintf("\tSHA256sum: N/A\n")
+	}
 	result+=fmt.Sprintf("\tFrom data:")
 	if sinfo.FromType==core.ENCDATA{
 		result+="Encoded Data, "
 	}else if sinfo.FromType==core.CSDFILE{
 		result+="CSD File, "
 	}
-	result+=fmt.Sprintf("UUID: %s\n",sinfo.FromUuid)
+	result+=fmt.Sprintf("Parent uuid: %s\n",sinfo.FromUuid)
 	user,err:=GetUserName(sinfo.OwnerId)
 	if err==nil{
-		result+=fmt.Sprintf("\tShared tag create user :%s(%d)\n",user,sinfo.OwnerId)
+		result+=fmt.Sprintf("\tShared tag create user :%s\n",user)
+//		result+=fmt.Sprintf("\tShared tag create user :%s(userid:%d)\n",user,sinfo.OwnerId)
 	}
 	result+=fmt.Sprintf("\tReceive users :%s\n",sinfo.Receivers)
 	var perm string
