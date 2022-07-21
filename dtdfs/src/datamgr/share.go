@@ -81,7 +81,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 		return
 	}
 	if dinfo.OwnerId!=linfo.Id{
-		fmt.Println("The data does not belong to",linfo.Name,dinfo.OwnerId,linfo.Id)
+		fmt.Printf("The data does not belong to %s(userid:%d)\n",linfo.Name,linfo.Id)
 		return
 	}
 	DoEncodeInC(dinfo.EncryptingKey,sinfo.RandKey,sinfo.EncryptedKey,16)
@@ -154,7 +154,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		}
 
 		if dinfo.OwnerId!=linfo.Id{
-			fmt.Println("The data does belong to",linfo.Name,dinfo.OwnerId,linfo.Id)
+			fmt.Printf("The data does belong to %s(userid:%d)\n",linfo.Name,linfo.Id)
 			return errors.New("incorrect user")
 		}
 		sinfo.OrgName=dinfo.OrgName
