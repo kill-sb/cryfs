@@ -219,13 +219,12 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)
     }
    // fmt.Print("-->")
     var result string
-    if dinfo.FromRCId==-1{
+    if dinfo.FromRCId<=0{
 		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data)  ",dinfo.Uuid)
-        result+=fmt.Sprintf("From Local Plain Data->%s,  ",dinfo.OrgName)
+        result+=fmt.Sprintf("From->Local Plain Data (%s),  ",dinfo.OrgName)
     }else {
 		result=fmt.Sprintf("Data Obj: %s (Type: Local Encrypted Data),  ",dinfo.Uuid)
-//		result+=fmt.Sprintf("From: Encrypted/Shared Data Original Name: %s, ",strings.TrimSuffix(dinfo.OrgName,".outdata"))
-		result+=fmt.Sprintf("From: Encrypted/Shared Data, Original Name: %s, ",dinfo.OrgName)
+		result+=fmt.Sprintf("From->Encrypted/Shared Data, Original Name->%s, ",dinfo.OrgName)
     }
     result+=fmt.Sprintf("Owner->%s,  ",getuser(dinfo.OwnerId))
     //result+=fmt.Sprintf("Owner->%s(userid:%d),  ",getuser(dinfo.OwnerId),dinfo.OwnerId)
@@ -281,7 +280,7 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, kw string,getuser func(int32
     }else if sinfo.FromType==CSDFILE{
         result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
 	}
-	result+=fmt.Sprintf(", Original Name: %s, Create at->%s\n",sinfo.OrgName,sinfo.CrTime)
+	result+=fmt.Sprintf(", Original Name->%s, Create at->%s\n",sinfo.OrgName,sinfo.CrTime)
 
     if kw!=""{
         result=strings.Replace(result,kw,"\033[7m"+kw+"\033[0m", -1)

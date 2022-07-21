@@ -269,7 +269,7 @@ func TraceCSDFile(token string,fname string){
 func TraceEncRCInfo(token string, dinfo *api.EncDataInfo){
 	fmt.Println("\nData Run Context info:")
 	if dinfo.FromRCId==0{
-		fmt.Println("    The data is created from local plain file(s) directly, so there's no run context info.")
+		fmt.Println("    The data is created from local plain file(s) directly, there's no run context info.")
 		return
 	}
 	rcinfo,err:=GetRCInfo_API(dinfo.FromRCId)

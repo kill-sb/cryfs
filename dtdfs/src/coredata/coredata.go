@@ -155,6 +155,7 @@ type ShareInfo struct{
 	OrgName string
 }
 
+/*
 type InfoTracer interface{
 	PrintTraceInfo(int,string)error
 }
@@ -197,15 +198,13 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 	// should be replaced later because of multi-source processing
 	if dinfo.FromRCId==-1{
 		result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
-	}else/* if dinfo.FromType==CSDFILE*/{
+	}else{
 		result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
 	}
 	result+=fmt.Sprintf("Owner->%s(uid:%d)",dinfo.OwnerName,dinfo.OwnerId)
 	if dinfo.FromRCId==-1{
 		result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
 	}else{
-		// TODO: print all source data later
-//		result+=fmt.Sprintf(", From User Share Data UUID->%s(Orginal Filename :%s)",dinfo.FromObj,strings.TrimSuffix(dinfo.OrgName,".outdata"))
 	}
 
 	result+=fmt.Sprintf(", Create at->%s\n",dinfo.CrTime)
@@ -215,7 +214,7 @@ func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
 	fmt.Print(result)
 
 	return nil
-}
+}*/
 
 func IsUbt()bool{
 	f,err:=os.Open("/etc/issue")
