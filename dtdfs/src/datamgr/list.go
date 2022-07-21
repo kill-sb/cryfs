@@ -378,23 +378,23 @@ func doTraceAll(){
 		fmt.Println("use -in to set filename need to be traced")
 		return
 	}
-	if loginuser==""{
-		fmt.Println("use parameter -user=NAME to set login user")
-        return
+	var token string=""
+	if loginuser!=""{
+		linfo,err:=Login(loginuser)
+		if err!=nil{
+			fmt.Println("login error:",err)
+			return
+		}
+		token=linfo.Token
+		defer Logout(linfo)
 	}
-	linfo,err:=Login(loginuser)
-    if err!=nil{
-        fmt.Println("login error:",err)
-        return
-    }
-    defer Logout(linfo)
 
 	ftype:=GetDataType(inpath)
 	switch ftype{
 	case core.ENCDATA:
-		TraceEncData(linfo.Token,inpath)
+		TraceEncData(token,inpath)
 	case core.CSDFILE:
-		TraceCSDFile(linfo.Token,inpath)
+		TraceCSDFile(token,inpath)
 	default:
 		fmt.Println(inpath+" does not have valid data type.")
 	}
