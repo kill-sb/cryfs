@@ -36,11 +36,11 @@ func LoadConfig(){
 
 func GetFunction() int {
 	//var bList,bEnc,bTrace,bShare,bMnt,bDec,bLogin bool
-	var bList,bEnc,bTrace,bShare,bMnt bool
+	var bList,bEnc,bTrace,bShare,bMnt,bDec bool
 	flag.BoolVar(&bEnc,"enc",false,"encrypt raw data")
 	flag.BoolVar(&bShare,"share",false,"share data to other users")
 	flag.BoolVar(&bMnt,"mnt",false,"mount encrypted data")
-//	flag.BoolVar(&bDec,"dec",false,"decrypted local data(test only)")
+	flag.BoolVar(&bDec,"dec",false,"decrypted local data(this function is for current test only, it will be removed in release edtion)")
 	flag.BoolVar(&bTrace,"trace",false,"trace details of data")
 	flag.BoolVar(&bList,"list",false,"list local encrypted data")
 //	flag.BoolVar(&bLogin,"login",false,"login and get a token")
@@ -69,10 +69,10 @@ func GetFunction() int {
 		ret=core.TRACE
 		count++
 	}
-/*	if(bDec){
+	if(bDec){
 		ret=core.DECODE
 		count++
-	}*/
+	}
 	if bEnc{
 		ret= core.ENCODE
 		count++
@@ -176,8 +176,8 @@ func main(){
 		doMount()
 	case core.TRACE:
 		doTraceAll()
-//	case core.DECODE:
-//		doDecode()
+	case core.DECODE:
+		doDecode()
 	default:
 		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-img container_image] [-import import_tool_path] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
 		//fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")

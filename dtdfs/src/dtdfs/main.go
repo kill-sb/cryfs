@@ -14,7 +14,7 @@ import "C"
 
 func main(){
 	strcmd:=fmt.Sprintf("unshare -m %s/datamgr ",coredata.GetSelfPath())
-	//strcmd:="datamgr "
+//	strcmd:=fmt.Sprintf("%s/datamgr",coredata.GetSelfPath())
 	nlen:=len(os.Args)
 	for i:=1;i<nlen;i++{
 		strcmd=strcmd+" "+os.Args[i]

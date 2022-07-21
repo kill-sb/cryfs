@@ -172,7 +172,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 			return err
 		}
 		sha256,_:=GetFileSha256(ipath)
-		if ssinfo.Sha256!="" && sha256!=ssinfo.Sha256{
+		if ssinfo.Sha256!="" && strings.ToLower(sha256)!=strings.ToLower(ssinfo.Sha256){
 			fmt.Println("Invalid sha256sum of ",ipath)
 			return errors.New("Invalid sha256sum of csdfile")
 		}

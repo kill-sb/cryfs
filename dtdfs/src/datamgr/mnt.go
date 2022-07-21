@@ -203,7 +203,7 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 			}
 			if sinfo.Sha256!=""{
 				sha256,_:=GetFileSha256(idata)
-				if sha256!=sinfo.Sha256{
+				if strings.ToLower(sha256)!=strings.ToLower(sinfo.Sha256){
 					return rdonly,errors.New(idata+" invalid sha256 sum")
 				}
 			}
@@ -548,10 +548,9 @@ func ProcOutputData(outsrc string)(/*uuid*/ string,/*isdir */bool,/*items*/ int,
 func RunPod(podimg string,opts map[string]*MountOpt)error{
 	ctcmd:="podman run -it --rm --privileged=true "
 	for k,v:=range opts{
-		ctcmd=ctcmd+" -v "+k+":"+v.dstpt+":"+v.access
+		ctcmd=ctcmd+" -v "+k+":'"+v.dstpt+"':"+v.access
 	}
 	ctcmd=ctcmd+" "+podimg+" /bin/bash"
-
 	ccmd:=C.CString(ctcmd)
 	defer C.free(unsafe.Pointer(ccmd))
 	C.system(ccmd)
