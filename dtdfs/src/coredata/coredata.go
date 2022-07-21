@@ -237,7 +237,7 @@ func GetUuid()(string,error){
     if output,err:=exec.Command("uuidgen").Output();err!=nil{
         return "",err
     }else{
-        return strings.TrimSpace(string(output)),nil
+        return strings.ToLower(strings.TrimSpace(string(output))),nil
     }
 }
 

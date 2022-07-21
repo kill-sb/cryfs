@@ -100,9 +100,14 @@ func doMount(){
 	paths:=strings.Split(inpath,",")
 	multisrc:=make([]string,0,len(paths))
 	for _,str:=range paths{
-		str=strings.TrimSpace(str)
-		if str!=""{
-			multisrc=append(multisrc,str)
+		apath,err:=filepath.Abs(strings.TrimSpace(str))
+		if err==nil{
+			if(apath!=""){
+				multisrc=append(multisrc,apath)
+			}
+		}else{
+			fmt.Println("Invalid input file:",str)
+			return
 		}
 	}
 
@@ -111,6 +116,22 @@ func doMount(){
 		return
     }
 
+	apath,err:=filepath.Abs(outpath)
+	if err!=nil{
+		fmt.Println("Invalid output path:",outpath)
+		return
+	}else{
+		outpath=apath
+	}
+
+	if mntimport!=""{
+		apath,err=filepath.Abs(mntimport)
+		if err!=nil{
+			fmt.Println("Invalid import-tool path:",mntimport)
+			return
+		}
+		mntimport=apath
+	}
 	if loginuser==""{
 		fmt.Println("use parameter -user=NAME to set login user")
 		return
