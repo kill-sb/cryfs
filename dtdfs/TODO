@@ -1,2 +1,1 @@
 docker import - cmit <cmit_img.tar
-check cmfs sha256sum

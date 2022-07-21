@@ -12,6 +12,7 @@ OBJ=cmfs.o crypt.o
 
 cmfs: $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) -o cmfs
+	strip cmfs
 
 demo:cmfs
 
