@@ -116,16 +116,18 @@ func doMount(){
 		return
     }
 
-	apath,err:=filepath.Abs(outpath)
-	if err!=nil{
-		fmt.Println("Invalid output path:",outpath)
-		return
-	}else{
-		outpath=apath
+	if outpath!=""{
+		apath,err:=filepath.Abs(outpath)
+		if err!=nil{
+			fmt.Println("Invalid output path:",outpath)
+			return
+		}else{
+			outpath=apath
+		}
 	}
 
 	if mntimport!=""{
-		apath,err=filepath.Abs(mntimport)
+		apath,err:=filepath.Abs(mntimport)
 		if err!=nil{
 			fmt.Println("Invalid import-tool path:",mntimport)
 			return

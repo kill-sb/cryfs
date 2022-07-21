@@ -47,11 +47,16 @@ int UseUbtCfg() // return 1, treat as ubuntu >22.04, 0 not ubuntu, -1 ubuntu  bu
 void Uninstall(int useubt)
 {
 	char cmd[1024];
+	int ret=0;
 	printf("OK\nUninstalling...");
-	system("sed -i '/ apisvr /d' /etc/hosts >/dev/null 2>/dev/null");
-	system("podman rmi cmit >/dev/null 2>/dev/null");
+	fflush(stdout);
 	sprintf(cmd,"rm -f %s/dtdfs %s/datamgr %s/cmfs >/dev/null 2>/dev/null",INSTALL_DIR,INSTALL_DIR,INSTALL_DIR);
-	system(cmd);
+	if (system(cmd)){
+		printf("FAILED\nYou should login as root or run installer with sudo.\n");
+		exit(1);
+	}
+	system("sed -i '/^[0-9].*[[:blank:]]apisvr[[:blank:]]/d' /etc/hosts >/dev/null 2>/dev/null");
+	system("podman rmi cmit >/dev/null 2>/dev/null");
 	if(useubt){
 			system("rm -f "UBT_CERT" >/dev/null 2>/dev/null");
 			system("update-ca-certificates >/dev/null 2>/dev/null");
@@ -162,6 +167,9 @@ int main(int c, char** v)
 	sprintf(cmd,"echo %s  apisvr  apisvr >>/etc/hosts",IP);
 	system(cmd);
 	system("rm -rf "TMPDIR);
-	printf("OK\nInstall finished, run dtdfs to get more help.\n");
+	if (useubt)
+		printf("OK\nInstall finished, run 'sudo dtdfs' to get more help.\n");
+	else
+		printf("OK\nInstall finished, run 'dtdfs' to get more help.\n");
 	return 0;	
 }

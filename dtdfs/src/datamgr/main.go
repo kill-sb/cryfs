@@ -88,7 +88,6 @@ func GetFunction() int {
 	if count!=1{
 		ret=core.INVALID
 	}
-
 	return ret
 }
 
