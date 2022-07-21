@@ -292,6 +292,9 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 		sinfo.MaxUse=-1
 	}else{
 		fmt.Sscanf(input,"%d",&sinfo.MaxUse)
+		if sinfo.MaxUse==0 || sinfo.MaxUse< -1 {
+			return errors.New("Invalid open times")
+		}
 	}
 	sinfo.LeftUse=sinfo.MaxUse
 	return nil
