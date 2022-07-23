@@ -9,7 +9,6 @@ import (
 
 func GetDataInfo_API(uuid string)(*api.EncDataInfo,error){
     req:=&api.GetDataInfoReq{Token:"0",Uuid:uuid}
-    //ack:=new(api.IDataInfoAck)
     ack:=api.NewDataInfoAck()
     err:=HttpAPIPost(req,ack,"getdatainfo")
     if err!=nil{
@@ -41,7 +40,6 @@ func GetUserInfo_API(ids []int32)([]api.UserInfoData,error){
 
 func FindUserName_API(names []string)([]api.UserInfoData,error){
     req:=&api.FindUserNameReq{Token:"0",Name:names}
-//    ack:=new(api.IUserInfoAck)
     ack:=api.NewUserInfoAck()
     err:=HttpAPIPost(req,ack,"finduserbynames")
     if err!=nil{
@@ -55,24 +53,9 @@ func FindUserName_API(names []string)([]api.UserInfoData,error){
     return ack.Data,nil
 }
 
-/*
-func UpdateDataInfo_API(dinfo *core.EncryptedData,linfo *core.LoginInfo) error{
-    upreq:=api.UpdateDataInfoReq{Token:linfo.Token,Uuid:dinfo.Uuid,Hash256:dinfo.HashMd5}
-    ack:=new (api.IUpdateDataAck)
-    err:=HttpAPIPost(&upreq,ack,"updatedata")
-    if err!=nil{
-        return err
-    }
-    if ack.Code!=0{
-        return errors.New(ack.Msg)
-    }
-    return nil
-}*/
-
 func SendMetaToServer_API(pdata *core.EncryptedData, token string)error{
     encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromRCId:pdata.FromRCId,OwnerId:pdata.OwnerId,OrgName:pdata.OrgName}
     ack:=api.NewDataAck()
-    //ack:=new (api.IEncDataAck)
     err:=HttpAPIPost(&encreq,ack,"newdata")
     if err!=nil{
         fmt.Println("call api error:",err)
@@ -85,7 +68,6 @@ func SendMetaToServer_API(pdata *core.EncryptedData, token string)error{
 
 func GetShareInfo_Public_API(uuid string)(*api.ShareInfoData,error){
     req:=&api.ShareInfoReq{Token:"0",Uuid:uuid,NeedKey:0}
-    //ack:=new(api.IShareInfoAck)
     ack:=api.NewShareInfoAck()
     err:=HttpAPIPost(req,ack,"getshareinfo")
     if err!=nil{
@@ -100,7 +82,6 @@ func GetShareInfo_Public_API(uuid string)(*api.ShareInfoData,error){
 
 func GetShareInfo_User_API(token string, uuid string,needkey byte)(*api.ShareInfoData,error){
     req:=&api.ShareInfoReq{Token:token,Uuid:uuid,NeedKey:needkey}
-//    ack:=new(api.IShareInfoAck)
     ack:=api.NewShareInfoAck()
     err:=HttpAPIPost(req,ack,"getshareinfo")
     if err!=nil{
@@ -117,7 +98,6 @@ func GetShareInfo_User_API(token string, uuid string,needkey byte)(*api.ShareInf
 func ShareData_API(token string,sinfo *core.ShareInfo)(error){
     data:=FillShareReqData(sinfo)
     req:=&api.ShareDataReq{Token:token,Data:data}
-    //ack:=new(api.IShareDataAck)
     ack:=api.NewShareAck()
     err:=HttpAPIPost(req,ack,"sharedata")
     if err!=nil{
@@ -132,7 +112,6 @@ func ShareData_API(token string,sinfo *core.ShareInfo)(error){
 
 func CreateRunContext_API(token string, rc *api.RCInfo)(*api.RCInfo,error){
 	req:=&api.CreateRCReq{Token:token,Data:rc}
-	//ack:=new(api.IRCInfoAck)
 	ack:=api.NewRCInfoAck()
 	err:=HttpAPIPost(req,ack,"createrc")
     if err!=nil{
@@ -146,7 +125,6 @@ func CreateRunContext_API(token string, rc *api.RCInfo)(*api.RCInfo,error){
 }
 
 func UpdateRunContext_API(token string, rc *api.RCInfo) error{
-	//ack= new (api.ISimpleAck)
 	req:=&api.UpdateRCReq{Token:token,RCId:rc.RCId,OutputUuid:rc.OutputUuid,EndTime:rc.EndTime}
     ack:=new (api.ISimpleAck)
     err:=HttpAPIPost(req,ack,"updaterc")
@@ -162,7 +140,6 @@ func UpdateRunContext_API(token string, rc *api.RCInfo) error{
 
 func GetRCInfo_API(rcid int64)(*api.RCInfo,error){
     req:=&api.GetRCInfoReq{Token:"0",RCId:rcid}
-    //ack:=new(api.IRCInfoAck)
     ack:=api.NewRCInfoAck()
     err:=HttpAPIPost(req,ack,"getrcinfo")
     if err!=nil{
@@ -177,7 +154,6 @@ func GetRCInfo_API(rcid int64)(*api.RCInfo,error){
 
 func TraceData_API(token string,data *api.DataObj,level int)([]*api.DataObj,error){
 	req:=&api.CommonTraceReq{Token:token,Level:level,Data:data}
-	//ack:=new(api.ITraceAck)
 	ack:=api.NewTraceAck()
 	err:=HttpAPIPost(req,ack,"trace")
 	if err!=nil{
@@ -227,7 +203,6 @@ func QueryObj_API(token string, objs []*api.DataObj)([]api.IFDataDesc,error){
 
 func Logout_API(token string)error{
 	req:=&api.LoginStatReq{Token:token}
-//	ack:=new(api.ILoginStatAck)
 	ack:=api.NewLoginStatAck()
 	err:=HttpAPIPost(req,ack,"logout")
     if err!=nil{

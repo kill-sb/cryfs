@@ -364,8 +364,6 @@ func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
 	return ret,nil
 }
 
-
-
 func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	if req.FromId<=0 && req.ToId<=0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
@@ -475,7 +473,6 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 			//return nil,errors.New("csd data not found")
 		}
 	}else if obj.Type==core.ENCDATA{
-		//query:=fmt.Sprintf("select rcinputdata.srcuuid,rcinputdata.srctype from rcinputdata, efilemeta where efilemeta.uuid='%s' and rcinputdata.rcid=efilemeta.fromrcid", obj.Obj)
 		query:=fmt.Sprintf("select fromrcid,orgname from efilemeta where uuid='%s'",obj.Obj)
 		res,err:=db.Query(query)
 		if err!=nil{

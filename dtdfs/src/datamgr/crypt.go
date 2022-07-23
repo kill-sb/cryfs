@@ -287,15 +287,7 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	pdata.FromRCId=0
 	pdata.FromContext=nil
 	ofile:=opath+"/"+pdata.Uuid
-/*	cpasswd:=(*C.char)(unsafe.Pointer(&passwd[0]))
-	cipath:=C.CString(ipath)
-	cofile:=C.CString(ofile)
-	defer C.free(unsafe.Pointer(cipath))
-	defer C.free(unsafe.Pointer(cofile))
-	C.do_encodefile(cipath,cofile,cpasswd)
-	*/
 	DoEncodeFileInC(ipath,ofile,passwd)
-//	pdata.HashMd5,_=GetFileMd5(ofile)
 	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,linfo.Token)
 	return pdata.Uuid,nil
 }
@@ -325,14 +317,6 @@ func doDecode(){
 			return
 		}
 		defer Logout(linfo)
-/*
-		if info.IsDir(){
-			fmt.Println("Decoding dir",inpath,outpath)
-			DecodeDir(inpath,outpath,linfo)
-		}else{
-			fmt.Println("Decoding file",inpath,outpath)
-			DecodeFile(inpath,outpath,linfo)
-		}*/
 		DecodeFile(inpath,outpath,linfo,finfo)
 	}
 }
@@ -368,7 +352,6 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 	}
 	sinfo.FileUri=ipath
 	ofile:=sinfo.OrgName
-//	fmt.Println("Get ofile ",ofile)
 //	fmt.Println("enc keys:",core.BinkeyToString(sinfo.EncryptedKey),"randkey:",core.BinkeyToString(sinfo.RandKey))
 	ofile=opath+"/"+ofile
 	orgkey:=make([]byte,16)
@@ -378,7 +361,6 @@ func DecodeCSDFile(linfo *core.LoginInfo,ipath,opath string) error{
 	if sinfo.IsDir==0{
 		ret=DoDecodeFileInC(ipath,ofile,orgkey,core.CSDV2HDSize)
 	}else{
-			// todo: it's a zipped dir
 		ret=DecodeCSDToDir(ipath,ofile,orgkey)
 	}
 	if ret==nil{

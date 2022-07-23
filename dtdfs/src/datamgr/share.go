@@ -343,25 +343,6 @@ func CreateCSDFile(sinfo *core.ShareInfo,dstfile string)error{
 
 
 func WriteCSDHead(sinfo *core.ShareInfo, fw *os.File)(*core.ShareInfoHeader_V2, error) {
-/*	head:=new (ShareInfoHeader)
-	copy(head.MagicStr[:],[]byte("CMITFS"))
-	copy(head.Uuid[:],[]byte(sinfo.Uuid))
-	copy(head.EncryptedKey[:],sinfo.EncryptedKey)
-	if IsLocalFile(sinfo.FileUri){
-		head.ContentType=BINCONTENT
-	}else{
-		head.ContentType=REMOTEURL
-	}
-	head.IsDir=sinfo.IsDir
-	buf:=new(bytes.Buffer)
-	binary.Write(buf,binary.LittleEndian,head)
-	fw.Write(buf.Bytes())
-*/
-/*	err,sha256:=GetFileSha256(sinfo.FileUri)
-	if err!=nil{
-		return err
-	}
-*/
 	head:=new (core.ShareInfoHeader_V2)
 	copy(head.MagicStr[:],[]byte("CSDFMTV2"))
 	copy(head.Uuid[:],[]byte(sinfo.Uuid))
@@ -446,7 +427,6 @@ func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
     asi.FromUuid=sinfo.FromUuid
     asi.CrTime=sinfo.CrTime
 	asi.Sha256=sinfo.Sha256
-   // asi.FileUri=sinfo.FileUri
     asi.OrgName=sinfo.OrgName
 	asi.IsDir=sinfo.IsDir
 	return asi

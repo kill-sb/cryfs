@@ -153,7 +153,6 @@ func main(){
 	}
 	LoadConfig()
 	namemap=make(map[string]int32)
-//	idmap=make(map[int32]string)
 
 	uuidmap =make(map[string]*core.EncryptedData)
 	useridmap=make(map[int32]string)
