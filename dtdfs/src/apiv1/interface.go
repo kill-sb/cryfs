@@ -33,6 +33,16 @@ const (
 	TRACE_FORWARD=0xffff
 )
 
+const (
+	ERR_UNKNOWN=-1
+	ERR_BADPARAM=iota
+	ERR_LOGIN
+	ERR_INVDATA
+	ERR_ACCESS
+	ERR_INTERNAL
+)
+
+
 func NewSimpleAck() *ISimpleAck{
 	sa:=new (ISimpleAck)
 	sa.Code=-1
@@ -40,6 +50,7 @@ func NewSimpleAck() *ISimpleAck{
 	return sa
 }
 
+/*
 func NewShareAck() *IShareDataAck{
 //	data:=new (ShareDataAck)
 	sda:=new (IShareDataAck)
@@ -47,7 +58,7 @@ func NewShareAck() *IShareDataAck{
 	sda.Msg=INIT_MSG
 //	sda.Data=data
 	return sda
-}
+}*/
 
 func NewDataInfoAck() *IDataInfoAck{
 	data:=new (EncDataInfo)
@@ -100,7 +111,7 @@ func NewShareInfoAck()*IShareInfoAck{
 	ack.Data=data
     return ack
 }
-
+/*
 func NewDataAck() *IEncDataAck{
 //	data:=new (EncDataAck)
 	eda:=new (IEncDataAck)
@@ -108,7 +119,7 @@ func NewDataAck() *IEncDataAck{
 	eda.Msg=INIT_MSG
 //	eda.Data=data
 	return eda
-}
+}*/
 
 func NewToken()*ITokenInfo{
     data:=&TokenInfo{Id:-1,Token:"nil",Key:"nil"}

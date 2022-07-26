@@ -149,6 +149,8 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 		err:= json.NewDecoder(r.Body).Decode(&ainfo)
 		if err!=nil{
 			Debug("Decode json error:",r.Body,"-",err)
+			token.Data=nil
+			token.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(token)
 			return
 		}
@@ -161,6 +163,8 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 		// check user/passwd
 		id,shasum,key,err:=dbop.LookupPasswdSHA(ainfo.Name)
 		if err!=nil{
+			token.Data=nil
+			token.Code=api.ERR_INTERNAL
 			json.NewEncoder(w).Encode(token)
 			return
 		}
@@ -180,7 +184,8 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 			token.Code=0
 			token.Msg="OK"
 		}else{
-			token.Code=1
+			token.Data=nil
+			token.Code=api.ERR_LOGIN
 			token.Msg="Invalid user/password"
 		}
 		json.NewEncoder(w).Encode(token)
@@ -191,78 +196,6 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 }
 
 
-/*
-func GetUserFunc(w http.ResponseWriter, r *http.Request){
-	if r.Method=="POST"{
-		usrack:=api.NewUserInfoAck()
-		w.Header().Set("Content-Type","application/json")
-		var usrreq api.GetUserReq
-		err:=json.NewDecoder(r.Body).Decode(&usrreq)
-		if err!=nil{
-			Debug("Decode json error:",err)
-			json.NewEncoder(w).Encode(usrack)
-			return
-		}
-		if g_config.Debug{
-			DebugJson("Request:",&usrreq)
-			defer DebugJson("Response:",usrack)
-		}
-		usrack.Code=0
-		usrack.Msg="OK"
-		for _,v:=range usrreq.Id{
-			usr,err:=dbop.GetUserInfo(v)
-			if err!=nil{
-				usrack.Code=3
-				usrack.Msg=fmt.Sprintf("search userid=%d error: %s",v,err.Error())
-				usrack.Data=[]api.UserInfoData{}
-				break
-			}else{
-				usrack.Data=append(usrack.Data,*usr)
-			}
-		}
-		json.NewEncoder(w).Encode(usrack)
-	}else{
-		http.NotFound(w,r)
-	}
-}
-
-func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
-	if r.Method=="POST"{
-		usrack:=api.NewUserInfoAck()
-		w.Header().Set("Content-Type","application/json")
-		var usrreq api.FindUserNameReq
-		err:=json.NewDecoder(r.Body).Decode(&usrreq)
-		if err!=nil{
-			Debug("Decode json error:",err)
-			json.NewEncoder(w).Encode(usrack)
-			return
-		}
-        if g_config.Debug{
-            DebugJson("Request:",&usrreq)
-            defer DebugJson("Response:",usrack)
-        }
-
-		usrack.Code=0
-		usrack.Msg="OK"
-		for _,v:=range usrreq.Name{
-			usr,err:=dbop.GetUserInfoByName(v)
-			if err!=nil{
-				usrack.Code=3
-				usrack.Msg=fmt.Sprintf("search user %s error: %s",v,err.Error())
-				usrack.Data=[]api.UserInfoData{}
-				break
-			}else{
-				Debug(usr.Name,usr.Id)
-				usrack.Data=append(usrack.Data,*usr)
-			}
-		}
-		json.NewEncoder(w).Encode(usrack)
-	}else{
-		http.NotFound(w,r)
-	}
-
-}*/
-
 func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		rfack:=api.NewLoginStatAck()
@@ -271,6 +204,8 @@ func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&rfreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			rfack.Data=nil
+			rfack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(rfack)
 			return
 		}
@@ -281,7 +216,8 @@ func RefreshTokenFunc(w http.ResponseWriter, r *http.Request){
 
 		info,err:=GetLoginUserInfo(rfreq.Token)
         if err!=nil{
-            rfack.Code=1
+			rfack.Data=nil
+            rfack.Code=api.ERR_INVDATA
             rfack.Msg="Invalid token"
             json.NewEncoder(w).Encode(rfack)
             return
@@ -340,12 +276,13 @@ func GetClientPublicIP(r *http.Request) string {
 
 func LogoutFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
-		loack:=api.NewLoginStatAck()
+		loack:=api.NewSimpleAck()
 		w.Header().Set("Content-Type","application/json")
 		var loreq api.LoginStatReq
 		err:=json.NewDecoder(r.Body).Decode(&loreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			loack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(loack)
 			return
 		}
@@ -355,7 +292,7 @@ func LogoutFunc(w http.ResponseWriter, r *http.Request){
         }
 		info,err:=GetLoginUserInfo(loreq.Token)
         if err!=nil{
-            loack.Code=1
+            loack.Code=api.ERR_INVDATA
             loack.Msg="Invalid token"
             json.NewEncoder(w).Encode(loack)
             return

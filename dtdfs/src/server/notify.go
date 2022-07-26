@@ -19,6 +19,8 @@ func CreateNotifyFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&snreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			snack.Data=0
+			snack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(snack)
 			return
 		}
@@ -28,20 +30,23 @@ func CreateNotifyFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(snreq.Token)
 		if err!=nil{
-			snack.Code=1
+			snack.Data=0
+			snack.Code=api.ERR_INVDATA
 			snack.Msg=err.Error()
 			json.NewEncoder(w).Encode(snack)
 			return
 		}
 		if luinfo.Id!=snreq.Data.FromUid{
-			snack.Code=2
+			snack.Data=0
+			snack.Code=api.ERR_ACCESS
 			snack.Msg="Send user is different from login user"
 			json.NewEncoder(w).Encode(snack)
 			return
 		}
 		_,err=dbop.GetUserInfo(snreq.Data.ToUid)
 		if err!=nil{
-			snack.Code=3
+			snack.Data=0
+			snack.Code=api.ERR_INVDATA
 			snack.Msg="Invalid receive user"
 			json.NewEncoder(w).Encode(snack)
 			return
@@ -49,7 +54,8 @@ func CreateNotifyFunc(w http.ResponseWriter, r *http.Request){
 
 		// user info checked ok
 		if err=dbop.NewNotify(snreq.Data);err!=nil{
-			snack.Code=4
+			snack.Data=0
+			snack.Code=api.ERR_INTERNAL
 			snack.Msg=err.Error()
 		}else{
 			snack.Code=0
@@ -70,6 +76,7 @@ func SetNotifyStatFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&snsreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			snsack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(snsack)
 			return
 		}
@@ -79,14 +86,14 @@ func SetNotifyStatFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(snsreq.Token)
 		if err!=nil{
-			snsack.Code=1
+			snsack.Code=api.ERR_INVDATA
 			snsack.Msg=err.Error()
 			json.NewEncoder(w).Encode(snsack)
 			return
 		}
 		alen:=len(snsreq.Ids)
 		if alen!=len(snsreq.Stats){
-			snsack.Code=1
+			snsack.Code=api.ERR_INVDATA
 			snsack.Msg="Invalid parameters"
 			json.NewEncoder(w).Encode(snsack)
 			return
@@ -94,23 +101,22 @@ func SetNotifyStatFunc(w http.ResponseWriter, r *http.Request){
 		for i:=0;i<alen;i++{
 			ninfo,err:=dbop.GetNotifyInfo(snsreq.Ids[i])
 			if err!=nil{
-				snsack.Code=1
+				snsack.Code=api.ERR_INVDATA
 				snsack.Msg=err.Error()
 				json.NewEncoder(w).Encode(snsack)
 				return
 			}
 			if luinfo.Id!=ninfo.ToUid {
-				snsack.Code=2
+				snsack.Code=api.ERR_ACCESS
 				snsack.Msg="Login user is not receive user."
 				json.NewEncoder(w).Encode(snsack)
 				return
 			}
 			if err=dbop.SetNotifyStat(snsreq.Ids[i],snsreq.Stats[i]);err!=nil{
-				snsack.Code=3
+				snsack.Code=api.ERR_INVDATA
 				snsack.Msg=err.Error()
                 json.NewEncoder(w).Encode(snsack)
                 return
-
 			}
 		}
 		snsack.Code=0
@@ -129,6 +135,7 @@ func DelNotifyFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&dnreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			dnack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(dnack)
 			return
 		}
@@ -138,7 +145,7 @@ func DelNotifyFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(dnreq.Token)
 		if err!=nil{
-			dnack.Code=1
+			dnack.Code=api.ERR_INVDATA
 			dnack.Msg=err.Error()
 			json.NewEncoder(w).Encode(dnack)
 			return
@@ -146,20 +153,20 @@ func DelNotifyFunc(w http.ResponseWriter, r *http.Request){
 		for _,id:=range dnreq.Ids{
 			ninfo,err:=dbop.GetNotifyInfo(id)
 			if err!=nil{
-				dnack.Code=1
+				dnack.Code=api.ERR_INVDATA
 				dnack.Msg=err.Error()
 				json.NewEncoder(w).Encode(dnack)
 				return
 			}
 			if luinfo.Id!=ninfo.ToUid && luinfo.Id!=ninfo.FromUid{
-				dnack.Code=2
+				dnack.Code=api.ERR_ACCESS
 				dnack.Msg="Login user is neither send user nor receive user."
 				json.NewEncoder(w).Encode(dnack)
 				return
 			}
 		}
 		if err=dbop.DelNotifies(dnreq.Ids);err!=nil{
-			dnack.Code=3
+			dnack.Code=api.ERR_INTERNAL
 			dnack.Msg=err.Error()
 		}else{
 			dnack.Code=0
@@ -179,6 +186,8 @@ func GetNotifyInfoFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&gnireq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			gniack.Data=nil
+			gniack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(gniack)
 			return
 		}
@@ -188,7 +197,8 @@ func GetNotifyInfoFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(gnireq.Token)
 		if err!=nil{
-			gniack.Code=1
+			gniack.Data=nil
+			gniack.Code=api.ERR_INVDATA
 			gniack.Msg=err.Error()
 			json.NewEncoder(w).Encode(gniack)
 			return
@@ -199,13 +209,13 @@ func GetNotifyInfoFunc(w http.ResponseWriter, r *http.Request){
 		for _,id:=range gnireq.Ids{
 			ninfo,err:=dbop.GetNotifyInfo(id)
 			if err!=nil{
-				gniack.Code=1
+				gniack.Code=api.ERR_INVDATA
 				gniack.Msg=err.Error()
 				gniack.Data=nil
 				break
 			}
 			if luinfo.Id!=ninfo.FromUid && luinfo.Id!=ninfo.ToUid{
-				gniack.Code=2
+				gniack.Code=api.ERR_ACCESS
 				gniack.Msg=fmt.Sprintf("Current user is neither sender nor receiver of notify-%d",ninfo.Id)
 				gniack.Data=nil
 				break
@@ -230,6 +240,8 @@ func SearchNotifiesFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&snreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			snack.Data=nil
+			snack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(snack)
 			return
 		}
@@ -239,13 +251,15 @@ func SearchNotifiesFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(snreq.Token)
 		if err!=nil{
-			snack.Code=1
+			snack.Data=nil
+			snack.Code=api.ERR_INVDATA
 			snack.Msg=err.Error()
 			json.NewEncoder(w).Encode(snack)
 			return
 		}
 		if luinfo.Id!=snreq.FromUid && luinfo.Id!=snreq.ToUid{
-			snack.Code=2
+			snack.Data=nil
+			snack.Code=api.ERR_ACCESS
 			snack.Msg="Login user is neither send user nor receive user"
 			json.NewEncoder(w).Encode(snack)
 			return
@@ -253,7 +267,7 @@ func SearchNotifiesFunc(w http.ResponseWriter, r *http.Request){
 
 		// user info checked ok
 		if snack.Data,err=dbop.SearchNotifies(&snreq);err!=nil{
-			snack.Code=1
+			snack.Code=api.ERR_INVDATA
 			snack.Msg=err.Error()
 			snack.Data=nil
 		}else{

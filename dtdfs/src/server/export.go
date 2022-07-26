@@ -18,6 +18,8 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&epreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			epack.Data=nil
+			epack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(epack)
 			return
 		}
@@ -28,7 +30,8 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 
 		luinfo,err:=GetLoginUserInfo(epreq.Token)
 		if err!=nil{
-			epack.Code=1
+			epack.Data=nil
+			epack.Code=api.ERR_INVDATA
 			epack.Msg=err.Error()
 			json.NewEncoder(w).Encode(epack)
 			return
@@ -49,7 +52,7 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 		}*/
 		// user info checked ok
 		if epack.Data,err=dbop.NewExport(epreq.Data,luinfo.Id,&epreq.Comment);err!=nil{
-			epack.Code=1
+			epack.Code=api.ERR_INTERNAL
 			epack.Msg=err.Error()
 			epack.Data=nil
 		}else{
@@ -70,6 +73,8 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&epreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			epack.Data=nil
+			epack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(epack)
 			return
 		}
@@ -80,7 +85,8 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 
 		luinfo,err:=GetLoginUserInfo(epreq.Token)
         if err!=nil{
-            epack.Code=1
+			epack.Data=nil
+            epack.Code=api.ERR_INVDATA
             epack.Msg="You should login first"
             json.NewEncoder(w).Encode(epack)
             return
@@ -88,19 +94,19 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 
 		epinfo,err:=dbop.GetExportInfo(epreq.ExpId)
 		if err!=nil{
-			epack.Code=2
+			epack.Code=api.ERR_INVDATA
 			epack.Data=nil
 			epack.Msg=err.Error()
 		}else{
 			err=dbop.LoadProcQueue(epinfo)
 			if err!=nil{
-				epack.Code=2
+				epack.Code=api.ERR_INTERNAL
 				epack.Data=nil
 				epack.Msg=err.Error()
 			}else{
 				if luinfo.Id!=epinfo.DstData.UserId{ // check receiver
 					if epinfo.ProcQueue==nil || len(epinfo.ProcQueue)==0{
-						epack.Code=3
+						epack.Code=api.ERR_ACCESS
 						epack.Msg="Invalid query user"
 						epack.Data=nil
 					}else{ // now check receive list
@@ -116,7 +122,7 @@ func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 							epack.Msg="OK"
 							epack.Data=epinfo
 						}else{
-							epack.Code=3
+							epack.Code=api.ERR_ACCESS
 							epack.Msg="Invalid query user"
 							epack.Data=nil
 						}
@@ -151,19 +157,23 @@ func SearchExportsFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&sereq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			seack.Data=nil
+			seack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(seack)
 			return
 		}
 
 		uinfo,err:=GetLoginUserInfo(sereq.Token)
         if err!=nil{
-            seack.Code=1
+			seack.Data=nil
+            seack.Code=api.ERR_INVDATA
             seack.Msg="You should login first"
             json.NewEncoder(w).Encode(seack)
             return
         }
 		if uinfo.Id!=sereq.ToUid && uinfo.Id!=sereq.FromUid{
-			seack.Code=3
+			seack.Data=nil
+			seack.Code=api.ERR_ACCESS
 			seack.Msg="You should be either SENDER or RECEIVER of the exporting"
 			json.NewEncoder(w).Encode(seack)
 			return
@@ -171,7 +181,8 @@ func SearchExportsFunc(w http.ResponseWriter, r *http.Request){
 
 		objs,err:=dbop.SearchExpProc(&sereq)
 		if err!=nil{
-			seack.Code=2
+			seack.Data=nil
+			seack.Code=api.ERR_INTERNAL
 			seack.Msg=err.Error()
 		}else{
 			seack.Data=objs
@@ -194,6 +205,7 @@ func RespExportFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&rereq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			reack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(reack)
 			return
 		}
@@ -203,7 +215,7 @@ func RespExportFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(rereq.Token)
 		if err!=nil{
-			reack.Code=1
+			reack.Code=api.ERR_INVDATA
 			reack.Msg=err.Error()
 			json.NewEncoder(w).Encode(reack)
 			return
@@ -212,7 +224,7 @@ func RespExportFunc(w http.ResponseWriter, r *http.Request){
 		// user info checked ok
 		// reference crypt.go:dbop.SaveMeta
 		if err=dbop.RespExportReq(luinfo.Id,&rereq);err!=nil{
-			reack.Code=1
+			reack.Code=api.ERR_INVDATA
 			reack.Msg=err.Error()
 		}else{
 			reack.Code=0

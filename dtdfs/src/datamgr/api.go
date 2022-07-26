@@ -55,7 +55,7 @@ func FindUserName_API(names []string)([]api.UserInfoData,error){
 
 func SendMetaToServer_API(pdata *core.EncryptedData, token string)error{
     encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromRCId:pdata.FromRCId,OwnerId:pdata.OwnerId,OrgName:pdata.OrgName}
-    ack:=api.NewDataAck()
+    ack:=api.NewSimpleAck()
     err:=HttpAPIPost(&encreq,ack,"newdata")
     if err!=nil{
         fmt.Println("call api error:",err)
@@ -98,7 +98,7 @@ func GetShareInfo_User_API(token string, uuid string,needkey byte)(*api.ShareInf
 func ShareData_API(token string,sinfo *core.ShareInfo)(error){
     data:=FillShareReqData(sinfo)
     req:=&api.ShareDataReq{Token:token,Data:data}
-    ack:=api.NewShareAck()
+    ack:=api.NewSimpleAck()
     err:=HttpAPIPost(req,ack,"sharedata")
     if err!=nil{
         fmt.Println("call getshareinfo error:",err)
@@ -203,7 +203,7 @@ func QueryObj_API(token string, objs []*api.DataObj)([]api.IFDataDesc,error){
 
 func Logout_API(token string)error{
 	req:=&api.LoginStatReq{Token:token}
-	ack:=api.NewLoginStatAck()
+	ack:=api.NewSimpleAck()
 	err:=HttpAPIPost(req,ack,"logout")
     if err!=nil{
         fmt.Println("call logout error:",err)

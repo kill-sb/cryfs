@@ -48,7 +48,7 @@ type EncDataReq struct{
 	OwnerId int32 `json:"ownerid"`
 	OrgName string `json:"orgname"`
 }
-
+/*
 type EncDataAck struct{
 //	Uuid string `json:"uuid"`
 //	LocalKey string `json:"locakkey"`
@@ -57,7 +57,7 @@ type EncDataAck struct{
 type IEncDataAck struct{
 	RetStat
 //	Data *EncDataAck `json:"data"`
-}
+}*/
 
 type ShareInfoReq struct{
 	Token string `json:"token"`
@@ -97,11 +97,12 @@ type ShareDataReq struct{
 /*
 type ShareDataAck struct{
 }
-*/
+
 type IShareDataAck struct{
 	RetStat
 //	Data *ShareDataAck `json:"data"`
 }
+*/
 
 type UserInfoData struct{
 	Id int32 `json:"id"`

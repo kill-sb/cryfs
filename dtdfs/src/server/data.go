@@ -14,12 +14,13 @@ import (
 
 func NewDataFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
-		encack:=api.NewDataAck()
+		encack:=api.NewSimpleAck()
 		w.Header().Set("Content-Type","application/json")
 		var encreq api.EncDataReq
 		err:=json.NewDecoder(r.Body).Decode(&encreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			encack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(encack)
 			return
 		}
@@ -29,13 +30,13 @@ func NewDataFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(encreq.Token)
 		if err!=nil{
-			encack.Code=1
+			encack.Code=api.ERR_INVDATA
 			encack.Msg=err.Error()
 			json.NewEncoder(w).Encode(encack)
 			return
 		}
 		if luinfo.Id!=encreq.OwnerId{
-			encack.Code=2
+			encack.Code=api.ERR_ACCESS
 			encack.Msg="Invalid user"
 			json.NewEncoder(w).Encode(encack)
 			return
@@ -53,7 +54,7 @@ func NewDataFunc(w http.ResponseWriter, r *http.Request){
 	    pdata.IsDir=encreq.IsDir
 		*/
 		if err:=dbop.SaveEncMeta(&encreq);err!=nil{
-			encack.Code=2
+			encack.Code=api.ERR_INTERNAL
 			encack.Msg=err.Error()
 		}else{
 			encack.Code=0
@@ -73,6 +74,8 @@ func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&difreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			ifack.Data=nil
+			ifack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(ifack)
 			return
 		}
@@ -91,7 +94,8 @@ func GetDataInfoFunc(w http.ResponseWriter, r *http.Request){
 
 		retdata,err:=dbop.GetEncDataInfo(difreq.Uuid)
 		if err!=nil{
-			ifack.Code=2
+			ifack.Data=nil
+			ifack.Code=api.ERR_INVDATA
 			ifack.Msg=err.Error()
 		}else{
 			ifack.Code=0
@@ -112,19 +116,23 @@ func SearchEncDataFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&sedreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			sedack.Data=nil
+			sedack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(sedack)
 			return
 		}
 
 		uinfo,err:=GetLoginUserInfo(sedreq.Token)
         if err!=nil{
-            sedack.Code=1
+			sedack.Data=nil
+            sedack.Code=api.ERR_INVDATA
             sedack.Msg="You should login first"
             json.NewEncoder(w).Encode(sedack)
             return
         }
 		if uinfo.Id!=sedreq.UserId {
-			sedack.Code=3
+			sedack.Data=nil
+			sedack.Code=api.ERR_ACCESS
 			sedack.Msg="You should login as the userid you searched for"
 			json.NewEncoder(w).Encode(sedack)
 			return
@@ -132,7 +140,8 @@ func SearchEncDataFunc(w http.ResponseWriter, r *http.Request){
 
 		objs,err:=dbop.SearchEncData(&sedreq)
 		if err!=nil{
-			sedack.Code=2
+			sedack.Data=nil
+			sedack.Code=api.ERR_INVDATA
 			sedack.Msg=err.Error()
 		}else{
 			sedack=api.NewSearchEncAck(objs)
@@ -160,19 +169,23 @@ func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&ssdreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			ssdack.Data=nil
+			ssdack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(ssdack)
 			return
 		}
 
 		uinfo,err:=GetLoginUserInfo(ssdreq.Token)
         if err!=nil{
-            ssdack.Code=1
+			ssdack.Data=nil
+            ssdack.Code=api.ERR_INVDATA
             ssdack.Msg="You should login first"
             json.NewEncoder(w).Encode(ssdack)
             return
         }
 		if uinfo.Id!=ssdreq.ToId && uinfo.Id!=ssdreq.FromId{
-			ssdack.Code=3
+			ssdack.Data=nil
+			ssdack.Code=api.ERR_ACCESS
 			ssdack.Msg="You should be either OWNER or RECEIVER of the data"
 			json.NewEncoder(w).Encode(ssdack)
 			return
@@ -180,7 +193,8 @@ func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 
 		objs,err:=dbop.SearchShareData(&ssdreq)
 		if err!=nil{
-			ssdack.Code=2
+			ssdack.Data=nil
+			ssdack.Code=api.ERR_INVDATA
 			ssdack.Msg=err.Error()
 		}else{
 			ssdack=api.NewSearchDataAck(objs)
@@ -209,6 +223,8 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&sifreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			sifack.Data=nil
+			sifack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(sifack)
 			return
 		}
@@ -222,7 +238,8 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 	linfo,err=GetLoginUserInfo(sifreq.Token)
 	if err!=nil{ // not a valid token
 		if sifreq.NeedKey==1{
-			sifack.Code=1
+			sifack.Data=nil
+			sifack.Code=api.ERR_INVDATA
 			sifack.Msg="You should login first"
 			json.NewEncoder(w).Encode(sifack)
 			return
@@ -233,7 +250,8 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 		retdata,err=dbop.GetUserShareInfoData(sifreq.Uuid,linfo.Id)
 	}
 	if err!=nil{ // get share info error in db
-		sifack.Code=2
+		sifack.Data=nil
+		sifack.Code=api.ERR_INVDATA
 		sifack.Msg=err.Error()
 		json.NewEncoder(w).Encode(sifack)
 		return
@@ -250,13 +268,15 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 			}
 		}
 		if !inlist{
-			sifack.Code=3
+			sifack.Data=nil
+			sifack.Code=api.ERR_ACCESS
 			sifack.Msg="user not in share list"
 			json.NewEncoder(w).Encode(sifack)
 			return
 		}
 		if retdata.LeftUse==0{
-			sifack.Code=4
+			sifack.Data=nil
+			sifack.Code=api.ERR_ACCESS
 			sifack.Msg="open times exhausted"
 	        json.NewEncoder(w).Encode(sifack)
 	        return
@@ -264,14 +284,16 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
         strexp:=strings.Replace(retdata.Expire," ","T",1)+"+08:00"
         tmexp,err:=time.Parse(time.RFC3339,strexp)
         if err!=nil{
-			sifack.Code=5
+			sifack.Data=nil
+			sifack.Code=api.ERR_INVDATA
 			sifack.Msg="bad expire time"
 			json.NewEncoder(w).Encode(sifack)
 			return
         }
         tmnow:=time.Now()
         if tmnow.After(tmexp){
-			sifack.Code=5
+			sifack.Data=nil
+			sifack.Code=api.ERR_ACCESS
 			sifack.Msg="shared data has expired at:"+retdata.Expire
 			json.NewEncoder(w).Encode(sifack)
             return
@@ -280,7 +302,8 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 		if retdata.LeftUse>0{
 			err=dbop.DecreaseOpenTimes(retdata,linfo.Id)
 			if err!=nil{
-				sifack.Code=5
+				sifack.Data=nil
+				sifack.Code=api.ERR_INTERNAL
 				sifack.Msg=err.Error()
                 json.NewEncoder(w).Encode(sifack)
 	            return
@@ -299,12 +322,13 @@ func GetShareInfoFunc(w http.ResponseWriter, r *http.Request){
 
 func ShareDataFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
-		shrack:=api.NewShareAck()
+		shrack:=api.NewSimpleAck()
 		w.Header().Set("Content-Type","application/json")
 		var shrreq api.ShareDataReq
 		err:=json.NewDecoder(r.Body).Decode(&shrreq)
 		if err!=nil{
 			log.Println("Decode json error:",err)
+			shrack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(shrack)
 			return
 		}
@@ -314,13 +338,13 @@ func ShareDataFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(shrreq.Token)
 		if err!=nil{
-			shrack.Code=1
+			shrack.Code=api.ERR_INVDATA
 			shrack.Msg=err.Error()
 			json.NewEncoder(w).Encode(shrack)
 			return
 		}
 		if luinfo.Id!=shrreq.Data.OwnerId{
-			shrack.Code=2
+			shrack.Code=api.ERR_ACCESS
 			shrack.Msg="Invalid user"
 			json.NewEncoder(w).Encode(shrack)
 			return
@@ -329,7 +353,7 @@ func ShareDataFunc(w http.ResponseWriter, r *http.Request){
 		// user info checked ok
 		// reference crypt.go:dbop.SaveMeta
 		if err=dbop.WriteShareInfo(shrreq.Data);err!=nil{
-			shrack.Code=1
+			shrack.Code=api.ERR_INTERNAL
 			shrack.Msg=err.Error()
 		}else{
 			shrack.Code=0
@@ -349,6 +373,8 @@ func CreateRCFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&rcreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			rcack.Data=nil
+			rcack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(rcack)
 			return
 		}
@@ -358,7 +384,8 @@ func CreateRCFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(rcreq.Token)
 		if err!=nil{
-			rcack.Code=1
+			rcack.Data=nil
+			rcack.Code=api.ERR_INVDATA
 			rcack.Msg=err.Error()
 			json.NewEncoder(w).Encode(rcack)
 			return
@@ -375,7 +402,8 @@ func CreateRCFunc(w http.ResponseWriter, r *http.Request){
 			rcreq.Data.EndTime=core.GetCurTime()
 		}
 		if err:=dbop.NewRunContext(rcreq.Data);err!=nil{
-			rcack.Code=2
+			rcack.Data=nil
+			rcack.Code=api.ERR_INTERNAL
 			rcack.Msg=err.Error()
 		}else{
 			rcack.Code=0
@@ -396,6 +424,7 @@ func UpdateRCFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&urcreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			ack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(ack)
 			return
 		}
@@ -405,14 +434,14 @@ func UpdateRCFunc(w http.ResponseWriter, r *http.Request){
         }
 		luinfo,err:=GetLoginUserInfo(urcreq.Token)
 		if err!=nil{
-			ack.Code=1
+			ack.Code=api.ERR_INVDATA
 			ack.Msg=err.Error()
 			json.NewEncoder(w).Encode(ack)
 			return
 		}
 
 		if err:=dbop.UpdateRunContext(luinfo.Id,urcreq.RCId,urcreq.OutputUuid,urcreq.EndTime);err!=nil{
-			ack.Code=2
+			ack.Code=api.ERR_INVDATA
 			ack.Msg=err.Error()
 		}else{
 			ack.Code=0
@@ -432,6 +461,8 @@ func GetRCInfoFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&grireq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			rcack.Data=nil
+			rcack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(rcack)
 			return
 		}
@@ -454,7 +485,8 @@ func GetRCInfoFunc(w http.ResponseWriter, r *http.Request){
 			return
 		}*/
 		if rcack.Data,err=dbop.GetRCInfo(grireq.RCId);err!=nil{
-			rcack.Code=2
+			rcack.Data=nil
+			rcack.Code=api.ERR_INVDATA
 			rcack.Msg=err.Error()
 		}else{
 			rcack.Code=0
@@ -464,5 +496,4 @@ func GetRCInfoFunc(w http.ResponseWriter, r *http.Request){
 	}else{
 		http.NotFound(w,r)
 	}
-
 }

@@ -17,6 +17,8 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&usrreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			usrack.Data=nil
+			usrack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(usrack)
 			return
 		}
@@ -37,7 +39,8 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 		for _,v:=range usrreq.Id{
 			usr,err:=dbop.GetUserInfo(v)
 			if err!=nil{
-				usrack.Code=3
+				usrack.Data=nil
+				usrack.Code=api.ERR_INVDATA
 				usrack.Msg=fmt.Sprintf("search userid=%d error: %s",v,err.Error())
 				usrack.Data=[]api.UserInfoData{}
 				break
@@ -59,6 +62,8 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&usrreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			usrack.Data=nil
+			usrack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(usrack)
 			return
 		}
@@ -80,12 +85,13 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 		for _,v:=range usrreq.Name{
 			usr,err:=dbop.GetUserInfoByName(v)
 			if err!=nil{
-				usrack.Code=3
+				usrack.Data=nil
+				usrack.Code=api.ERR_INVDATA
 				usrack.Msg=fmt.Sprintf("search user %s error: %s",v,err.Error())
-				usrack.Data=[]api.UserInfoData{}
+//				usrack.Data=[]api.UserInfoData{}
 				break
 			}else{
-				Debug(usr.Name,usr.Id)
+//				Debug(usr.Name,usr.Id)
 				usrack.Data=append(usrack.Data,*usr)
 			}
 		}
@@ -104,6 +110,7 @@ func AddContactsFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&acreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			acack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(acack)
 			return
 		}
@@ -113,7 +120,7 @@ func AddContactsFunc(w http.ResponseWriter, r *http.Request){
 		}
 		uinfo,err:=GetLoginUserInfo(acreq.Token)
         if err!=nil{
-            acack.Code=1
+            acack.Code=api.ERR_INVDATA
             acack.Msg="You should login first"
             json.NewEncoder(w).Encode(acack)
             return
@@ -121,7 +128,7 @@ func AddContactsFunc(w http.ResponseWriter, r *http.Request){
 		for _,id:=range acreq.Ids{
 			err=dbop.NewContact(uinfo.Id,id)
 			if err!=nil{
-				acack.Code=2
+				acack.Code=api.ERR_INTERNAL
 				acack.Msg=err.Error()
 				json.NewEncoder(w).Encode(acack)
 				return
@@ -143,6 +150,7 @@ func DelContactsFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&dcreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			dcack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(dcack)
 			return
 		}
@@ -152,7 +160,7 @@ func DelContactsFunc(w http.ResponseWriter, r *http.Request){
 		}
 		uinfo,err:=GetLoginUserInfo(dcreq.Token)
         if err!=nil{
-            dcack.Code=1
+            dcack.Code=api.ERR_INVDATA
             dcack.Msg="You should login first"
             json.NewEncoder(w).Encode(dcack)
             return
@@ -160,7 +168,7 @@ func DelContactsFunc(w http.ResponseWriter, r *http.Request){
 		for _,id:=range dcreq.Ids{
 			err=dbop.DelContact(uinfo.Id,id)
 			if err!=nil{
-				dcack.Code=2
+				dcack.Code=api.ERR_INTERNAL
 				dcack.Msg=err.Error()
 				json.NewEncoder(w).Encode(dcack)
 				return
@@ -183,6 +191,8 @@ func GetContactsFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&gcreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			gcack.Data=nil
+			gcack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(gcack)
 			return
 		}
@@ -192,14 +202,16 @@ func GetContactsFunc(w http.ResponseWriter, r *http.Request){
 		}
 		uinfo,err:=GetLoginUserInfo(gcreq.Token)
         if err!=nil{
-            gcack.Code=1
+			gcack.Data=nil
+            gcack.Code=api.ERR_INVDATA
             gcack.Msg="You should login first"
             json.NewEncoder(w).Encode(gcack)
             return
         }
 		gcack.Data,err=dbop.ListContacts(uinfo.Id)
 		if err!=nil{
-			gcack.Code=2
+			gcack.Data=nil
+			gcack.Code=api.ERR_INVDATA
 			gcack.Msg=err.Error()
 		}else{
 			gcack.Code=0
@@ -219,6 +231,8 @@ func FuzzySearchFunc(w http.ResponseWriter, r *http.Request){
 		err:=json.NewDecoder(r.Body).Decode(&fsreq)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			fsack.Data=nil
+			fsack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(fsack)
 			return
 		}
@@ -228,14 +242,16 @@ func FuzzySearchFunc(w http.ResponseWriter, r *http.Request){
 		}
 		uinfo,err:=GetLoginUserInfo(fsreq.Token)
         if err!=nil{
-            fsack.Code=1
+			fsack.Data=nil
+            fsack.Code=api.ERR_INVDATA
             fsack.Msg="You should login first"
             json.NewEncoder(w).Encode(fsack)
             return
         }
 		fsack.Data,err=dbop.FuzzySearch(uinfo.Id,fsreq.Keyword)
 		if err!=nil{
-			fsack.Code=2
+			fsack.Data=nil
+			fsack.Code=api.ERR_INTERNAL
 			fsack.Msg=err.Error()
 		}else{
 			fsack.Code=0

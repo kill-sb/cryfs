@@ -19,6 +19,8 @@ func TraceFunc(w http.ResponseWriter, r *http.Request){
 		tback:=api.NewTraceAck()
 		if err!=nil{
 			Debug("Decode json error:",err)
+			tback.Data=nil
+			tback.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(tback)
 			return
 		}
@@ -52,7 +54,8 @@ func TraceFunc(w http.ResponseWriter, r *http.Request){
 			err=errors.New("Incorrect trace level")
 		}
 		if err!=nil{
-			tback.Code=3
+			tback.Data=nil
+			tback.Code=api.ERR_INVDATA
 			tback.Msg=fmt.Sprintf("trace datauuid=%s error: %s",tbreq.Data.Obj,err.Error())
 		}else{
 			tback.Data=objs
@@ -72,6 +75,8 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 		tback:=api.NewTraceAck()
 		if err!=nil{
 			Debug("Decode json error:",err)
+			tback.Data=nil
+			tback.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(tback)
 			return
 		}
@@ -93,7 +98,8 @@ func TraceBackFunc(w http.ResponseWriter, r *http.Request){
 		objs,err:=dbop.TraceBack(tbreq.Data)
 			//objs,err:=dbop.GetDataParent(&v)
 		if err!=nil{
-			tback.Code=3
+			tback.Data=nil
+			tback.Code=api.ERR_INVDATA
 			tback.Msg=fmt.Sprintf("search uuid=%s error: %s",tbreq.Data.Obj,err.Error())
 		}else{
 			tback.Data=objs
@@ -112,6 +118,8 @@ func TraceForwardFunc(w http.ResponseWriter, r *http.Request){
 		tback:=api.NewTraceAck()
 		if err!=nil{
 			Debug("Decode json error:",err)
+			tback.Data=nil
+			tback.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(tback)
 			return
 		}
@@ -133,7 +141,8 @@ func TraceForwardFunc(w http.ResponseWriter, r *http.Request){
 		objs,err:=dbop.TraceForward(tbreq.Data)
 			//objs,err:=dbop.GetDataParent(&v)
 		if err!=nil{
-			tback.Code=3
+			tback.Data=nil
+			tback.Code=api.ERR_INVDATA
 			tback.Msg=fmt.Sprintf("search uuid=%s error: %s",tbreq.Data.Obj,err.Error())
 		}else{
 			tback.Data=objs
@@ -152,6 +161,8 @@ func TraceParentsFunc(w http.ResponseWriter, r *http.Request){
 		tback:=api.NewTraceAck()
 		if err!=nil{
 			Debug("Decode json error:",err)
+			tback.Data=nil
+			tback.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(tback)
 			return
 		}
@@ -173,7 +184,8 @@ func TraceParentsFunc(w http.ResponseWriter, r *http.Request){
 		objs,err:=dbop.GetDataParents(tbreq.Data)
 			//objs,err:=dbop.GetDataParent(&v)
 		if err!=nil{
-			tback.Code=3
+			tback.Data=nil
+			tback.Code=api.ERR_INVDATA
 			tback.Msg=fmt.Sprintf("search uuid=%s error: %s",tbreq.Data.Obj,err.Error())
 		}else{
 			tback.Data=objs
@@ -192,6 +204,8 @@ func TraceChildrenFunc(w http.ResponseWriter, r *http.Request){
 		tback:=api.NewTraceAck()
 		if err!=nil{
 			Debug("Decode json error:",err)
+			tback.Data=nil
+			tback.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(tback)
 			return
 		}
@@ -213,7 +227,8 @@ func TraceChildrenFunc(w http.ResponseWriter, r *http.Request){
 		objs,err:=dbop.GetDataChildren(tbreq.Data)
 			//objs,err:=dbop.GetDataParent(&v)
 		if err!=nil{
-			tback.Code=3
+			tback.Data=nil
+			tback.Code=api.ERR_INVDATA
 			tback.Msg=fmt.Sprintf("search uuid=%s error: %s",tbreq.Data.Obj,err.Error())
 		}else{
 			tback.Data=objs
@@ -233,6 +248,8 @@ func QueryObjsFunc(w http.ResponseWriter, r *http.Request){
 		qoack:=api.NewQueryObjsAck(qoreq.Data)
 		if err!=nil{
 			Debug("Decode json error:",err)
+			qoack.Data=nil
+			qoack.Code=api.ERR_BADPARAM
 			json.NewEncoder(w).Encode(qoack)
 			return
 		}
@@ -263,9 +280,10 @@ func QueryObjsFunc(w http.ResponseWriter, r *http.Request){
 			}
 
 			if err!=nil{
-				qoack.Code=3
+				qoack.Data=nil
+				qoack.Code=api.ERR_INVDATA
 				qoack.Msg="query obj '"+qoreq.Data[k].Obj+"' error:"+err.Error()
-				qoack.Data=[]api.IFDataDesc{}
+//				qoack.Data=[]api.IFDataDesc{}
 				break
 			}else{
 				qoack.Data=append(qoack.Data,obj)
