@@ -126,9 +126,18 @@ func AddContactsFunc(w http.ResponseWriter, r *http.Request){
             return
         }
 		for _,id:=range acreq.Ids{
-			err=dbop.NewContact(uinfo.Id,id)
+			_,err=dbop.GetUserInfo(id)
 			if err!=nil{
 				acack.Code=api.ERR_INVDATA
+				acack.Msg=err.Error()
+				json.NewEncoder(w).Encode(acack)
+				return
+			}
+		}
+		for _,id:=range acreq.Ids{
+			err=dbop.NewContact(uinfo.Id,id)
+			if err!=nil{
+				acack.Code=api.ERR_INTERNAL
 				acack.Msg=err.Error()
 				json.NewEncoder(w).Encode(acack)
 				return

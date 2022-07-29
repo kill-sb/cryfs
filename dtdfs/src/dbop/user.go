@@ -161,13 +161,14 @@ func NewContact(uid, cid int32)error{
             return err
         }
 		if count>0{
-			return errors.New("contact exists already")
+			return nil //errors.New("contact exists already")
 		}
 	}
+/*	removed outside, prevent successfully adding in db previously"
 	_,err=GetUserInfo(cid)
 	if err!=nil{
 		return err
-	}
+	}*/
     query=fmt.Sprintf("insert into contacts (userid, contactuserid) values (%d,%d)",uid,cid)
     if _, err= db.Exec(query); err == nil {
 		return nil
