@@ -84,13 +84,13 @@ func GetUserInfoByName(name string)(*api.UserInfoData,error){
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("Query error:",err)
-		return ret,err
+		return nil,err
 	}
 	defer res.Close()
 	if !res.Next(){
-		ret.Id=-1
-		fmt.Println("error",err)
-		return ret,nil
+//		ret.Id=-1
+//		fmt.Println("error",err)
+		return nil,errors.New(fmt.Sprintf("User '%s' not found",name))
 	}else{
 		res.Scan(&ret.Descr,&ret.Id,&ret.Mobile,&ret.Email)
 	}
@@ -113,7 +113,7 @@ func GetUserInfo(id int32)(*api.UserInfoData,error){
 	}
 	defer res.Close()
 	if !res.Next(){
-		return nil,errors.New("No such user")
+		return nil,errors.New(fmt.Sprintf("No such userid: %d",id))
 	}else{
 		res.Scan(&ret.Descr,&ret.Name,&ret.Mobile,&ret.Email)
 	}

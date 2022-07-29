@@ -87,8 +87,7 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 			if err!=nil{
 				usrack.Data=nil
 				usrack.Code=api.ERR_INVDATA
-				usrack.Msg=fmt.Sprintf("search user %s error: %s",v,err.Error())
-//				usrack.Data=[]api.UserInfoData{}
+				usrack.Msg=err.Error()
 				break
 			}else{
 //				Debug(usr.Name,usr.Id)

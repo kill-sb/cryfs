@@ -250,11 +250,7 @@ func GetVisitors(recvlist string) ([]string,[]int32,error){
 	}
 	intret:=make([]int32,0,len(strret))
 	for  _,v:=range uinfo{
-		if v.Id!=-1{
-			intret=append(intret,v.Id)
-		}else{
-			return nil,nil,errors.New(fmt.Sprintf("Name:%s not found",v.Name))
-		}
+		intret=append(intret,v.Id)
 	}
     return strret,intret,nil
 }
