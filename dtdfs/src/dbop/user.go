@@ -113,7 +113,7 @@ func GetUserInfo(id int32)(*api.UserInfoData,error){
 	}
 	defer res.Close()
 	if !res.Next(){
-		return nil,errors.New("No such user ")
+		return nil,errors.New("No such user")
 	}else{
 		res.Scan(&ret.Descr,&ret.Name,&ret.Mobile,&ret.Email)
 	}
@@ -161,8 +161,12 @@ func NewContact(uid, cid int32)error{
             return err
         }
 		if count>0{
-			return nil //errors.New("contact exists already")
+			return errors.New("contact exists already")
 		}
+	}
+	_,err=GetUserInfo(cid)
+	if err!=nil{
+		return err
 	}
     query=fmt.Sprintf("insert into contacts (userid, contactuserid) values (%d,%d)",uid,cid)
     if _, err= db.Exec(query); err == nil {
