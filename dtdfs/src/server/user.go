@@ -3,7 +3,6 @@ package main
 import (
     "net/http"
     "encoding/json"
-    "fmt"
     "dbop"
     //core "coredata"
     api "apiv1"
@@ -41,8 +40,7 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 			if err!=nil{
 				usrack.Data=nil
 				usrack.Code=api.ERR_INVDATA
-				usrack.Msg=fmt.Sprintf("search userid=%d error: %s",v,err.Error())
-				usrack.Data=[]api.UserInfoData{}
+				usrack.Msg=err.Error()
 				break
 			}else{
 				usrack.Data=append(usrack.Data,*usr)
