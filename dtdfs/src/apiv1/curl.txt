@@ -294,3 +294,14 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	curl -H "Content-Type: application/json" -X POST -d '{"token":"92cd9c9b4100028b128652def8535e52","userid":1,"startdate":"2022-02-01","latest":1}' -k https://apisvr:8080/api/v1/searchencdata
 	return ok:
 	{"code":0,"message":"OK","data":[{"uuid":"fb457b85-029b-49c8-ae36-5c5492bc6a7f","userid":1,"crtime":"2022-06-29 14:02:38"},{"uuid":"73c997d9-12cb-4610-82d6-cdbf2d47589f","userid":1,"crtime":"2022-06-29 14:01:40"},{"uuid":"7f5d4f25-3e43-4463-ab48-1ca5115c0ff4","userid":1,"crtime":"2022-06-08 14:52:24"},{"uuid":"e9002c53-3a67-4a5b-8010-89a9a8e6dc06","userid":1,"crtime":"2022-04-06 15:25:25"},{"uuid":"f6e63544-ebe2-4c83-bdc9-9a10baf2438e","userid":1,"crtime":"2022-03-04 10:38:55"},{"uuid":"ac1ada36-c79e-4951-bb6a-c37cca8952c0","userid":1,"crtime":"2022-02-11 16:08:59"},{"uuid":"b4f620ac-065b-4a4b-8a99-e2b68fe3953f","userid":1,"crtime":"2022-02-11 16:08:00"}]}
+
+36. searchusers
+	login:
+    curl -H "Content-Type: application/json" -X POST -d '{"name":"li4","passwd":"123123","primask":0}' -k https://apisvr:8080/api/v1/login
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"59e09aa429a6b4b5176567f670b68234","keyword":"ang","maxcount":3,"startindex":2}' -k https://apisvr:8080/api/v1/searchusers
+	return ok:
+	{"code":0,"message":"OK","data":[{"id":5,"descr":"","name":"yangsx","mobile":"","email":"yangsx@cmgos.com"},{"id":6,"descr":"","name":"asdfasdf","mobile":"","email":"yangsx1@cmgos.com"},{"id":9,"descr":"","name":"testerzj123","mobile":"","email":"zhangjing@cmgos.com"}]}
+
+	
+	

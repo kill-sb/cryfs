@@ -43,7 +43,7 @@ func GetUserFunc(w http.ResponseWriter, r *http.Request){
 				usrack.Msg=err.Error()
 				break
 			}else{
-				usrack.Data=append(usrack.Data,*usr)
+				usrack.Data=append(usrack.Data,usr)
 			}
 		}
 		json.NewEncoder(w).Encode(usrack)
@@ -89,7 +89,7 @@ func FindUserNameFunc(w http.ResponseWriter, r *http.Request){
 				break
 			}else{
 //				Debug(usr.Name,usr.Id)
-				usrack.Data=append(usrack.Data,*usr)
+				usrack.Data=append(usrack.Data,usr)
 			}
 		}
 		json.NewEncoder(w).Encode(usrack)
@@ -280,6 +280,54 @@ func FuzzySearchFunc(w http.ResponseWriter, r *http.Request){
 			fsack.Msg="OK"
 		}
 		json.NewEncoder(w).Encode(fsack)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+
+func SearchUsersFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		suack:=api.NewUserInfoAck()
+		w.Header().Set("Content-Type","application/json")
+		var sureq api.SearchUsersReq
+		err:=json.NewDecoder(r.Body).Decode(&sureq)
+		if err!=nil{
+			Debug("Decode json error:",err)
+			suack.Data=nil
+			suack.Code=api.ERR_BADPARAM
+			json.NewEncoder(w).Encode(suack)
+			return
+		}
+		if g_config.Debug{
+			DebugJson("Request:",&sureq)
+			defer DebugJson("Response:",suack)
+		}
+        if sureq.StartItem<0 || sureq.MaxCount<0{
+            suack.Data=nil
+            suack.Code=api.ERR_INVDATA
+            suack.Msg="Invalid search parameter"
+            json.NewEncoder(w).Encode(suack)
+            return
+        }
+
+		_,err=GetLoginUserInfo(sureq.Token)
+        if err!=nil{
+			suack.Data=nil
+            suack.Code=api.ERR_INVDATA
+            suack.Msg="You should login first"
+            json.NewEncoder(w).Encode(suack)
+            return
+        }
+		suack.Data,err=dbop.SearchUsers(&sureq)
+		if err!=nil{
+			suack.Data=nil
+			suack.Code=api.ERR_INTERNAL
+			suack.Msg=err.Error()
+		}else{
+			suack.Code=0
+			suack.Msg="OK"
+		}
+		json.NewEncoder(w).Encode(suack)
 	}else{
 		http.NotFound(w,r)
 	}

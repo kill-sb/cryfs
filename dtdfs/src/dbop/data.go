@@ -333,6 +333,7 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 
 func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
 	db:=GetDB()
+	var maxcnt int32 =50
 	query:=fmt.Sprintf("select uuid, crtime from efilemeta where ownerid=%d",req.UserId)
 	if req.Start!=""{
 		query+=fmt.Sprintf(" and crtime >= '%s' ",req.Start+" 00:00:00")
@@ -347,6 +348,7 @@ func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
 	}
 	if req.MaxCount!=0{
 		query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+		maxcnt=req.MaxCount
 	}
 	res,err:=db.Query(query)
 	if err!=nil{
@@ -354,7 +356,7 @@ func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
 		return nil,err
 	}
 	defer res.Close()
-	ret:=make([]*api.EncDataNode,0,50)
+	ret:=make([]*api.EncDataNode,0,maxcnt)
 	for res.Next(){
 		node:=new(api.EncDataNode)
 		node.UserId=req.UserId
@@ -372,6 +374,7 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
 	db:=GetDB()
+	var maxcnt int32 =50
 	query:="select sharetags.uuid, sharetags.ownerid,sharetags.crtime, shareusers.userid, shareusers.leftuse from sharetags,shareusers "
 	if req.FromId>0 && req.ToId>0{
 		query+=fmt.Sprintf("where sharetags.ownerid=%d and shareusers.userid=%d ",req.FromId,req.ToId)
@@ -394,6 +397,7 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	}
 	if req.MaxCount!=0{
 		query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+		maxcnt=req.MaxCount
 	}
 
 	res,err:=db.Query(query)
@@ -402,7 +406,7 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 		return nil,err
 	}
 	defer res.Close()
-	ret:=make([]*api.ShareDataNode,0,50)
+	ret:=make([]*api.ShareDataNode,0,maxcnt)
 	for res.Next(){
 		node:=new(api.ShareDataNode)
 		err=res.Scan(&node.Uuid,&node.FromId,&node.Crtime,&node.ToId,&node.LeftTimes)

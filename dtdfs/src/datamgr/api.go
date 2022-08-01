@@ -22,7 +22,7 @@ func GetDataInfo_API(uuid string)(*api.EncDataInfo,error){
     return ack.Data,nil
 }
 
-func GetUserInfo_API(ids []int32)([]api.UserInfoData,error){
+func GetUserInfo_API(ids []int32)([]*api.UserInfoData,error){
     req:=&api.GetUserReq{Token:"0",Id:ids}
     //ack:=new (api.IUserInfoAck)
     ack:=api.NewUserInfoAck()
@@ -38,7 +38,7 @@ func GetUserInfo_API(ids []int32)([]api.UserInfoData,error){
     return ack.Data,nil
 }
 
-func FindUserName_API(names []string)([]api.UserInfoData,error){
+func FindUserName_API(names []string)([]*api.UserInfoData,error){
     req:=&api.FindUserNameReq{Token:"0",Name:names}
     ack:=api.NewUserInfoAck()
     err:=HttpAPIPost(req,ack,"finduserbynames")

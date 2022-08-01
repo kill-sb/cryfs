@@ -99,7 +99,7 @@ func NewUserInfoAck() *IUserInfoAck{
 	ack:=new (IUserInfoAck)
 	ack.Code=-1
 	ack.Msg=INIT_MSG
-	ack.Data=make([]UserInfoData,0,20)
+	ack.Data=make([]*UserInfoData,0,20)
 	return ack
 }
 func NewShareInfoAck()*IShareInfoAck{

@@ -79,6 +79,7 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
 	if req.FromUid==0 && req.ToUid==0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
+	var maxcnt int32 =50
 	db:=GetDB()
 	query:="select id,type,content,descr,crtime,fromuid,touid,isnew from notifies "
 	if req.FromUid!=0 && req.ToUid!=0{
@@ -101,6 +102,7 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
 	}
     if req.MaxCount!=0{
         query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+		maxcnt=req.MaxCount
     }
 
 	res,err:=db.Query(query)
@@ -109,7 +111,7 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
 		return nil,err
 	}
 	defer res.Close()
-	ret:=make([]*api.NotifyInfo,0,50)
+	ret:=make([]*api.NotifyInfo,0,maxcnt)
 	for res.Next(){
 		node:=new(api.NotifyInfo)
 		err=res.Scan(&node.Id,&node.Type,&node.Content,&node.Comment,&node.CrTime,&node.FromUid,&node.ToUid,&node.IsNew)
@@ -302,6 +304,7 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
 	if req.FromUid<=0 && req.ToUid<=0{
 		return nil,errors.New("'fromid' and 'toid' should be assigned at least one")
 	}
+	var maxcnt int32=50
 	db:=GetDB()
 	query:=""
 	if req.ToUid>0{
@@ -328,6 +331,7 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
     }
     if req.MaxCount!=0{
         query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+		maxcnt=req.MaxCount
     }
 
 	res,err:=db.Query(query)
@@ -336,7 +340,7 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
 		return nil,err
 	}
 	defer res.Close()
-	ret:=make([]*api.ExportProcInfo,0,50)
+	ret:=make([]*api.ExportProcInfo,0,maxcnt)
 	for res.Next(){
 		info:=new(api.ExportProcInfo)
 // exports.expid,exports.requid,exports.status,exports.datatype,exports.datauuid,exports.crtime 

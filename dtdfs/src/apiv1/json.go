@@ -123,7 +123,7 @@ type SearchUserReq struct{
 
 type IUserInfoAck struct{
 	RetStat
-	Data []UserInfoData `json:"data"`
+	Data []*UserInfoData `json:"data"`
 }
 
 type FindUserNameReq struct{
@@ -458,3 +458,11 @@ type IGetContactsAck struct{
 	RetStat
 	Data []*ContactInfo `json:"data"`
 }
+
+type SearchUsersReq struct{
+	Token string `json:"token"`
+	Keyword string `json:"keyword"`
+    StartItem int64 `json:"startindex"`
+    MaxCount int32  `json:"maxcount"`
+} // return IUserInfoAck
+

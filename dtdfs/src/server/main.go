@@ -162,7 +162,7 @@ func SetupHandler() error{
 	routemap[prefix+"delcontacts"]=DelContactsFunc
 	routemap[prefix+"listcontacts"]=GetContactsFunc
 	routemap[prefix+"searchcontacts"]=FuzzySearchFunc
-
+	routemap[prefix+"searchusers"]=SearchUsersFunc
 
 	http.HandleFunc(prefix,DistroFunc)
 	/*

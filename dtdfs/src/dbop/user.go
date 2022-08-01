@@ -179,9 +179,11 @@ func NewContact(uid, cid int32)error{
 
 func ListContacts(uid int32,req *api.GetContactReq)([]*api.ContactInfo,error){
 	db:=GetDB()
+	var maxcnt int32=50
 	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and users.id=contacts.contactuserid",uid)
     if req.MaxCount!=0{
         query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+		maxcnt=req.MaxCount
     }
 
 	res, err := db.Query(query)
@@ -190,7 +192,7 @@ func ListContacts(uid int32,req *api.GetContactReq)([]*api.ContactInfo,error){
 		return nil,err
 	}
 	defer res.Close()
-	clist:=make([]*api.ContactInfo,0,50)
+	clist:=make([]*api.ContactInfo,0,maxcnt)
 	for res.Next(){
 		cinfo:=new(api.ContactInfo)
 		err=res.Scan(&cinfo.UserId,&cinfo.Name)
@@ -204,9 +206,11 @@ func ListContacts(uid int32,req *api.GetContactReq)([]*api.ContactInfo,error){
 
 func FuzzySearch(uid int32, req *api.FzSearchReq)([]*api.ContactInfo,error){
 	db:=GetDB()
+	var maxcnt int32 =50
 	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and contacts.contactuserid=users.id and users.name like '%s'",uid,"%"+req.Keyword+"%")
     if req.MaxCount!=0{
         query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+		maxcnt=req.MaxCount
     }
 
 	res,err:=db.Query(query)
@@ -215,7 +219,7 @@ func FuzzySearch(uid int32, req *api.FzSearchReq)([]*api.ContactInfo,error){
 		return nil,err
 	}
 	defer res.Close()
-	clist:=make([]*api.ContactInfo,0,50)
+	clist:=make([]*api.ContactInfo,0,maxcnt)
 	for res.Next(){
 		cinfo:=new(api.ContactInfo)
 		err=res.Scan(&cinfo.UserId,&cinfo.Name)
@@ -237,3 +241,30 @@ func DelContact(uid,cid int32 )error{
 	return nil
 }
 
+func SearchUsers(req *api.SearchUsersReq)([]*api.UserInfoData,error){
+	db:=GetDB()
+	var slicecnt int32=50
+	kw:="%"+req.Keyword+"%"
+	query:=fmt.Sprintf("select id,descr,name,mobile,email from users where name like '%s' or email like '%s' or mobile like '%s'",kw,kw,kw)
+    if req.MaxCount!=0{
+        query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+		slicecnt=req.MaxCount
+    }
+	fmt.Println("query:",query)
+	res,err:=db.Query(query)
+	if err!=nil{
+		fmt.Println("query error:",query)
+		return nil,err
+	}
+	defer res.Close()
+	clist:=make([]*api.UserInfoData,0,slicecnt)
+	for res.Next(){
+		cinfo:=new(api.UserInfoData)
+		err=res.Scan(&cinfo.Id,&cinfo.Descr,&cinfo.Name,&cinfo.Mobile,&cinfo.Email)
+		if err!=nil{
+			return nil,err
+		}
+		clist=append(clist,cinfo)
+	}
+	return clist,nil
+}
