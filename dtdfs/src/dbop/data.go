@@ -345,6 +345,9 @@ func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
 	}else{
 		query+=" order by crtime asc"
 	}
+	if req.MaxCount!=0{
+		query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+	}
 	res,err:=db.Query(query)
 	if err!=nil{
 		log.Println("select from db error:",err)
@@ -389,6 +392,10 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	}else{
 		query+="order by sharetags.crtime asc"
 	}
+	if req.MaxCount!=0{
+		query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+	}
+
 	res,err:=db.Query(query)
 	if err!=nil{
 		log.Println("select from db error:",err)

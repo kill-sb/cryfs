@@ -121,6 +121,13 @@ func SearchEncDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(sedack)
 			return
 		}
+		if sedreq.StartItem<0 || sedreq.MaxCount<0{
+			sedack.Data=nil
+			sedack.Code=api.ERR_INVDATA
+			sedack.Msg="Invalid search parameter"
+			json.NewEncoder(w).Encode(sedack)
+			return
+		}
 
 		uinfo,err:=GetLoginUserInfo(sedreq.Token)
         if err!=nil{
@@ -137,7 +144,6 @@ func SearchEncDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(sedack)
 			return
 		}
-
 		objs,err:=dbop.SearchEncData(&sedreq)
 		if err!=nil{
 			sedack.Data=nil
@@ -171,6 +177,13 @@ func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 			log.Println("Decode json error:",err)
 			ssdack.Data=nil
 			ssdack.Code=api.ERR_BADPARAM
+			json.NewEncoder(w).Encode(ssdack)
+			return
+		}
+		if ssdreq.StartItem<0 || ssdreq.MaxCount<0{
+			ssdack.Data=nil
+			ssdack.Code=api.ERR_INVDATA
+			ssdack.Msg="Invalid search parameter"
 			json.NewEncoder(w).Encode(ssdack)
 			return
 		}

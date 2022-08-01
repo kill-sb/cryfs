@@ -249,6 +249,15 @@ func SearchNotifiesFunc(w http.ResponseWriter, r *http.Request){
             DebugJson("Request:",&snreq)
             defer DebugJson("Response:",snack)
         }
+
+        if snreq.StartItem<0 || snreq.MaxCount<0{
+            snack.Data=nil
+            snack.Code=api.ERR_INVDATA
+            snack.Msg="Invalid search parameter"
+            json.NewEncoder(w).Encode(snack)
+            return
+        }
+
 		luinfo,err:=GetLoginUserInfo(snreq.Token)
 		if err!=nil{
 			snack.Data=nil

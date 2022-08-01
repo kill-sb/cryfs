@@ -163,6 +163,14 @@ func SearchExportsFunc(w http.ResponseWriter, r *http.Request){
 			return
 		}
 
+        if sereq.StartItem<0 || sereq.MaxCount<0{
+            seack.Data=nil
+            seack.Code=api.ERR_INVDATA
+            seack.Msg="Invalid search parameter"
+            json.NewEncoder(w).Encode(seack)
+            return
+        }
+
 		uinfo,err:=GetLoginUserInfo(sereq.Token)
         if err!=nil{
 			seack.Data=nil

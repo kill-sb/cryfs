@@ -99,6 +99,10 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
 	}else{
 		query+=" order by crtime asc"
 	}
+    if req.MaxCount!=0{
+        query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+    }
+
 	res,err:=db.Query(query)
 	if err!=nil{
 		log.Println("select from db error:",err)
@@ -321,6 +325,9 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
         query+=" order by exports.crtime desc"
     }else{
         query+=" order by exports.crtime asc"
+    }
+    if req.MaxCount!=0{
+        query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
     }
 
 	res,err:=db.Query(query)

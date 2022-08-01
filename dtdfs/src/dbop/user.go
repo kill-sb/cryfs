@@ -177,9 +177,13 @@ func NewContact(uid, cid int32)error{
 	}
 }
 
-func ListContacts(uid int32)([]*api.ContactInfo,error){
+func ListContacts(uid int32,req *api.GetContactReq)([]*api.ContactInfo,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and users.id=contacts.contactuserid",uid)
+    if req.MaxCount!=0{
+        query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+    }
+
 	res, err := db.Query(query)
 	if err != nil {
 		fmt.Println("query contacts error:",query)
@@ -198,9 +202,13 @@ func ListContacts(uid int32)([]*api.ContactInfo,error){
 	return clist,nil
 }
 
-func FuzzySearch(uid int32, keyword string)([]*api.ContactInfo,error){
+func FuzzySearch(uid int32, req *api.FzSearchReq)([]*api.ContactInfo,error){
 	db:=GetDB()
-	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and contacts.contactuserid=users.id and users.name like '%s'",uid,"%"+keyword+"%")
+	query:=fmt.Sprintf("select contacts.contactuserid,users.name from contacts,users where contacts.userid=%d and contacts.contactuserid=users.id and users.name like '%s'",uid,"%"+req.Keyword+"%")
+    if req.MaxCount!=0{
+        query+=fmt.Sprintf(" limit %d,%d",req.StartItem,req.MaxCount)
+    }
+
 	res,err:=db.Query(query)
 	if err!=nil{
 		fmt.Println("query error:",query)

@@ -255,6 +255,8 @@ type SearchEncDataReq struct{
 	Start string `json:"startdate"`
 	End string `json:"enddate"`
 	Latest int32 `json:"latest"`
+	StartItem int64 `json:"startindex"`
+	MaxCount int32	`json:"maxcount"`
 }
 
 type EncDataNode struct{
@@ -275,6 +277,8 @@ type SearchShareDataReq struct{
 	Start string `json:"startdate"`
 	End string `json:"enddate"`
 	Latest int32 `json:"latest"`
+	StartItem int64 `json:"startindex"`
+	MaxCount int32	`json:"maxcount"`
 }
 
 type ShareDataNode struct{
@@ -340,6 +344,8 @@ type SearchExpReq struct{
 	Start string `json:"startdate"`
 	End string `json:"enddate"`
 	Latest int32 `json:"latest"`
+    StartItem int64 `json:"startindex"`
+    MaxCount int32  `json:"maxcount"`
 }
 
 type ISearchExpAck struct{
@@ -382,6 +388,9 @@ type SearchNotifiesReq struct{
 	Type int32 `json:"type"`
 	IsNew int32 `json:"isnew"`
 	Latest int32 `json:"latest"`
+    StartItem int64 `json:"startindex"`
+    MaxCount int32  `json:"maxcount"`
+
 }
 
 type ISearchNotifiesAck struct{
@@ -434,11 +443,15 @@ type DelContactReq struct{
 
 type GetContactReq struct{
 	Token string `json:"token"`
+    StartItem int64 `json:"startindex"`
+    MaxCount int32  `json:"maxcount"`
 }
 
 type FzSearchReq struct{
 	Token string `json:"token"`
 	Keyword string `json:"keyword"`
+    StartItem int64 `json:"startindex"`
+    MaxCount int32  `json:"maxcount"`
 }
 
 type IGetContactsAck struct{

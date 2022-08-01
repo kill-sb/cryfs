@@ -206,6 +206,14 @@ func GetContactsFunc(w http.ResponseWriter, r *http.Request){
 			DebugJson("Request:",&gcreq)
 			defer DebugJson("Response:",gcack)
 		}
+        if gcreq.StartItem<0 || gcreq.MaxCount<0{
+            gcack.Data=nil
+            gcack.Code=api.ERR_INVDATA
+            gcack.Msg="Invalid search parameter"
+            json.NewEncoder(w).Encode(gcack)
+            return
+        }
+
 		uinfo,err:=GetLoginUserInfo(gcreq.Token)
         if err!=nil{
 			gcack.Data=nil
@@ -214,7 +222,7 @@ func GetContactsFunc(w http.ResponseWriter, r *http.Request){
             json.NewEncoder(w).Encode(gcack)
             return
         }
-		gcack.Data,err=dbop.ListContacts(uinfo.Id)
+		gcack.Data,err=dbop.ListContacts(uinfo.Id,&gcreq)
 		if err!=nil{
 			gcack.Data=nil
 			gcack.Code=api.ERR_INVDATA
@@ -246,6 +254,14 @@ func FuzzySearchFunc(w http.ResponseWriter, r *http.Request){
 			DebugJson("Request:",&fsreq)
 			defer DebugJson("Response:",fsack)
 		}
+        if fsreq.StartItem<0 || fsreq.MaxCount<0{
+            fsack.Data=nil
+            fsack.Code=api.ERR_INVDATA
+            fsack.Msg="Invalid search parameter"
+            json.NewEncoder(w).Encode(fsack)
+            return
+        }
+
 		uinfo,err:=GetLoginUserInfo(fsreq.Token)
         if err!=nil{
 			fsack.Data=nil
@@ -254,7 +270,7 @@ func FuzzySearchFunc(w http.ResponseWriter, r *http.Request){
             json.NewEncoder(w).Encode(fsack)
             return
         }
-		fsack.Data,err=dbop.FuzzySearch(uinfo.Id,fsreq.Keyword)
+		fsack.Data,err=dbop.FuzzySearch(uinfo.Id,&fsreq)
 		if err!=nil{
 			fsack.Data=nil
 			fsack.Code=api.ERR_INTERNAL
