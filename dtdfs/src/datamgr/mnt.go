@@ -569,7 +569,7 @@ func ProcOutputData(outsrc string)(/*uuid*/ string,/*isdir */bool,/*items*/ int,
 }
 
 func RunPod(podimg string,opts map[string]*MountOpt)error{
-	ctcmd:="podman run -it --rm --privileged=true "
+	ctcmd:="podman run -it --rm --network none --privileged=true "
 	for k,v:=range opts{
 		ctcmd=ctcmd+" -v "+k+":'"+v.dstpt+"':"+v.access
 	}

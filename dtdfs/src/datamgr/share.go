@@ -3,8 +3,11 @@ package main
 import(
 	"fmt"
 	"os"
+	"bufio"
+	"time"
 	"io"
 	"strings"
+	"strconv"
 	"unsafe"
 	"errors"
 	"bytes"
@@ -125,16 +128,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 	return
 
 }
-/*
-func LoadShareInfoFromTag(ipath string)(*core.ShareInfo,error){
-	head,err:=core.LoadShareInfoHead(ipath)
-	if err!=nil{
-		fmt.Println("Load share info during reshare error:",err)
-		return nil, err
-	}
-	return GetShareInfoFromHead(head)
-}
-*/
+
 func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 	fromtype:=GetDataType(ipath)
 	if fromtype==core.UNKNOWN{
@@ -154,7 +148,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		}
 
 		if dinfo.OwnerId!=linfo.Id{
-			fmt.Printf("The data does belong to %s(userid:%d)\n",linfo.Name,linfo.Id)
+			fmt.Printf("The data does not belong to %s(userid:%d)\n",linfo.Name,linfo.Id)
 			return errors.New("incorrect user")
 		}
 		sinfo.OrgName=dinfo.OrgName
@@ -255,12 +249,32 @@ func GetVisitors(recvlist string) ([]string,[]int32,error){
     return strret,intret,nil
 }
 
+func GetValidInput(vfun func (string)(string,error))(string,error){
+	bio:=bufio.NewReader(os.Stdin)
+	line,_,err:=bio.ReadLine()
+	if err!=nil{
+		return "",err
+	}
+	str:=strings.TrimSpace(string(line))
+	if vfun!=nil{
+		return vfun(str)
+	}
+	return str,nil
+}
+
 func InputShareInfo(sinfo *core.ShareInfo) error{
 	// fill: descr,perm,expire,maxuse/leftuse
-	var recvlist string
 	fmt.Println("\nInput receivers(seperate with ','):")
-	fmt.Scanf("%s",&recvlist)
-	var err error
+//	fmt.Scanf("%s",&recvlist)
+	recvlist,err:=GetValidInput(func (s string)(string,error){
+	    if len(strings.Split(s," "))>1{
+			return "",errors.New("Invalid whitespace")
+		}
+		return s,nil
+	})
+	if err!=nil{
+		return err
+	}
 	sinfo.Receivers,sinfo.RcvrIds,err=GetVisitors(recvlist)
 	if err!=nil{
 		fmt.Println("Get receivers error:",err)
@@ -269,21 +283,55 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 //	fmt.Println("input a brief description for the file to be shared:")
 //	fmt.Scanf("%s",&sinfo.Descr)
 	fmt.Println("input permission: (Press 'Enter' use default choice 1 for reshare, input 0 for readonly)")
-	input:=""
-	fmt.Scanf("%s",&input)
+	input,err:=GetValidInput(func(s string)(string,error){
+		if s=="" || s=="1" || s=="0"{
+			return s,nil
+		}
+		return "",errors.New("Invalid perm code")
+	})
+	if err!=nil{
+		return err
+	}
 	if input==""{
 		sinfo.Perm=1
 	}else{
 		fmt.Sscanf(input,"%d",&sinfo.Perm)
 	}
-	fmt.Println("expire time: YYYY-MM-DD (Press 'Enter' for no expire time limit)")
-	fmt.Scanf("%s",&sinfo.Expire)
+	fmt.Println("expire date: YYYY-MM-DD (Press 'Enter' for no expire time limit)")
+	//fmt.Scanf("%s",&sinfo.Expire)
+	sinfo.Expire,err=GetValidInput(func (s string)(string,error){
+		if s==""{
+			return s,nil
+		}
+		s+="T00:00:00+08:00"
+        _,e:=time.Parse(time.RFC3339,s)
+		if e!=nil{
+			return "",errors.New("Invalid date format")
+		}
+		return s,nil
+	})
+	if err!=nil{
+		return err
+	}
 	if sinfo.Expire==""{
 		sinfo.Expire="2999-12-31 00:00:00"
 	}
-	input=""
+//	input=""
 	fmt.Println("limit open times: (Press 'Enter' use default value -1 , means no limit)")
-	fmt.Scanf("%s",&input)
+//	fmt.Scanf("%s",&input)
+	input,err=GetValidInput(func(s string)(string,error){
+		if s=="" {
+			return s,nil
+		}
+		_,e:=strconv.ParseInt(s,10,32)
+		if e!=nil{
+			return "",errors.New("Invalid number format")
+		}
+		return s,nil
+	})
+	if err!=nil{
+		return err
+	}
 	if input==""{
 		sinfo.MaxUse=-1
 	}else{
