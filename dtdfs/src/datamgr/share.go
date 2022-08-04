@@ -117,7 +117,7 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 		os.RemoveAll(dst)
 		return
 	}
-	sinfo.CrTime=core.GetCurTime()
+//	sinfo.CrTime=core.GetCurTime()
 	err=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
 		fmt.Println(err)
@@ -219,7 +219,7 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		return err
 	}
 
-	sinfo.CrTime=core.GetCurTime()
+//	sinfo.CrTime=core.GetCurTime()
 	err=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
 		fmt.Println(err)

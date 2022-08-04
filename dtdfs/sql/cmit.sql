@@ -313,7 +313,7 @@ CREATE TABLE `sharetags` (
   `perm` int(11) DEFAULT NULL,
   `fromtype` int(11) DEFAULT NULL,
   `sha256` char(64) NOT NULL DEFAULT '',
-  `crtime` datetime DEFAULT NULL,
+  `crtime` timestamp DEFAULT NULL,
   `orgname` varchar(255) DEFAULT '',
   `isdir` int(11) NOT NULL DEFAULT 0,
   `content` int(11) NOT NULL DEFAULT 0,

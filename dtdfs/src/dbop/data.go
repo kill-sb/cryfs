@@ -322,7 +322,7 @@ func WriteShareInfo(sinfo *api.ShareInfoData) error{
 	if sinfo.OrgName==""{
 		sinfo.OrgName=sinfo.Uuid
 	}
-	query=fmt.Sprintf("insert into sharetags (uuid,sha256,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype,crtime,orgname,isdir) values ('%s','%s',%d,'%s','%s','%s',%d,'%s','%s',%d,%d,'%s','%s',%d)",sinfo.Uuid,sinfo.Sha256,sinfo.OwnerId,sinfo.Descr,recvlist,sinfo.Expire,sinfo.MaxUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.CrTime,sinfo.OrgName,sinfo.IsDir)
+	query=fmt.Sprintf("insert into sharetags (uuid,sha256,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype,orgname,isdir) values ('%s','%s',%d,'%s','%s','%s',%d,'%s','%s',%d,%d,'%s',%d)",sinfo.Uuid,sinfo.Sha256,sinfo.OwnerId,sinfo.Descr,recvlist,sinfo.Expire,sinfo.MaxUse,keystr,sinfo.FromUuid,sinfo.Perm,sinfo.FromType,sinfo.OrgName,sinfo.IsDir)
 	if _, err= db.Exec(query); err != nil {
 		fmt.Println("Insert shareinfo into db error:",query, err,"expire=",sinfo.Expire)
 		return err
