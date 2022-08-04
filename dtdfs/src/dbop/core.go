@@ -16,7 +16,7 @@ var userinfocache map[int32] *api.UserInfoData
 var curdb *sql.DB =nil
 
 const dbname="mysql"
-const dbconfig="cmit:123456@tcp(mysqlsvr:3306)/cmit"
+const dbconfig="cmit:123456@tcp(mysqlsvr:3306)/cmit?charset=utf8"
 const COMMENT_INIT="Pending..."
 const CHECK_TIME=60*2
 
