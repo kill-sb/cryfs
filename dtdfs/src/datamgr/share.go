@@ -303,8 +303,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 		if s==""{
 			return s,nil
 		}
-		s+="T00:00:00+08:00"
-        _,e:=time.Parse(time.RFC3339,s)
+        _,e:=time.Parse(time.RFC3339,s+"T00:00:00+08:00")
 		if e!=nil{
 			return "",errors.New("Invalid date format")
 		}
