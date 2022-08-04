@@ -1,4 +1,2 @@
 docker import - cmit <cmit_img.tar
-add search point start/items for:
-searchsharedata, searchencdata,searchnotifies,searchexports,searchcontacts,listcontacts
-add searchusers
+modify sql file, add utf8 parameter

@@ -87,7 +87,7 @@ CREATE TABLE `expinvolvedata` (
   `datatype` int(11) NOT NULL,
   `dataowner` int(11) NOT NULL,
   `nodeid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -116,7 +116,7 @@ CREATE TABLE `exports` (
   `crtime` datetime NOT NULL,
   `comment` varchar(200) DEFAULT '',
   PRIMARY KEY (`expid`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -144,7 +144,7 @@ CREATE TABLE `exprocque` (
   `proctime` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `nodeid` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`nodeid`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -174,7 +174,7 @@ CREATE TABLE `notifies` (
   `touid` int(11) DEFAULT NULL,
   `isnew` int(11) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
