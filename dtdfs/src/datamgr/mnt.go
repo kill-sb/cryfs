@@ -54,23 +54,23 @@ type InputDataInfo struct{
 
 
 func PrepareMntOpts(inputs []*InputDataInfo, tool string, output string) map[string]*MountOpt{
-	podmntroot:="/mnt"
+	rdroot:="/readonly"
 	retmap:=make(map[string]*MountOpt)
 	for i,idata:=range inputs{
 		opt:=new(MountOpt)
-		opt.dstpt=podmntroot+fmt.Sprintf("/input/%d-%s",i+1,idata.orgname)
+		opt.dstpt=rdroot+fmt.Sprintf("/input/%d-%s",i+1,idata.orgname)
 		opt.access="ro"
 		retmap[idata.dstdir]=opt
 	}
 	if tool!=""{
 		topt:=new(MountOpt)
-		topt.dstpt=podmntroot+"/tool"
+		topt.dstpt=rdroot+"/tool"
 		topt.access="ro"
 		retmap[tool]=topt
 	}
 	if output!=""{
 		oopt:=new(MountOpt)
-		oopt.dstpt=podmntroot+"/output"
+		oopt.dstpt="/output"
 		oopt.access="rw"
 		retmap[output]=oopt
 	}

@@ -1,2 +1,5 @@
 docker import - cmit <cmit_img.tar
-modify sql file, add utf8 parameter
+
+import files info 
+modified kernel
+
