@@ -36,21 +36,57 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(epack)
 			return
 		}
-/*		ownerid,err:=dbop.GetDataOwner(epreq.Data)
-		if err!=nil{
-            epack.Code=1
-            epack.Msg=err.Error()
-            json.NewEncoder(w).Encode(epack)
-            return
-        }
-
-		if luinfo.Id!=ownerid{
-			epack.Code=2
-			epack.Msg="Invalid user"
+		switch epreq.Data.Type{
+		case api.ENCDATA:
+			ownerid,err:=dbop.GetDataOwner(epreq.Data)
+			if err!=nil{
+				epack.Data=nil
+	            epack.Code=api.ERR_INVDATA
+	            epack.Msg=err.Error()
+	            json.NewEncoder(w).Encode(epack)
+	            return
+	        }
+			if luinfo.Id!=ownerid {
+				epack.Data=nil
+				epack.Code=api.ERR_ACCESS
+				epack.Msg="Not owner of the data"
+				json.NewEncoder(w).Encode(epack)
+				return
+			}
+		case api.CSDFILE:
+			sinfo,err:=dbop.GetShareInfoData(epreq.Data.Obj)
+			if err!=nil{
+				epack.Data=nil
+	            epack.Code=api.ERR_INVDATA
+	            epack.Msg=err.Error()
+	            json.NewEncoder(w).Encode(epack)
+	            return
+			}
+			if luinfo.Id!=sinfo.OwnerId{
+				inlist:=false
+				for _,rid:=range sinfo.RcvrIds{
+					if rid==luinfo.Id{
+						inlist=true
+						break
+					}
+				}
+				if !inlist{
+					epack.Data=nil
+					epack.Code=api.ERR_ACCESS
+					epack.Msg="Neither owner nor receiver of the data"
+					json.NewEncoder(w).Encode(epack)
+					return
+				}
+			}
+		default:
+			epack.Data=nil
+			epack.Code=api.ERR_INVDATA
+			epack.Msg=err.Error()
 			json.NewEncoder(w).Encode(epack)
 			return
-		}*/
-		// user info checked ok
+		}
+
+		// user info checked ok now
 		if epack.Data,err=dbop.NewExport(epreq.Data,luinfo.Id,&epreq.Comment);err!=nil{
 			epack.Code=api.ERR_INTERNAL
 			epack.Msg=err.Error()
