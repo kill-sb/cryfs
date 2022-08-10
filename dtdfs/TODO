@@ -1,5 +1,6 @@
 docker import - cmit <cmit_img.tar
 
-import files info 
-modified kernel
+reduce import files info ?
+modified kernel(finished and tested seems ok)
+
 

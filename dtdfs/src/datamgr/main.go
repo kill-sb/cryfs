@@ -177,7 +177,7 @@ func main(){
 	case core.DECODE:
 		doDecode()
 	default:
-		fmt.Println("dtdfs(data defense v0.9) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-img container_image] [-import import_tool_path] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
+		fmt.Println("dtdfs(data defense v0.91) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-img container_image] [-import import_tool_path] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
 		//fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
 	}
 }
