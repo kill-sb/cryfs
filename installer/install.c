@@ -140,7 +140,7 @@ int main(int c, char** v)
 		sprintf(cmd,"/bin/cp %s/dtdfs %s/datamgr %s/cmfs %s >/dev/null 2>/dev/null",TMPDIR,TMPDIR,TMPDIR,INSTALL_DIR);
 	system(cmd);
 
-	printf("OK\nInstall default container image...");
+	printf("OK\nInstalling default container image...");
 	fflush(stdout);
 	sprintf(cmd,"podman import - cmit <%s/cmit_img.tar >/dev/null 2>/dev/null",TMPDIR);
 	system(cmd);

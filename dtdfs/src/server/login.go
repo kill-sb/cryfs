@@ -164,6 +164,7 @@ func LoginFunc(w http.ResponseWriter, r *http.Request){
 		id,shasum,key,err:=dbop.LookupPasswdSHA(ainfo.Name)
 		if err!=nil{
 			token.Data=nil
+			token.Msg="Invalid user/password"
 			token.Code=api.ERR_INTERNAL
 			json.NewEncoder(w).Encode(token)
 			return
