@@ -126,7 +126,7 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
 func RecordProcQueue(expid int64, queue []*api.ExProcNode) error{
 	var err error=nil
 	if len(queue)==0{
-		return err
+		return nil
 	}
 	db:=GetDB()
 	defer func(){
@@ -225,8 +225,9 @@ func NewExport(data *api.DataObj,userid int32, comment *string)(*api.ExportProcI
 	epinfo.CrTime=core.GetCurTime()
 	if len(epinfo.ProcQueue)==0{ // from raw data or from data ownered by self
 		epinfo.Status=api.AGREE
+	}else{
+		epinfo.Status=api.WAITING
 	}
-	epinfo.Status=api.WAITING
 	db:=GetDB()
 	query:=fmt.Sprintf("insert into exports (requid,status,datatype,datauuid,crtime,comment) values (%d,%d,%d,'%s','%s','%s')",userid,epinfo.Status,epinfo.DstData.Type,epinfo.DstData.Uuid,epinfo.CrTime,epinfo.Comment)
     if result, err := db.Exec(query); err == nil{
