@@ -331,6 +331,21 @@ type IExProcAck struct{
 	Data *ExportProcInfo `json:"data"`
 }
 
+type ApproveNode struct{
+	ProcUid int32 `json:"procuid"`
+	DataObj []string `json:"uuids"`
+}
+
+type ApproveListReq struct{
+	Token string `json:"token"`
+	Data *DataObj `json:"data"`
+}
+
+type ApproveListAck struct{
+	RetStat
+	Data []*ApproveNode `json:"data"`
+}
+
 type ExportProcReq struct{
 	Token string `json:"token"`
 	ExpId int64 `json:"expid"`

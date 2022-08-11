@@ -101,6 +101,57 @@ func ExportDataFunc(w http.ResponseWriter, r *http.Request){
 	}
 }
 
+func GetApproversFunc(w http.ResponseWriter, r *http.Request){
+	if r.Method=="POST"{
+		aplack:=api.NewApproveListAck()
+		w.Header().Set("Content-Type","application/json")
+		var aplreq api.ApproveListReq
+		err:=json.NewDecoder(r.Body).Decode(&aplreq)
+		if err!=nil{
+			Debug("Decode json error:",err)
+			aplack.Data=nil
+			aplack.Code=api.ERR_BADPARAM
+			json.NewEncoder(w).Encode(aplack)
+			return
+		}
+        if g_config.Debug{
+            DebugJson("Request:",&aplreq)
+            defer DebugJson("Response:",aplack)
+        }
+
+		var selfid int32=-1
+		luinfo,err:=GetLoginUserInfo(aplreq.Token)
+		if err==nil && luinfo!=nil{
+			selfid=luinfo.Id
+		}
+		alinfo,err:=dbop.CreateProcQueue(selfid,aplreq.Data)
+		if err!=nil{
+			aplack.Data=nil
+	        aplack.Code=api.ERR_INVDATA
+	        aplack.Msg=err.Error()
+	        json.NewEncoder(w).Encode(aplack)
+	        return
+		}
+		Debug("procque:",alinfo,err)
+		nlist:=len(alinfo)
+		aplack.Data=make([]*api.ApproveNode,0,nlist)
+		for _,node:=range alinfo{
+			alnode:=new (api.ApproveNode)
+			alnode.ProcUid=node.ProcUid
+			alnode.DataObj=make([]string,0,len(node.SrcData))
+			for _,v:=range node.SrcData{
+				alnode.DataObj=append(alnode.DataObj,v.Uuid)
+			}
+			aplack.Data=append(aplack.Data,alnode)
+		}
+		aplack.Code=0
+		aplack.Msg="OK"
+		json.NewEncoder(w).Encode(aplack)
+	}else{
+		http.NotFound(w,r)
+	}
+}
+
 func GetExportStatFunc(w http.ResponseWriter, r *http.Request){
 	if r.Method=="POST"{
 		epack:=api.NewExProcAck()

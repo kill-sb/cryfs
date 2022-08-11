@@ -243,7 +243,7 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 		info.LeftUse=0
 		return info,nil
 	}else{
-		return nil,errors.New("No shared info found in server")
+		return nil,errors.New(fmt.Sprintf("%s not shared info found in server",uuid))
 	}
 }
 
@@ -480,8 +480,8 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 			retobj[0]=cobj
 			return retobj,nil
 		}else{
-			return nil,nil
-			//return nil,errors.New("csd data not found")
+//			return nil,nil
+			return nil,errors.New(fmt.Sprintf("Shared data %s not found",obj.Obj))
 		}
 	}else if obj.Type==core.ENCDATA{
 		query:=fmt.Sprintf("select fromrcid,orgname from efilemeta where uuid='%s'",obj.Obj)
@@ -493,7 +493,7 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 		var rcid int64
 		var orgname string
 		if !res.Next(){
-			return nil, err
+			return nil, errors.New(fmt.Sprintf("Local encrypted data %s not found",obj.Obj))
 		}
 		err=res.Scan(&rcid,&orgname)
 		if err!=nil{

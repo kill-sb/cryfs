@@ -158,6 +158,7 @@ func SetupHandler() error{
 	routemap[prefix+"getexportstat"]=GetExportStatFunc
 	routemap[prefix+"searchexports"]=SearchExportsFunc
 	routemap[prefix+"respexport"]=RespExportFunc
+	routemap[prefix+"getapprovers"]=GetApproversFunc
 	routemap[prefix+"addcontacts"]=AddContactsFunc
 	routemap[prefix+"delcontacts"]=DelContactsFunc
 	routemap[prefix+"listcontacts"]=GetContactsFunc

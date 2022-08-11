@@ -121,6 +121,10 @@ func SearchEncDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(sedack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&sedreq)
+            defer DebugJson("Response:",sedack)
+        }
 		if sedreq.StartItem<0 || sedreq.MaxCount<0{
 			sedack.Data=nil
 			sedack.Code=api.ERR_INVDATA
@@ -155,10 +159,7 @@ func SearchEncDataFunc(w http.ResponseWriter, r *http.Request){
 			sedack.Msg="OK"
 		}
 		json.NewEncoder(w).Encode(sedack)
-        if g_config.Debug{
-            DebugJson("Request:",&sedreq)
-            DebugJson("Response:",sedack)
-        }
+
 		/*
 		var linfo *LoginUserInfo
 		linfo,err=GetLoginUserInfo(sifreq.Token)
@@ -180,6 +181,11 @@ func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 			json.NewEncoder(w).Encode(ssdack)
 			return
 		}
+        if g_config.Debug{
+            DebugJson("Request:",&ssdreq)
+            defer DebugJson("Response:",ssdack)
+        }
+
 		if ssdreq.StartItem<0 || ssdreq.MaxCount<0{
 			ssdack.Data=nil
 			ssdack.Code=api.ERR_INVDATA
@@ -215,10 +221,7 @@ func SearchShareDataFunc(w http.ResponseWriter, r *http.Request){
 			ssdack.Msg="OK"
 		}
 		json.NewEncoder(w).Encode(ssdack)
-        if g_config.Debug{
-            DebugJson("Request:",&ssdreq)
-            DebugJson("Response:",ssdack)
-        }
+
 		/*
 		var linfo *LoginUserInfo
 		linfo,err=GetLoginUserInfo(sifreq.Token)

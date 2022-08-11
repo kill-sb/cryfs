@@ -303,5 +303,19 @@ cat cert.pem >>/etc/pki/tls/certs/ca-bundle.crt
 	return ok:
 	{"code":0,"message":"OK","data":[{"id":5,"descr":"","name":"yangsx","mobile":"","email":"yangsx@cmgos.com"},{"id":6,"descr":"","name":"asdfasdf","mobile":"","email":"yangsx1@cmgos.com"},{"id":9,"descr":"","name":"testerzj123","mobile":"","email":"zhangjing@cmgos.com"}]}
 
-	
+37. getapprovers
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"5a8ee13945006b691aa3476cf8dfa658","data":{"type":1,"obj":"c7415c94-53d7-4f1f-aa79-fb0cd4a625fa"}}' -k https://apisvr:8080/api/v1/getapprovers
+	return ok:
+	{"code":0,"message":"OK","data":[{"procuid":1,"uuids":["fb457b85-029b-49c8-ae36-5c5492bc6a7f"]},{"procuid":4,"uuids":["a64b0ed5-0a9e-4ea3-ac69-bab16bd9ac78"]}]}
+
+	login:
+	curl -H "Content-Type: application/json" -X POST -d '{"name":"zhang3","passwd":"123456","primask":0}' -k https://apisvr:8080/api/v1/login
+	login ok:
+	{"code":0,"message":"OK","data":{"id":1,"token":"57ef3ccb138dcc16345a1e8bbff03d1d","key":"f447b20a7fcbf53a5d5be013ea0b15af","timeout":900}}
+	call:
+	curl -H "Content-Type: application/json" -X POST -d '{"token":"57ef3ccb138dcc16345a1e8bbff03d1d","data":{"type":1,"obj":"c7415c94-53d7-4f1f-aa79-fb0cd4a625fa"}}' -k https://apisvr:8080/api/v1/getapprovers
+	return ok:
+	{"code":0,"message":"OK","data":[{"procuid":4,"uuids":["a64b0ed5-0a9e-4ea3-ac69-bab16bd9ac78"]}]}
+
 	

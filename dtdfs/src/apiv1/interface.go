@@ -196,6 +196,14 @@ func NewExProcAck() *IExProcAck{
 	return epa
 }
 
+func NewApproveListAck() *ApproveListAck{
+	ala:=new(ApproveListAck)
+	ala.Code=-1
+	ala.Msg=INIT_MSG
+	ala.Data=nil
+	return ala
+}
+
 func NewSearchExpAck() *ISearchExpAck{
 	sea:=new (ISearchExpAck)
 	sea.Code=-1
