@@ -116,11 +116,13 @@ func PrintEncDataInfo(data *core.EncryptedData,index int)bool{
 	}else{
 		result+="\tFrom: data reprocessed in container\n"
 	}
-	result+=fmt.Sprintf("\tDescription :%s\n",data.Descr)
 	if data.IsDir==1{
 		result+=fmt.Sprintf("\tIs Directory :yes\n")
 	}else{
-		result+=fmt.Sprintln("\tIs Directory :no\n")
+		result+=fmt.Sprintf("\tIs Directory :no\n")
+	}
+	if data.Descr!=""{
+		result+=fmt.Sprintf("\tDescription :%s\n",data.Descr)
 	}
 	if keyword!=""{
 		if strings.Contains(result,keyword){
@@ -443,6 +445,9 @@ func PrintShareDataInfo(sinfo *core.ShareInfo,index int)bool{
 		result+=fmt.Sprintf("\tIs Directory :yes\n")
 	}else{
 		result+=fmt.Sprintf("\tIs Directory :no\n")
+	}
+	if sinfo.Descr!=""{
+		result+=fmt.Sprintf("\tDescription :%s\n",sinfo.Descr)
 	}
 	if keyword!=""{
 		if strings.Contains(result,keyword){

@@ -17,7 +17,7 @@ func main(){
 //	strcmd:=fmt.Sprintf("%s/datamgr",coredata.GetSelfPath())
 	nlen:=len(os.Args)
 	for i:=1;i<nlen;i++{
-		strcmd=strcmd+" "+os.Args[i]
+		strcmd=strcmd+" \""+os.Args[i]+"\""
 	}
 	//strcmd+=" 2>/dev/null "
     ccmd:=C.CString(strcmd)

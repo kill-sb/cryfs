@@ -240,6 +240,9 @@ func DoDecodeInC(src, passwd, dst []byte,length int){
 func RecordMetaFromRaw(pdata *core.EncryptedData ,keylocalkey []byte, passwd []byte,token string)error{
 	// passwd: raw passwd, need to be encrypted with linfo.Keylocalkey
 	// RecordLocal && Record Remote
+	if datadesc!=""{
+		pdata.Descr=datadesc
+	}
 	savedkey:=make([]byte,128/8)
 	DoEncodeInC(passwd , keylocalkey ,savedkey,128/8)
 	SaveLocalFileTag(pdata,savedkey)

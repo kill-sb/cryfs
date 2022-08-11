@@ -410,7 +410,7 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo,ne
 		asinfo,err=GetShareInfo_User_API(linfo.Token,uuid,needkey)
 	}
 	if err!=nil{
-        fmt.Println("GetShareInfo_API error:",err)
+//        fmt.Println(err)
         return nil,err
 	}
 	// TODO: Fill IsDir from remove server, remove ContentType
@@ -420,7 +420,9 @@ func GetShareInfoFromHead(head* core.ShareInfoHeader_V2,linfo* core.LoginInfo,ne
 }
 
 func WriteShareInfo(token string, sinfo* core.ShareInfo)error{
-//func WriteShareInfo(token string, sinfo* core.ShareInfo)(error){
+	if datadesc!=""{
+		sinfo.Descr=datadesc
+	}
 	err:=ShareData_API(token,sinfo)
 	if err!=nil{
 		return err

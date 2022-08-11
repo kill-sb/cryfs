@@ -11,10 +11,24 @@ import(
 
 const AES_KEY_LEN=128
 
+type SpaceInStr struct{
+	val string
+}
+
+func (d *SpaceInStr)String()string{
+	return d.val
+}
+
+func (d *SpaceInStr)Set(str string) error{
+	d.val=str
+	return nil
+}
+
 var definpath , inpath string
 var defoutpath,outpath , oname string
 var mntimport string
 var defuser, loginuser string
+var datadesc string
 var config string
 var keyword string
 var podimg string
@@ -32,6 +46,7 @@ func LoadConfig(){
 	definpath=os.Getenv("DATA_IN_PATH")
 //	defoutpath=os.Getenv("HOME")+"/.cmitdata"
 	defuser=os.Getenv("DATA_DEF_USER")
+	datadesc=""
 }
 
 func GetFunction() int {
@@ -44,6 +59,7 @@ func GetFunction() int {
 	flag.BoolVar(&bTrace,"trace",false,"trace details of data")
 	flag.BoolVar(&bList,"list",false,"list local encrypted data")
 //	flag.BoolVar(&bLogin,"login",false,"login and get a token")
+	flag.StringVar(&datadesc,"desc","","Data description")
 	flag.StringVar(&inpath,"in",definpath,"original data path (may be a file or a directory)")
 	flag.StringVar(&outpath,"out",defoutpath,"output data path")
 	flag.StringVar(&oname,"oname","","output new data org-name(default named with uuid)")
@@ -177,7 +193,6 @@ func main(){
 	case core.DECODE:
 		doDecode()
 	default:
-		fmt.Println("dtdfs(data defense v0.91) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-img container_image] [-import import_tool_path] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
-		//fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-user USERNAME] [-config CONFIGFILE] [-search KEYWORD]\nuse -h for more help")
+		fmt.Println("dtdfs(data defense v0.91) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-desc \"data_description\"] [-img container_image] [-import import_tool_path] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
 	}
 }

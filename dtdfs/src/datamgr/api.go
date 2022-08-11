@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
     api "apiv1"
     core "coredata"
 )
@@ -12,11 +11,11 @@ func GetDataInfo_API(uuid string)(*api.EncDataInfo,error){
     ack:=api.NewDataInfoAck()
     err:=HttpAPIPost(req,ack,"getdatainfo")
     if err!=nil{
-        fmt.Println("call api info error:",err)
+//        fmt.Println("call api info error:",err)
         return nil,err
     }
     if ack.Code!=0{
-        fmt.Println("request error:",ack.Msg)
+  //      fmt.Println("request error:",ack.Msg)
         return nil,errors.New(ack.Msg)
     }
     return ack.Data,nil
@@ -28,11 +27,11 @@ func GetUserInfo_API(ids []int32)([]*api.UserInfoData,error){
     ack:=api.NewUserInfoAck()
     err:=HttpAPIPost(req,ack,"finduserbyids")
     if err!=nil{
-        fmt.Println("call api info error:",err)
+  //      fmt.Println("call api info error:",err)
         return nil,err
     }
     if ack.Code!=0{
-        fmt.Println("request error:",ack.Msg)
+    //    fmt.Println("request error:",ack.Msg)
         return nil,errors.New(ack.Msg)
     }
     return ack.Data,nil
@@ -43,11 +42,11 @@ func FindUserName_API(names []string)([]*api.UserInfoData,error){
     ack:=api.NewUserInfoAck()
     err:=HttpAPIPost(req,ack,"finduserbynames")
     if err!=nil{
-        fmt.Println("call api info error:",err)
+      //  fmt.Println("call api info error:",err)
         return nil,err
     }
     if ack.Code!=0{
-        fmt.Println("request error:",ack.Msg)
+       // fmt.Println("request error:",ack.Msg)
         return nil,errors.New(ack.Msg)
     }
     return ack.Data,nil
@@ -57,8 +56,9 @@ func SendMetaToServer_API(pdata *core.EncryptedData, token string)error{
     encreq:=api.EncDataReq{Token:token,Uuid:pdata.Uuid,Descr:pdata.Descr,IsDir:pdata.IsDir,FromRCId:pdata.FromRCId,OwnerId:pdata.OwnerId,OrgName:pdata.OrgName}
     ack:=api.NewSimpleAck()
     err:=HttpAPIPost(&encreq,ack,"newdata")
-    if err!=nil{
-        fmt.Println("call api error:",err)
+	if err!=nil{
+//		fmt.Println("call api error:",err)
+		return err
     }
     if ack.Code!=0{
         return errors.New(ack.Msg)
@@ -71,7 +71,7 @@ func GetShareInfo_Public_API(uuid string)(*api.ShareInfoData,error){
     ack:=api.NewShareInfoAck()
     err:=HttpAPIPost(req,ack,"getshareinfo")
     if err!=nil{
-        fmt.Println("call getshareinfo error:",err)
+//        fmt.Println("call getshareinfo error:",err)
         return nil,err
     }
 	if ack.Code!=0{
@@ -85,7 +85,7 @@ func GetShareInfo_User_API(token string, uuid string,needkey byte)(*api.ShareInf
     ack:=api.NewShareInfoAck()
     err:=HttpAPIPost(req,ack,"getshareinfo")
     if err!=nil{
-        fmt.Println("call getshareinfo error:",err)
+//        fmt.Println("call getshareinfo error:",err)
         return nil,err
     }
 	if ack.Code!=0{
@@ -101,7 +101,7 @@ func ShareData_API(token string,sinfo *core.ShareInfo)(error){
     ack:=api.NewSimpleAck()
     err:=HttpAPIPost(req,ack,"sharedata")
     if err!=nil{
-        fmt.Println("call getshareinfo error:",err)
+  //      fmt.Println("call getshareinfo error:",err)
         return err
     }
 	if ack.Code!=0{
@@ -115,7 +115,7 @@ func CreateRunContext_API(token string, rc *api.RCInfo)(*api.RCInfo,error){
 	ack:=api.NewRCInfoAck()
 	err:=HttpAPIPost(req,ack,"createrc")
     if err!=nil{
-        fmt.Println("call updaterc error:",err)
+    //    fmt.Println("call updaterc error:",err)
         return nil,err
     }
     if ack.Code!=0{
@@ -129,7 +129,7 @@ func UpdateRunContext_API(token string, rc *api.RCInfo) error{
     ack:=new (api.ISimpleAck)
     err:=HttpAPIPost(req,ack,"updaterc")
     if err!=nil{
-        fmt.Println("call updaterc error:",err)
+     //   fmt.Println("call updaterc error:",err)
         return err
     }
 	if ack.Code!=0{
@@ -143,7 +143,7 @@ func GetRCInfo_API(rcid int64)(*api.RCInfo,error){
     ack:=api.NewRCInfoAck()
     err:=HttpAPIPost(req,ack,"getrcinfo")
     if err!=nil{
-        fmt.Println("call getrcinfo error:",err)
+       // fmt.Println("call getrcinfo error:",err)
         return nil,err
     }
 	if ack.Code!=0{
@@ -193,7 +193,8 @@ func QueryObj_API(token string, objs []*api.DataObj)([]api.IFDataDesc,error){
 	}
 	err:=HttpAPIPost(req,ack,"queryobjs")
 	if err!=nil{
-		fmt.Println("can't queryobjs error:",err)
+//		fmt.Println("can't queryobjs error:",err)
+		return nil,err
 	}
 	if ack.Code!=0{
 		return nil,errors.New(ack.Msg)
@@ -206,7 +207,7 @@ func Logout_API(token string)error{
 	ack:=api.NewSimpleAck()
 	err:=HttpAPIPost(req,ack,"logout")
     if err!=nil{
-        fmt.Println("call logout error:",err)
+//        fmt.Println("call logout error:",err)
         return err
     }
     if ack.Code!=0{

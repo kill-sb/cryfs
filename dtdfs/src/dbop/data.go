@@ -197,8 +197,8 @@ func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
 		}
 		return data,nil
 	}else{
-		fmt.Println("Can't find ",data.Uuid,"in db")
-		return nil,errors.New("Cant find raw data in db")
+		log.Println("Can't find ",data.Uuid,"in db")
+		return nil,errors.New(fmt.Sprintf("Cant find encdata %s in server",uuid))
 	}
 }
 
@@ -243,7 +243,7 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 		info.LeftUse=0
 		return info,nil
 	}else{
-		return nil,errors.New(fmt.Sprintf("%s not shared info found in server",uuid))
+		return nil,errors.New(fmt.Sprintf("Shared data %s not found in server",uuid))
 	}
 }
 
@@ -289,7 +289,7 @@ func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
 		}
 		return info,nil
 	}else{
-		return nil,errors.New("No shared info found in server")
+		return nil,errors.New(fmt.Sprintf("Shared data %s not found in server",uuid))
 	}
 }
 

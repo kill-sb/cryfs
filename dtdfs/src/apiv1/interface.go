@@ -248,7 +248,11 @@ func (dinfo* EncDataInfo)PrintDataInfo(level int, kw string,getuser func (int32)
     result+=fmt.Sprintf("Owner->%s,  ",getuser(dinfo.OwnerId))
     //result+=fmt.Sprintf("Owner->%s(userid:%d),  ",getuser(dinfo.OwnerId),dinfo.OwnerId)
 
-    result+=fmt.Sprintf("Create at->%s\n",dinfo.CrTime)
+    result+=fmt.Sprintf("Create at->%s",dinfo.CrTime)
+	if dinfo.Descr!=""{
+		result+=fmt.Sprintf(",  Description: \"%s\"",dinfo.Descr)
+	}
+	result+="\n"
     if kw!=""{
         result=strings.Replace(result,kw,"\033[7m"+kw+"\033[0m", -1)
     }
@@ -299,8 +303,11 @@ func (sinfo* ShareInfoData)PrintDataInfo(level int, kw string,getuser func(int32
     }else if sinfo.FromType==CSDFILE{
         result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
 	}
-	result+=fmt.Sprintf(", Original Name->%s, Create at->%s\n",sinfo.OrgName,sinfo.CrTime)
-
+	result+=fmt.Sprintf(", Original Name->%s, Create at->%s",sinfo.OrgName,sinfo.CrTime)
+	if sinfo.Descr!=""{
+		result+=", Description->\""+sinfo.Descr+"\""
+	}
+	result+="\n"
     if kw!=""{
         result=strings.Replace(result,kw,"\033[7m"+kw+"\033[0m", -1)
     }
