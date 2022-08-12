@@ -41,11 +41,13 @@ func UpdateRunContext(userid int32, rcid int64, datauuid string, endtime string)
 	db:=GetDB()
 	query:=fmt.Sprintf("select userid from runcontext where id=%d",rcid)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
     if err!=nil{
         fmt.Println("select from runcontext error:",err)
         return err
     }
-	defer res.Close()
     if res.Next(){
 		var uid int32
         err=res.Scan(&uid)
@@ -65,10 +67,12 @@ func GetRCInfo(rcid int64)(*api.RCInfo,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select userid,os,baseimg,ipaddr,outputuuid,crtime,detime from runcontext where id=%d",rcid)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		return nil,err
 	}
-	defer res.Close()
 	info:=new (api.RCInfo)
 	if res.Next(){
 		err=res.Scan(&info.UserId,&info.OS,&info.BaseImg,&info.IPAddr,&info.OutputUuid,&info.StartTime,&info.EndTime)
@@ -106,10 +110,12 @@ func GetSrcObjs(rcid int64)([]*api.SourceObj,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select srctype,srcuuid from rcinputdata where rcid=%d",rcid)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		return nil,err
 	}
-	defer res.Close()
 	objs:=make([]*api.SourceObj,0,10)
 	for res.Next(){
 		obj:=new(api.SourceObj)
@@ -126,10 +132,12 @@ func GetImportInfo(rcid int64)([]*api.ImportFile,error){
     db:=GetDB()
     query:=fmt.Sprintf("select relname,filedesc,sha256,size from rcimport where rcid=%d",rcid)
     res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
     if err!=nil{
         return nil,err
     }
-	defer res.Close()
     objs:=make([]*api.ImportFile,0,10)
     for res.Next(){
         obj:=new(api.ImportFile)
@@ -159,11 +167,13 @@ func GetDataOwner(obj *api.DataObj)(int32,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select ownerid from %s where uuid='%s'",tbname,obj.Obj)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		fmt.Printf("select from %s error: %s\n",tbname,err.Error())
 		return ownerid,err
 	}
-	defer res.Close()
 	if res.Next(){
 		err=res.Scan(&ownerid)
 		if err!=nil{
@@ -180,11 +190,13 @@ func GetEncDataInfo(uuid string)(*api.EncDataInfo,error){
 	data.Uuid=uuid
 	query:=fmt.Sprintf("select descr,fromrcid,ownerid,isdir,orgname,crtime from efilemeta where uuid='%s'",uuid)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		fmt.Println("select from efilemeta error:",err)
 		return nil,err
 	}
-	defer res.Close()
 	if res.Next(){
 		err=res.Scan(&data.Descr,&data.FromRCId,&data.OwnerId,&data.IsDir,&data.OrgName,&data.CrTime)
 		if err!=nil{
@@ -220,11 +232,13 @@ func DecreaseOpenTimes(sinfo *api.ShareInfoData, userid int32) error{
 func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select sha256, ownerid,descr, receivers,expire,maxuse,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
-   res,err:=db.Query(query)
+	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
     if err!=nil{
         return nil,err
     }
-	defer res.Close()
 	if res.Next(){
 		info:=new (api.ShareInfoData)
 	// info.FileUri will be filled outside
@@ -250,11 +264,13 @@ func GetShareInfoData(uuid string)(*api.ShareInfoData,error){
 func GetUserShareInfoData(uuid string, userid int32)(*api.ShareInfoData,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select sha256,ownerid,descr,receivers,expire,maxuse,keycryptkey,datauuid,perm,fromtype, crtime,orgname,isdir from sharetags where uuid='%s'",uuid)
-   res,err:=db.Query(query)
+    res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
     if err!=nil{
         return nil,err
     }
-	defer res.Close()
     if res.Next(){
 		info:=new (api.ShareInfoData)
 		// info.FileUri will be filled outside
@@ -351,11 +367,13 @@ func SearchEncData(req *api.SearchEncDataReq)([]*api.EncDataNode,error){
 		maxcnt=req.MaxCount
 	}
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		log.Println("select from db error:",err)
 		return nil,err
 	}
-	defer res.Close()
 	ret:=make([]*api.EncDataNode,0,maxcnt)
 	for res.Next(){
 		node:=new(api.EncDataNode)
@@ -401,11 +419,13 @@ func SearchShareData(req *api.SearchShareDataReq)([]*api.ShareDataNode,error){
 	}
 
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		log.Println("select from db error:",err)
 		return nil,err
 	}
-	defer res.Close()
 	ret:=make([]*api.ShareDataNode,0,maxcnt)
 	for res.Next(){
 		node:=new(api.ShareDataNode)
@@ -468,10 +488,12 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 		retobj:=make([]*api.DataObj,1)
 		query:=fmt.Sprintf("select fromtype,datauuid from sharetags where uuid='%s'",obj.Obj)
 		res,err:=db.Query(query)
+		if res!=nil{
+			defer res.Close()
+		}
 		if err!=nil{
 			return nil,err
 		}
-		defer res.Close()
 		if res.Next(){
 			err=res.Scan(&cobj.Type,&cobj.Obj)
 			if err!=nil{
@@ -486,10 +508,12 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 	}else if obj.Type==core.ENCDATA{
 		query:=fmt.Sprintf("select fromrcid,orgname from efilemeta where uuid='%s'",obj.Obj)
 		res,err:=db.Query(query)
+		if res!=nil{
+			defer res.Close()
+		}
 		if err!=nil{
 			return nil,err
 		}
-		defer res.Close()
 		var rcid int64
 		var orgname string
 		if !res.Next(){
@@ -510,10 +534,12 @@ func GetDataParents(obj *api.DataObj)([]*api.DataObj,error){
 
 		query=fmt.Sprintf("select srcuuid,srctype from rcinputdata where rcid=%d", rcid)
 		res1,err:=db.Query(query)
+		if res1!=nil{
+			defer res1.Close()
+		}
 		if err!=nil{
 			return nil,err
 		}
-		defer res1.Close()
 		retobj:=make([]*api.DataObj,0,10)
 		for res1.Next(){
 			nobj:=new (api.DataObj)
@@ -583,10 +609,12 @@ func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
 	// search  generated encdata
 	query:=fmt.Sprintf("select efilemeta.uuid from efilemeta, rcinputdata  where rcinputdata.srcuuid='%s' and rcinputdata.srctype=%d and efilemeta.fromrcid=rcinputdata.rcid",obj.Obj,obj.Type)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		return nil,err
 	}
-	defer res.Close()
 	retobj:=make([]*api.DataObj,0,20)
 	for res.Next(){
 		nobj:=new (api.DataObj)
@@ -602,10 +630,12 @@ func GetDataChildren(obj *api.DataObj)([]*api.DataObj,error){
 	// search generated csd files
 	query=fmt.Sprintf("select uuid from sharetags where datauuid='%s' and fromtype=%d",obj.Obj,obj.Type)
 	res1,err:=db.Query(query)
+	if res1!=nil{
+		defer res1.Close()
+	}
 	if err!=nil{
 		return nil,err
 	}
-	defer res1.Close()
 	for res1.Next(){
 		nobj:=new (api.DataObj)
 		err=res1.Scan(&nobj.Obj)

@@ -58,11 +58,13 @@ func GetNotifyInfo(id int64)(*api.NotifyInfo,error){
 	ninfo.Id=id
 	query:=fmt.Sprintf("select type,content,descr,crtime,fromuid,touid,isnew from notifies where id=%d",id)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		fmt.Println("select from notifies error:",err)
 		return nil,err
 	}
-	defer res.Close()
 	if res.Next(){
 		err=res.Scan(&ninfo.Type,&ninfo.Content,&ninfo.Comment,&ninfo.CrTime,&ninfo.FromUid,&ninfo.ToUid,&ninfo.IsNew)
 		if err!=nil{
@@ -106,11 +108,13 @@ func SearchNotifies(req *api.SearchNotifiesReq)([]*api.NotifyInfo,error){
     }
 
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		log.Println("select from db error:",err)
 		return nil,err
 	}
-	defer res.Close()
 	ret:=make([]*api.NotifyInfo,0,maxcnt)
 	for res.Next(){
 		node:=new(api.NotifyInfo)
@@ -250,11 +254,13 @@ func GetExportInfo(expid int64)(*api.ExportProcInfo,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select requid,status,datatype,datauuid,crtime,comment from exports where expid=%d",expid)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		fmt.Println("select from exports error:",err)
 		return nil,err
 	}
-	defer res.Close()
 	if res.Next(){
 		err=res.Scan(&epinfo.DstData.UserId,&epinfo.Status,&epinfo.DstData.Type,&epinfo.DstData.Uuid,&epinfo.CrTime,&epinfo.Comment)
 		if err!=nil{
@@ -270,10 +276,12 @@ func LoadProcQueue(epinfo *api.ExportProcInfo)error{
 	db:=GetDB()
 	query:=fmt.Sprintf("select status,procuid,comment,proctime,nodeid from exprocque where expid=%d",epinfo.ExpId)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		return err
 	}
-	defer res.Close()
 	epinfo.ProcQueue=make([]*api.ExProcNode,0,50)
 	for res.Next(){
 		node:=new(api.ExProcNode)
@@ -286,7 +294,13 @@ func LoadProcQueue(epinfo *api.ExportProcInfo)error{
 		node.SrcData=make([]*api.ProcDataObj,0,20)
 		query:=fmt.Sprintf("select datauuid,datatype,dataowner from expinvolvedata where nodeid=%d",nodeid)
 		resdata,err:=db.Query(query)
-		defer resdata.Close()
+		if resdata!=nil{
+			defer resdata.Close()
+		}
+		if err!=nil{
+			epinfo.ProcQueue=nil
+			return err
+		}
 		for resdata.Next(){
 			srcnode:=new (api.ProcDataObj)
 			err=resdata.Scan(&srcnode.Uuid,&srcnode.Type,&srcnode.UserId)
@@ -336,11 +350,13 @@ func SearchExpProc(req *api.SearchExpReq)([]*api.ExportProcInfo,error){
     }
 
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		log.Println("select from db error:",err)
 		return nil,err
 	}
-	defer res.Close()
 	ret:=make([]*api.ExportProcInfo,0,maxcnt)
 	for res.Next(){
 		info:=new(api.ExportProcInfo)

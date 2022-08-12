@@ -155,67 +155,6 @@ type ShareInfo struct{
 	OrgName string
 }
 
-/*
-type InfoTracer interface{
-	PrintTraceInfo(int,string)error
-}
-
-func (sinfo*ShareInfo)PrintTraceInfo(level int,keyword string) error{
-	for i:=0;i<level;i++{
-		fmt.Print("\t")
-	}
-	fmt.Print("-->")
-
-	result:=fmt.Sprintf("Shared Data(UUID :%s)  Details :",sinfo.Uuid)
-	result+=fmt.Sprintf("Owner->%s(uid :%d)",sinfo.OwnerName,sinfo.OwnerId)
-	result+=fmt.Sprintf(", Send to->%s",sinfo.Receivers)
-	if sinfo.Perm==0{
-		result+=fmt.Sprintf(", Perm->ReadOnly")
-	}else{
-		result+=fmt.Sprintf(", Perm->Resharable")
-	}
-
-	if sinfo.FromType==ENCDATA{		result+=fmt.Sprintf(", From->Local Encrypted Data(UUID :%s)",sinfo.FromUuid)
-	}else{
-		result+=fmt.Sprintf(", From->User Shared Data(UUID :%s)",sinfo.FromUuid)
-	}
-	result+=fmt.Sprintf(", Create at->%s\n",sinfo.CrTime)
-
-    if keyword!=""{
-        result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
-    }
-	fmt.Print(result)
-	return nil
-}
-
-func (dinfo *EncryptedData)PrintTraceInfo(level int, keyword string)error{
-	for i:=0;i<level;i++{
-		fmt.Print("\t")
-	}
-	fmt.Print("-->")
-	var result string
-
-	// should be replaced later because of multi-source processing
-	if dinfo.FromRCId==-1{
-		result=fmt.Sprintf("Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
-	}else{
-		result=fmt.Sprintf("Reprocessed Local Encrypted Data(UUID: %s)  Details :",dinfo.Uuid)
-	}
-	result+=fmt.Sprintf("Owner->%s(uid:%d)",dinfo.OwnerName,dinfo.OwnerId)
-	if dinfo.FromRCId==-1{
-		result+=fmt.Sprintf(", From Local Plain Data->%s",dinfo.OrgName)
-	}else{
-	}
-
-	result+=fmt.Sprintf(", Create at->%s\n",dinfo.CrTime)
-    if keyword!=""{
-		result=strings.Replace(result,keyword,"\033[7m"+keyword+"\033[0m", -1)
-	}
-	fmt.Print(result)
-
-	return nil
-}*/
-
 func IsUbt()bool{
 	f,err:=os.Open("/etc/issue")
 	if err!=nil{

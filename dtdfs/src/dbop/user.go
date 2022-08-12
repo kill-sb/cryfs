@@ -36,10 +36,12 @@ func GetUserNames(uids []int32)([]string,error){
 		query+=fmt.Sprintf(" or id='%d'",uids[i])
 	}
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		return ret,err
 	}
-	defer res.Close()
 	i:=0
 	for res.Next(){
 		err=res.Scan(&ret[i])
@@ -60,10 +62,12 @@ func IsValidUser(user string)(int32,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select id from users where name='%s'",user)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		return ret,err
 	}
-	defer res.Close()
 	if !res.Next(){
 		return ret,errors.New("No such user ")
 	}else{
@@ -82,11 +86,13 @@ func GetUserInfoByName(name string)(*api.UserInfoData,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select descr,id,mobile,email from users where name='%s'",name)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		fmt.Println("Query error:",err)
 		return nil,err
 	}
-	defer res.Close()
 	if !res.Next(){
 //		ret.Id=-1
 //		fmt.Println("error",err)
@@ -108,10 +114,12 @@ func GetUserInfo(id int32)(*api.UserInfoData,error){
 	db:=GetDB()
 	query:=fmt.Sprintf("select descr,name,mobile,email from users where id=%d",id)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		return nil,err
 	}
-	defer res.Close()
 	if !res.Next(){
 		return nil,errors.New(fmt.Sprintf("No such userid: %d",id))
 	}else{
@@ -128,10 +136,12 @@ func LookupPasswdSHA(user string)(int32,string,string,error){
 		query+=fmt.Sprintf(" or email='%s'",user)
 	}
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		return -1,"","",err
 	}
-	defer res.Close()
 	if res.Next(){
 		var key string
 		var shasum string
@@ -149,11 +159,13 @@ func NewContact(uid, cid int32)error{
     db:=GetDB()
 	query:=fmt.Sprintf("select count(*) from contacts where userid=%d and contactuserid=%d",uid,cid)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
     if err!=nil{
         fmt.Println("select from contacts error:",err)
         return err
     }
-	defer res.Close()
     if res.Next(){
         var count int64
         err=res.Scan(&count)
@@ -187,11 +199,13 @@ func ListContacts(uid int32,req *api.GetContactReq)([]*api.ContactInfo,error){
     }
 
 	res, err := db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err != nil {
 		fmt.Println("query contacts error:",query)
 		return nil,err
 	}
-	defer res.Close()
 	clist:=make([]*api.ContactInfo,0,maxcnt)
 	for res.Next(){
 		cinfo:=new(api.ContactInfo)
@@ -214,11 +228,13 @@ func FuzzySearch(uid int32, req *api.FzSearchReq)([]*api.ContactInfo,error){
     }
 
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		fmt.Println("query error:",query)
 		return nil,err
 	}
-	defer res.Close()
 	clist:=make([]*api.ContactInfo,0,maxcnt)
 	for res.Next(){
 		cinfo:=new(api.ContactInfo)
@@ -252,11 +268,13 @@ func SearchUsers(req *api.SearchUsersReq)([]*api.UserInfoData,error){
     }
 	fmt.Println("query:",query)
 	res,err:=db.Query(query)
+	if res!=nil{
+		defer res.Close()
+	}
 	if err!=nil{
 		fmt.Println("query error:",query)
 		return nil,err
 	}
-	defer res.Close()
 	clist:=make([]*api.UserInfoData,0,slicecnt)
 	for res.Next(){
 		cinfo:=new(api.UserInfoData)
