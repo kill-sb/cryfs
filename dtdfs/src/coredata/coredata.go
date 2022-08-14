@@ -25,6 +25,7 @@ const (
 	LIST
     MOUNT
 	LOGIN
+	VERSION
 )
 
 const (

@@ -10,6 +10,7 @@ import(
 )
 
 const AES_KEY_LEN=128
+const version="Data Denfense 0.93"
 
 type SpaceInStr struct{
 	val string
@@ -51,7 +52,7 @@ func LoadConfig(){
 
 func GetFunction() int {
 	//var bList,bEnc,bTrace,bShare,bMnt,bDec,bLogin bool
-	var bList,bEnc,bTrace,bShare,bMnt,bDec bool
+	var bList,bEnc,bTrace,bShare,bMnt,bDec,bVer bool
 	flag.BoolVar(&bEnc,"enc",false,"encrypt raw data")
 	flag.BoolVar(&bShare,"share",false,"share data to other users")
 	flag.BoolVar(&bMnt,"mnt",false,"mount encrypted data")
@@ -69,6 +70,7 @@ func GetFunction() int {
 	flag.StringVar(&loginuser,"user",defuser, "login user name")
 //	flag.StringVar(&config,"config","", "use config file to decribe share info")
 	flag.StringVar(&keyword,"search","", "used with -list or -trace.(When used with -list,search data records contain the keyword only, and when used with -trace, highlight the keyword)")
+	flag.BoolVar(&bVer,"v",false,"display version")
 	flag.Parse()
 	ret:=core.INVALID
 	count:=0
@@ -99,6 +101,10 @@ func GetFunction() int {
 	}
 	if bMnt{
 		ret=core.MOUNT
+		count++
+	}
+	if bVer{
+		ret=core.VERSION
 		count++
 	}
 	if count!=1{
@@ -192,7 +198,9 @@ func main(){
 		doTraceAll()
 	case core.DECODE:
 		doDecode()
+	case core.VERSION:
+		fmt.Println(version)
 	default:
-		fmt.Println("dtdfs(data defense v0.92) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-desc \"data_description\"] [-img container_image] [-import import_tool_path] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
+		fmt.Println("dtdfs(data defense) -enc|-list|-mnt|-share|-trace  -in INPUT_PATH [-out OUTPUTPATH] [-oname outdata_orgname] [-desc \"data_description\"] [-img container_image] [-import import_tool_path] [-user USERNAME] [-search KEYWORD]\nuse -h for more help")
 	}
 }
