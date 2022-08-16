@@ -4,6 +4,6 @@ modified kernel(finished and tested seems ok)
 
 //1. add -desc  parameter
 //2. common user support
-fixme: import will cause file access leaking-- ongoing
+//fixme: import will cause file access leaking-- ongoing
 3. default -in -out dir and config file
 4. reduce import files info ?

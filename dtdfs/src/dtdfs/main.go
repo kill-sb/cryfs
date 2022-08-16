@@ -20,14 +20,14 @@ import "C"
 
 func TestRead(path string)error{
 	if err:=syscall.Access(path,4);err!=nil{
-		return errors.New(fmt.Sprintf("You have no read permission on %s",path))
+		return errors.New(fmt.Sprintf("%s can't be read, check the pathname or permission.",path))
 	}
 	return nil
 }
 
 func TestWrite(path string)error{
 	if err:=syscall.Access(path,2);err!=nil{
-		return errors.New(fmt.Sprintf("You have no write permission on %s",path))
+		return errors.New(fmt.Sprintf("%s can't be written, check the pathname or permission.",path))
 	}
 	return nil
 }
