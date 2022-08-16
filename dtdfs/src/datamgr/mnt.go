@@ -100,7 +100,8 @@ func doMount(){
 	paths:=strings.Split(inpath,",")
 	multisrc:=make([]string,0,len(paths))
 	for _,str:=range paths{
-		apath,err:=filepath.Abs(strings.TrimSpace(str))
+		apath,err:=filepath.Abs(str)
+		//apath,err:=filepath.Abs(strings.TrimSpace(str))
 		if err==nil{
 			if(apath!=""){
 				multisrc=append(multisrc,apath)

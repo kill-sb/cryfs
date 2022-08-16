@@ -3,6 +3,10 @@ import (
 	"unsafe"
 	"os"
 	"coredata"
+	"syscall"
+	"path/filepath"
+	"errors"
+	"strings"
 	"fmt"
 )
 
@@ -14,7 +18,77 @@ import (
 */
 import "C"
 
+func TestRead(path string)error{
+	if err:=syscall.Access(path,4);err!=nil{
+		return errors.New(fmt.Sprintf("You have no read permission on %s",path))
+	}
+	return nil
+}
+
+func TestWrite(path string)error{
+	if err:=syscall.Access(path,2);err!=nil{
+		return errors.New(fmt.Sprintf("You have no write permission on %s",path))
+	}
+	return nil
+}
+
+func CheckIn(path string) error{
+    paths:=strings.Split(path,",")
+    for _,str:=range paths{
+        apath,err:=filepath.Abs(str)
+        if err!=nil{
+			return err
+        }else{
+			err=TestRead(apath)
+			if err!=nil{
+				return err
+			}
+        }
+    }
+	return nil
+}
+
+func CheckOut(path string) error{
+	apath,err:=filepath.Abs(path)
+	if err!=nil{
+		return err
+	}
+	return TestWrite(apath)
+}
+
+func CheckTool(path string) error{
+	apath,err:=filepath.Abs(path)
+	if err!=nil{
+		return err
+	}
+	return TestRead(apath)
+}
+
 func checkpath()error{
+	var in,out,tool string
+	StringVar(&in,"in","","")
+	StringVar(&out,"out","","")
+	StringVar(&tool,"import","","")
+	Parse()
+	var err error
+	if in!=""{
+		err=CheckIn(in)
+	}
+	if err!=nil{
+		return err
+	}
+	if out!=""{
+		err=CheckOut(out)
+	}
+	if err!=nil{
+		return err
+	}
+	if tool!=""{
+		err=CheckTool(tool)
+	}
+	if err!=nil{
+		return err
+	}
 	return nil
 }
 
