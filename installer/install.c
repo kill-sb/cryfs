@@ -73,12 +73,18 @@ int main(int c, char** v)
 	char cmd[4096];
 	int ins=0;
 	int useubt=0;
+	
 
 	if (c==2 && strcmp(v[1],"-v")==0){
 #ifdef __CUR_VERSION
 			printf("%s\n",__CUR_VERSION);
 #endif
 			exit(0);
+	}
+
+	if(getuid()!=0){
+		printf("You should run installer as root.\n");
+		exit(1);
 	}
 
 	printf("Checking environment...");
@@ -148,6 +154,8 @@ int main(int c, char** v)
 	}else
 		sprintf(cmd,"/bin/cp %s/dtdfs %s/datamgr %s/cmfs %s >/dev/null 2>/dev/null",TMPDIR,TMPDIR,TMPDIR,INSTALL_DIR);
 	system(cmd);
+	sprintf(cmd,"chmod +s %s/dtdfs",INSTALL_DIR);
+	system(cmd);
 
 	printf("OK\nInstalling default container image...");
 	fflush(stdout);
@@ -176,9 +184,9 @@ int main(int c, char** v)
 	sprintf(cmd,"echo %s  apisvr  apisvr >>/etc/hosts",IP);
 	system(cmd);
 	system("rm -rf "TMPDIR);
-	if (useubt)
+/*	if (useubt)
 		printf("OK\nInstall finished, run 'sudo dtdfs' to get more help.\n");
-	else
-		printf("OK\nInstall finished, run 'dtdfs' to get more help.\n");
+	else*/
+	printf("OK\nInstall finished, run 'dtdfs' to get more help.\n");
 	return 0;	
 }
