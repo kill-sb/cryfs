@@ -74,6 +74,13 @@ int main(int c, char** v)
 	int ins=0;
 	int useubt=0;
 
+	if (c==2 && strcmp(v[1],"-v")==0){
+#ifdef __CUR_VERSION
+			printf("%s\n",__CUR_VERSION);
+#endif
+			exit(0);
+	}
+
 	printf("Checking environment...");
 	fflush(stdout);
 	useubt=UseUbtCfg();
@@ -83,22 +90,14 @@ int main(int c, char** v)
 	}
 	ins=Installed();
 	// unistall
-	if (c==2)
-	{	
-		if(strcmp(v[1],"-u")==0){
+	if (c==2 &&strcmp(v[1],"-u")==0){
 			if (ins)
 				Uninstall(useubt);
 			else 
 				printf("FAILED\nData Defense is not found in your system\n");
 			exit(0);
-		}
-		else if (strcmp(v[1],"-v")==0){
-#ifdef __CUR_VERSION
-			printf("OK\n%s\n",__CUR_VERSION);
-#endif
-			exit(0);
-		}
 	}
+
 
 	// install start
 	if (ins){
