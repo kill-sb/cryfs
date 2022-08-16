@@ -9,10 +9,14 @@ import (
 /*
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 */
 import "C"
 
 func main(){
+	C.setuid(0);
+	C.setgid(0);
 	strcmd:=fmt.Sprintf("unshare -m %s/datamgr ",coredata.GetSelfPath())
 //	strcmd:=fmt.Sprintf("%s/datamgr",coredata.GetSelfPath())
 	nlen:=len(os.Args)
