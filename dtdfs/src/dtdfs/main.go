@@ -102,12 +102,14 @@ func checkpath()error{
 }
 
 func main(){
-	if err:=checkpath();err!=nil{ // check in,out and import access here
-		fmt.Println(err)
-		return
+	if syscall.Getuid()!=0{ // non root
+		if err:=checkpath();err!=nil{ // check in,out and import access here
+			fmt.Println(err)
+			return
+		}
+		C.setuid(0);
+		C.setgid(0);
 	}
-	C.setuid(0);
-	C.setgid(0);
 	strcmd:=fmt.Sprintf("unshare -m %s/datamgr ",coredata.GetSelfPath())
 	nlen:=len(os.Args)
 	for i:=1;i<nlen;i++{
