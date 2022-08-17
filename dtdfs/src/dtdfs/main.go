@@ -61,10 +61,10 @@ func CheckTool(path string) error{
 	if err!=nil{
 		return err
 	}
-	err=TestRead(apath)
+/*	err=TestRead(apath)
 	if err!=nil{
 		return err
-	}
+	}*/
 	// don't check dir here, mnt will do it later
     err=filepath.Walk(apath, func (curpath string, info os.FileInfo, err error)error{
         return TestRead(curpath)
