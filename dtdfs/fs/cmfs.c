@@ -610,6 +610,18 @@ static int cmfs_removexattr(const char* path, const char* name)
 		return -errno;
 	return 0;
 }
+
+static int cmfs_access(const char *path, int mode)
+{
+	int ret;
+	char dst[PATH_MAX];
+	get_realname(dst,path);
+	ret=access(dst,mode);
+	if(ret<0)
+		return -errno;
+	return ret;
+}
+
 /* "creat" will lead reading  unusable
 static int cmfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
@@ -651,6 +663,8 @@ static struct fuse_operations cmfs_oper = {
   .getxattr     = cmfs_getxattr,
   .listxattr    = cmfs_listxattr,
   .removexattr  = cmfs_removexattr,
+  .access  = cmfs_access,
+// access
 };
 
 void cmfs_init(struct fuse_args* args)
