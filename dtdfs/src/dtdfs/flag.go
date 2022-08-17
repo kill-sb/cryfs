@@ -1,70 +1,11 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 /*
-	Package flag implements command-line flag parsing.
-
-	Usage
-
-	Define flags using flag.String(), Bool(), Int(), etc.
-
-	This declares an integer flag, -n, stored in the pointer nFlag, with type *int:
-		import "flag"
-		var nFlag = flag.Int("n", 1234, "help message for flag n")
-	If you like, you can bind the flag to a variable using the Var() functions.
-		var flagvar int
-		func init() {
-			flag.IntVar(&flagvar, "flagname", 1234, "help message for flagname")
-		}
-	Or you can create custom flags that satisfy the Value interface (with
-	pointer receivers) and couple them to flag parsing by
-		flag.Var(&flagVal, "name", "help message for flagname")
-	For such flags, the default value is just the initial value of the variable.
-
-	After all flags are defined, call
-		flag.Parse()
-	to parse the command line into the defined flags.
-
-	Flags may then be used directly. If you're using the flags themselves,
-	they are all pointers; if you bind to variables, they're values.
-		fmt.Println("ip has value ", *ip)
-		fmt.Println("flagvar has value ", flagvar)
-
-	After parsing, the arguments following the flags are available as the
-	slice flag.Args() or individually as flag.Arg(i).
-	The arguments are indexed from 0 through flag.NArg()-1.
-
-	Command line flag syntax
-
-	The following forms are permitted:
-
-		-flag
-		-flag=x
-		-flag x  // non-boolean flags only
-	One or two minus signs may be used; they are equivalent.
-	The last form is not permitted for boolean flags because the
-	meaning of the command
-		cmd -x *
-	where * is a Unix shell wildcard, will change if there is a file
-	called 0, false, etc. You must use the -flag=false form to turn
-	off a boolean flag.
-
-	Flag parsing stops just before the first non-flag argument
-	("-" is a non-flag argument) or after the terminator "--".
-
-	Integer flags accept 1234, 0664, 0x1234 and may be negative.
-	Boolean flags may be:
-		1, 0, t, f, T, F, true, false, TRUE, FALSE, True, False
-	Duration flags accept any input valid for time.ParseDuration.
-
-	The default set of command-line flags is controlled by
-	top-level functions.  The FlagSet type allows one to define
-	independent sets of flags, such as to implement subcommands
-	in a command-line interface. The methods of FlagSet are
-	analogous to the top-level functions for the command-line
-	flag set.
+ Mostly copied from golang/src/flag, but modified for special requirement:
+ focus on certain parameters, ignore others, that means:
+ 1. do not return error when meet non-predefined parameters
+ 2. do not pint usage when meet unknown parameter or -h switch
+ It is used just for check some path permission, if success, then pass all parameters to sub process(datamgr)
 */
+
 package main
 
 import (
@@ -284,25 +225,11 @@ func (f funcValue) Set(s string) error { return f(s) }
 
 func (f funcValue) String() string { return "" }
 
-// Value is the interface to the dynamic value stored in a flag.
-// (The default value is represented as a string.)
-//
-// If a Value has an IsBoolFlag() bool method returning true,
-// the command-line parser makes -name equivalent to -name=true
-// rather than using the next command-line argument.
-//
-// Set is called once, in command line order, for each flag present.
-// The flag package may call the String method with a zero-valued receiver,
-// such as a nil pointer.
 type Value interface {
 	String() string
 	Set(string) error
 }
 
-// Getter is an interface that allows the contents of a Value to be retrieved.
-// It wraps the Value interface, rather than being part of it, because it
-// appeared after Go 1 and its compatibility rules. All Value types provided
-// by this package satisfy the Getter interface, except the type used by Func.
 type Getter interface {
 	Value
 	Get() interface{}
@@ -318,17 +245,7 @@ const (
 	PanicOnError                         // Call panic with a descriptive error.
 )
 
-// A FlagSet represents a set of defined flags. The zero value of a FlagSet
-// has no name and has ContinueOnError error handling.
-//
-// Flag names must be unique within a FlagSet. An attempt to define a flag whose
-// name is already in use will cause a panic.
 type FlagSet struct {
-	// Usage is the function called when an error occurs while parsing flags.
-	// The field is a function (not a method) that may be changed to point to
-	// a custom error handler. What happens after Usage is called depends
-	// on the ErrorHandling setting; for the command line, this defaults
-	// to ExitOnError, which exits the program after calling Usage.
 	Usage func()
 
 	name          string
@@ -451,9 +368,6 @@ func Set(name, value string) error {
 // isZeroValue determines whether the string represents the zero
 // value for a flag.
 func isZeroValue(flag *Flag, value string) bool {
-	// Build a zero value of the flag's Value type, and see if the
-	// result of calling its String method equals the value passed in.
-	// This works unless the Value type is itself an interface type.
 	typ := reflect.TypeOf(flag.Value)
 	var z reflect.Value
 	if typ.Kind() == reflect.Ptr {
@@ -464,11 +378,6 @@ func isZeroValue(flag *Flag, value string) bool {
 	return value == z.Interface().(Value).String()
 }
 
-// UnquoteUsage extracts a back-quoted name from the usage
-// string for a flag and returns it and the un-quoted usage.
-// Given "a `name` to show" it returns ("name", "a name to show").
-// If there are no back quotes, the name is an educated guess of the
-// type of the flag's value, or the empty string if the flag is boolean.
 func UnquoteUsage(flag *Flag) (name string, usage string) {
 	// Look for a back-quoted name, but avoid the strings package.
 	usage = flag.Usage
@@ -536,26 +445,6 @@ func (f *FlagSet) PrintDefaults() {
 	})
 }
 
-// PrintDefaults prints, to standard error unless configured otherwise,
-// a usage message showing the default settings of all defined
-// command-line flags.
-// For an integer valued flag x, the default output has the form
-//	-x int
-//		usage-message-for-x (default 7)
-// The usage message will appear on a separate line for anything but
-// a bool flag with a one-byte name. For bool flags, the type is
-// omitted and if the flag name is one byte the usage message appears
-// on the same line. The parenthetical default is omitted if the
-// default is the zero value for the type. The listed type, here int,
-// can be changed by placing a back-quoted name in the flag's usage
-// string; the first such item in the message is taken to be a parameter
-// name to show in the message and the back quotes are stripped from
-// the message when displayed. For instance, given
-//	flag.String("I", "", "search `directory` for include files")
-// the output will be
-//	-I directory
-//		search directory for include files.
-//
 // To change the destination for flag messages, call CommandLine.SetOutput.
 func PrintDefaults() {
 	CommandLine.PrintDefaults()
@@ -571,19 +460,6 @@ func (f *FlagSet) defaultUsage() {
 	f.PrintDefaults()
 }
 
-// NOTE: Usage is not just defaultUsage(CommandLine)
-// because it serves (via godoc flag Usage) as the example
-// for how to write your own usage function.
-
-// Usage prints a usage message documenting all defined command-line flags
-// to CommandLine's output, which by default is os.Stderr.
-// It is called when an error occurs while parsing flags.
-// The function is a variable that may be changed to point to a custom function.
-// By default it prints a simple header and calls PrintDefaults; for details about the
-// format of the output and how to control it, see the documentation for PrintDefaults.
-// Custom usage functions may choose to exit the program; by default exiting
-// happens anyway as the command line's error handling strategy is set to
-// ExitOnError.
 var Usage = func() {
 	fmt.Fprintf(CommandLine.Output(), "Usage of %s:\n", os.Args[0])
 	PrintDefaults()
@@ -806,39 +682,25 @@ func Float64(name string, value float64, usage string) *float64 {
 	return CommandLine.Float64(name, value, usage)
 }
 
-// DurationVar defines a time.Duration flag with specified name, default value, and usage string.
-// The argument p points to a time.Duration variable in which to store the value of the flag.
-// The flag accepts a value acceptable to time.ParseDuration.
 func (f *FlagSet) DurationVar(p *time.Duration, name string, value time.Duration, usage string) {
 	f.Var(newDurationValue(value, p), name, usage)
 }
 
-// DurationVar defines a time.Duration flag with specified name, default value, and usage string.
-// The argument p points to a time.Duration variable in which to store the value of the flag.
 // The flag accepts a value acceptable to time.ParseDuration.
 func DurationVar(p *time.Duration, name string, value time.Duration, usage string) {
 	CommandLine.Var(newDurationValue(value, p), name, usage)
 }
 
-// Duration defines a time.Duration flag with specified name, default value, and usage string.
-// The return value is the address of a time.Duration variable that stores the value of the flag.
-// The flag accepts a value acceptable to time.ParseDuration.
 func (f *FlagSet) Duration(name string, value time.Duration, usage string) *time.Duration {
 	p := new(time.Duration)
 	f.DurationVar(p, name, value, usage)
 	return p
 }
 
-// Duration defines a time.Duration flag with specified name, default value, and usage string.
-// The return value is the address of a time.Duration variable that stores the value of the flag.
-// The flag accepts a value acceptable to time.ParseDuration.
 func Duration(name string, value time.Duration, usage string) *time.Duration {
 	return CommandLine.Duration(name, value, usage)
 }
 
-// Func defines a flag with the specified name and usage string.
-// Each time the flag is seen, fn is called with the value of the flag.
-// If fn returns a non-nil error, it will be treated as a flag value parsing error.
 func (f *FlagSet) Func(name, usage string, fn func(string) error) {
 	f.Var(funcValue(fn), name, usage)
 }
@@ -850,12 +712,6 @@ func Func(name, usage string, fn func(string) error) {
 	CommandLine.Func(name, usage, fn)
 }
 
-// Var defines a flag with the specified name and usage string. The type and
-// value of the flag are represented by the first argument, of type Value, which
-// typically holds a user-defined implementation of Value. For instance, the
-// caller could create a flag that turns a comma-separated string into a slice
-// of strings by giving the slice the methods of Value; in particular, Set would
-// decompose the comma-separated string into the slice.
 func (f *FlagSet) Var(value Value, name string, usage string) {
 	// Remember the default value as a string; it won't change.
 	flag := &Flag{name, usage, value, value.String()}
@@ -876,12 +732,6 @@ func (f *FlagSet) Var(value Value, name string, usage string) {
 	f.formal[name] = flag
 }
 
-// Var defines a flag with the specified name and usage string. The type and
-// value of the flag are represented by the first argument, of type Value, which
-// typically holds a user-defined implementation of Value. For instance, the
-// caller could create a flag that turns a comma-separated string into a slice
-// of strings by giving the slice the methods of Value; in particular, Set would
-// decompose the comma-separated string into the slice.
 func Var(value Value, name string, usage string) {
 	CommandLine.Var(value, name, usage)
 }
@@ -942,19 +792,19 @@ func (f *FlagSet) parseOne() (bool, error) {
 	m := f.formal
 //	flag, _ := m[name] // BUG
 	flag, alreadythere := m[name] // BUG
-	if !alreadythere {
+	if !alreadythere { // not a predefined parameter
 	/*	if name == "help" || name == "h" { // special case for nice help message.
 			f.usage()
 			return false, ErrHelp
 		}*/
 		for{
-			if len(f.args)==0{
+			if len(f.args)==0{ // end of parameter list
 				return false,nil
 			}
-			if f.args[0][0]!='-'{
+			if f.args[0][0]!='-'{ // not a switch'-', ignore it, try next one
 				f.args=f.args[1:]
 				continue
-			}else{
+			}else{ // get a functional parameter, will return success
 				break
 			}
 		}
@@ -993,10 +843,6 @@ func (f *FlagSet) parseOne() (bool, error) {
 	return true, nil
 }
 
-// Parse parses flag definitions from the argument list, which should not
-// include the command name. Must be called after all flags in the FlagSet
-// are defined and before flags are accessed by the program.
-// The return value will be ErrHelp if -help or -h were set but not defined.
 func (f *FlagSet) Parse(arguments []string) error {
 	f.parsed = true
 	f.args = arguments
@@ -1043,16 +889,9 @@ func Parsed() bool {
 	return CommandLine.Parsed()
 }
 
-// CommandLine is the default set of command-line flags, parsed from os.Args.
-// The top-level functions such as BoolVar, Arg, and so on are wrappers for the
-// methods of CommandLine.
 var CommandLine = NewFlagSet(os.Args[0], ExitOnError)
 
 func init() {
-	// Override generic FlagSet default Usage with call to global Usage.
-	// Note: This is not CommandLine.Usage = Usage,
-	// because we want any eventual call to use any updated value of Usage,
-	// not the value it has when this line is run.
 	CommandLine.Usage = commandLineUsage
 }
 
