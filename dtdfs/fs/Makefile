@@ -1,18 +1,22 @@
-
+CPP=g++
 CC=gcc
 CFLAGS=-D_FILE_OFFSET_BITS=64 -O2
 #CFLAGS=-g -D_FILE_OFFSET_BITS=64 -D__DEBUG -O0
 LDFLAGS=-lfuse -lssl -lcrypto 
 
-OBJ=cmfs.o crypt.o
+OBJ=cmfs.o crypt.o cache.oo
 #OBJ=cmfs.o node.o dir.o
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 cmfs: $(OBJ)
-	$(CC) $(OBJ) $(LDFLAGS) -o cmfs
+	$(CPP) $(OBJ) $(LDFLAGS) -o cmfs
 	strip cmfs
+
+cache.oo:cache.cpp
+	$(CPP) -c $(CFLAGS) cache.cpp -o cache.oo
+
 
 demo:cmfs
 
@@ -26,6 +30,5 @@ test:cmfs
 #	./cmfs  /tmp/mnt  /mnt  -o kernel_cache -o auto_cache
 .PHONY: clean
 clean:
-	make clean -C fs
-	rm -f *.o cmfs
+	rm -f *.o *.oo cmfs
 

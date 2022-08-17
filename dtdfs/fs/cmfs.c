@@ -19,6 +19,7 @@
 #include <stddef.h>
 
 #include "cmfs.h"
+#include "cache.h"
 
 static struct cmfs_options g_opts;
 
@@ -704,6 +705,7 @@ int main(int argc, char *argv[]) {
 	}*/
 
 	if( argc<3){
+//		cache_sync(0);
 		printf("Usage: cmfs <srcdir> <mntpoint> [options]\n");
   		return fuse_main(argc, argv, &cmfs_oper, NULL);
 	}
