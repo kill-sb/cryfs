@@ -307,7 +307,7 @@ func InputShareInfo(sinfo *core.ShareInfo) error{
 		if e!=nil{
 			return "",errors.New("Invalid date format")
 		}
-		return s,nil
+		return s+" 23:59:59",nil
 	})
 	if err!=nil{
 		return err
