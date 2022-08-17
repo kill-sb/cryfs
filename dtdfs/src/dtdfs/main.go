@@ -61,7 +61,15 @@ func CheckTool(path string) error{
 	if err!=nil{
 		return err
 	}
-	return TestRead(apath)
+	err=TestRead(apath)
+	if err!=nil{
+		return err
+	}
+	// don't check dir here, mnt will do it later
+    err=filepath.Walk(apath, func (curpath string, info os.FileInfo, err error)error{
+        return TestRead(curpath)
+    })
+	return err
 }
 
 func checkpath()error{
@@ -70,6 +78,7 @@ func checkpath()error{
 	StringVar(&out,"out","","")
 	StringVar(&tool,"import","","")
 	Parse()
+//	fmt.Println(in,",",out,",",tool)
 	var err error
 	if in!=""{
 		err=CheckIn(in)
