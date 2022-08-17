@@ -2,6 +2,7 @@
 #define __CACHE_H__
 #include <stdlib.h>
 #include <map>
+#include <time.h>
 #include "cmfs.h"
 
 using namespace std;
@@ -25,10 +26,12 @@ struct cache_buf{
 //	off_t blk;  // in-file block map key
 	const char* fname;
 	off_t blk;
+	time_t visit;
 	char buf[FILEBLOCK];
 	int len;
 	cache_buf()
 	{
+//		visit=time(NULL);
 		fname=NULL;
 	}
 };

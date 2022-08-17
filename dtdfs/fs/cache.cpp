@@ -7,10 +7,23 @@
 #include <string.h>
 
 
-map<unsigned long,cache_buf*>lru_map;
+map<time_t,cache_buf*>lru_map;
 map<string, file_cache*> g_cache;
 
 unsigned long memuse=0;
+
+static int updatevisit(cache_buf* cb)
+{
+	time_t now=time(NULL);
+	map<time_t,cache_buf*>::iterator pos=lru_map.find(cb->visit);
+	if(pos==lru_map.end())
+		return -1;
+	lru_map.erase(pos);
+	cb->visit=now;
+	lru_map[now]=cb;
+	return 0;
+}
+
 
 static const char* getpath(int fd,char *buf)// PATH_MAX len
 {
@@ -67,6 +80,7 @@ int add_cache(int fd,off_t blk,const char* buf, int buf_len)
 	}
 	cur->len=buf_len;
 	memcpy(cur->buf,buf,buf_len);
+	updatevisit(cur);
 	return 0;
 }	
 
@@ -86,6 +100,7 @@ int searchcache(int fd, off_t blk,char *buf,int *len)
 	if(get->len<=0) // error
 		return get->len;
 	memcpy(buf,get->buf,*len);
+	updatevisit(get);
 	return *len; // return >0, buf has been copied
 }
 
@@ -97,9 +112,10 @@ void cache_sync(int fd)
 }
 
 extern "C"
-void drop_cache(const char* fname)
+void drop_cache(const char* fname,off_t block)
 {
 	// invoked after unlink, cleanup
+//	file_cache* fc=			
 }
 
 
