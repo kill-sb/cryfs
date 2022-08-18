@@ -1,4 +1,5 @@
-#include "cache.h"
+#include <map>
+#include <sys/time.h>
 #include <string>
 #include <unistd.h>
 #include <stdlib.h>
@@ -6,21 +7,60 @@
 #include <iostream>
 #include <string.h>
 
+using namespace std;
+#include "cache.h"
+typedef unsigned long ulong;
 
-map<time_t,cache_buf*>lru_map;
+struct cache_buf{
+	const char* fname;
+	off_t blk;
+	ulong visit;
+	char buf[FILEBLOCK];
+	int len;
+	cache_buf()
+	{
+//		visit=time(NULL);
+		fname=NULL;
+	}
+};
+
+struct file_cache{
+	char *fname;
+	map<off_t,cache_buf*> pages;
+	file_cache()
+	{
+		fname=NULL;
+	}
+	~file_cache()
+	{
+		if(fname)
+			delete []fname;
+	}
+};
+
+
+
+map<ulong,cache_buf*>lru_map;
 map<string, file_cache*> g_cache;
 
 unsigned long memuse=0;
 
+static ulong getusec()
+{	
+	struct timeval now;
+	gettimeofday(&now,NULL);
+	return now.tv_sec*1000*1000+now.tv_usec;
+
+}
+
 static int updatevisit(cache_buf* cb)
 {
-	time_t now=time(NULL);
-	map<time_t,cache_buf*>::iterator pos=lru_map.find(cb->visit);
+	map<ulong,cache_buf*>::iterator pos=lru_map.find(cb->visit);
 	if(pos==lru_map.end())
 		return -1;
 	lru_map.erase(pos);
-	cb->visit=now;
-	lru_map[now]=cb;
+	cb->visit=getusec();
+	lru_map[cb->visit]=cb;
 	return 0;
 }
 
