@@ -301,10 +301,12 @@ func doDecode(){
 		return
 	}
 	if outpath==""{
-		outpath="./"
+        fmt.Println("You should set outpath explicitly")
+        return
 	}else{
 		os.MkdirAll(outpath,0755)
 	}
+
 	finfo,err:=os.Stat(inpath)
 	if err!=nil{
 		fmt.Println("Can't find ",inpath)
@@ -418,7 +420,8 @@ func doEncode(){
 		return
 	}
 	if outpath==""{
-		outpath="./"
+		fmt.Println("You should set outpath explicitly")
+		return
 	}else{
 		os.MkdirAll(outpath,0755)
 	}

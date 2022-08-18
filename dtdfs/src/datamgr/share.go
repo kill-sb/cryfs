@@ -22,7 +22,8 @@ func doShare(){
         return
     }
     if outpath==""{
-        outpath=inpath+".csd"
+        fmt.Println("You should set outpath explicitly")
+        return
     }
     info,err:=os.Stat(inpath)
 	if err!=nil{
