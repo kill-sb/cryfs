@@ -36,6 +36,7 @@ var podimg string
 var apisvr string
 var DtdfsSum string
 var CmfsSum string
+var ouid int
 
 var namemap map[string]int32
 //var idmap map[int32]string
@@ -71,6 +72,7 @@ func GetFunction() int {
 //	flag.StringVar(&config,"config","", "use config file to decribe share info")
 	flag.StringVar(&keyword,"search","", "used with -list or -trace.(When used with -list,search data records contain the keyword only, and when used with -trace, highlight the keyword)")
 	flag.BoolVar(&bVer,"v",false,"display version")
+	flag.IntVar(&ouid,"s",0,"securiy mode")
 	flag.Parse()
 	ret:=core.INVALID
 	count:=0

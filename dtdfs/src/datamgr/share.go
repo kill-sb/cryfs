@@ -4,7 +4,6 @@ import(
 	"fmt"
 	"os"
 	"bufio"
-	"syscall"
 	"time"
 	"io"
 	"strings"
@@ -16,11 +15,6 @@ import(
 	api "apiv1"
 	core "coredata"
 )
-
-/*
-#include <stdlib.h>
-*/
-import "C"
 
 func doShare(){
 	if inpath==""{
@@ -124,7 +118,9 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 		os.RemoveAll(dst)
 		return
 	}
-	SetParentOwner(dst)
+	if ouid!=0{
+		ChOwner(dst,false)
+	}
 //	sinfo.CrTime=core.GetCurTime()
 	err=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
@@ -226,7 +222,9 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		os.RemoveAll(dst)
 		return err
 	}
-	SetParentOwner(dst)
+	if ouid!=0{
+		ChOwner(dst,false)
+	}
 //	sinfo.CrTime=core.GetCurTime()
 	err=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
@@ -485,37 +483,3 @@ func FillShareReqData(sinfo *core.ShareInfo)*api.ShareInfoData{
 	return asi
 }
 
-func SetParentOwner(fname string)error{
-    if fname==""{
-        return errors.New("Empty filename")
-    }
-    for{
-        if !strings.HasSuffix(fname,"/"){
-            break
-        }
-        fname=strings.TrimSuffix(fname,"/")
-    }
-    entries:=strings.Split(fname,"/")
-	src:=strings.TrimSuffix(fname,entries[len(entries)-1])
-	if src==""{
-		return errors.New("bad filename")
-	}
-	fi,err:=os.Stat(src)
-    if err!=nil{
-        return err
-    }
-    if !fi.IsDir(){
-        return errors.New("error: parent path is not a dir?")
-    }
-    sys := fi.Sys().(*syscall.Stat_t)
-    if sys != nil {
-        cmd:=fmt.Sprintf("chown -R %d:%d %s>/dev/null 2>/dev/null", sys.Uid,sys.Gid,fname)
-        ccmd:=C.CString(cmd)
-        defer C.free(unsafe.Pointer(ccmd))
-        C.system(ccmd)
-        return nil
-    }else{
-        return errors.New("System error")
-    }
-
-}

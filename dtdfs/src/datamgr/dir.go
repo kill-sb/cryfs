@@ -4,8 +4,6 @@ import(
     "os"
 	"unsafe"
     "fmt"
-	"errors"
-	"syscall"
     "path/filepath"
     "strings"
 	core "coredata"
@@ -62,7 +60,9 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
 		}
 		return nil
 	})
-	ChEncOwner(opath,ofile)
+	if ouid!=0{
+		ChOwner(ofile,true)
+	}
     return pdata.Uuid,nil
 }
 
@@ -138,23 +138,16 @@ func DecodeCSDToDir(ifile,opath string, passwd []byte)error{
 	return nil
 }
 
-func ChEncOwner(src,dst string)error{
-	fi,err:=os.Stat(src)
-	if err!=nil{
-		return err
-	}
-	if !fi.IsDir(){
-		return errors.New("error: src path is not a dir")
-	}
-	sys := fi.Sys().(*syscall.Stat_t)
-    if sys != nil {
-		cmd:=fmt.Sprintf("chown -R %d:%d %s %s>/dev/null 2>/dev/null", sys.Uid,sys.Gid,dst,dst+".tag")
-	    ccmd:=C.CString(cmd)
-		defer C.free(unsafe.Pointer(ccmd))
-		C.system(ccmd)
-		return nil
+func ChOwner(dst string,addtag bool)error{
+	var cmd string
+	if addtag{
+		cmd=fmt.Sprintf("chown -R %d:%d %s %s >/dev/null 2>/dev/null", ouid,ouid,dst,dst+".tag")
 	}else{
-		return errors.New("System error")
+		cmd=fmt.Sprintf("chown -R %d:%d %s >/dev/null 2>/dev/null", ouid,ouid,dst)
 	}
+	ccmd:=C.CString(cmd)
+	defer C.free(unsafe.Pointer(ccmd))
+	C.system(ccmd)
+	return nil
 }
 
