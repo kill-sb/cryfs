@@ -2,6 +2,7 @@ package main
 
 import(
 	"fmt"
+	"syscall"
 	"strings"
 	"errors"
 	"flag"
@@ -44,6 +45,11 @@ var namemap map[string]int32
 var uuidmap map[string]*core.EncryptedData
 var useridmap map[int32] string
 
+func ComUser(){
+	syscall.Setuid(ouid)
+	syscall.Setgid(ouid)
+}
+
 func LoadConfig(){
 	definpath=os.Getenv("DATA_IN_PATH")
 //	defoutpath=os.Getenv("HOME")+"/.cmitdata"
@@ -82,22 +88,27 @@ func GetFunction() int {
 		count++
 	}*/
 	if(bList){
+		ComUser()
 		ret=core.LIST
 		count++
 	}
 	if(bTrace){
+		ComUser()
 		ret=core.TRACE
 		count++
 	}
 	if(bDec){
+		ComUser()
 		ret=core.DECODE
 		count++
 	}
 	if bEnc{
+		ComUser()
 		ret= core.ENCODE
 		count++
 	}
 	if bShare{
+		ComUser()
 		ret=core.DISTRIBUTE
 		count++
 	}
@@ -106,6 +117,7 @@ func GetFunction() int {
 		count++
 	}
 	if bVer{
+		ComUser()
 		ret=core.VERSION
 		count++
 	}

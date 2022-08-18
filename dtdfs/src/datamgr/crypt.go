@@ -292,9 +292,9 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	ofile:=opath+"/"+pdata.Uuid
 	DoEncodeFileInC(ipath,ofile,passwd)
 	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,linfo.Token)
-	if ouid!=0{
+/*	if ouid!=0{
 		ChOwner(ofile,true);
-	}
+	}*/
 	return pdata.Uuid,nil
 }
 

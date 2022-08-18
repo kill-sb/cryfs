@@ -118,9 +118,9 @@ func shareDir(ipath,opath string, linfo *core.LoginInfo){
 		os.RemoveAll(dst)
 		return
 	}
-	if ouid!=0{
+/*	if ouid!=0{
 		ChOwner(dst,false)
-	}
+	}*/
 //	sinfo.CrTime=core.GetCurTime()
 	err=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{
@@ -222,9 +222,10 @@ func shareFile(ipath,opath string, linfo *core.LoginInfo)error {
 		os.RemoveAll(dst)
 		return err
 	}
+	/*
 	if ouid!=0{
 		ChOwner(dst,false)
-	}
+	}*/
 //	sinfo.CrTime=core.GetCurTime()
 	err=WriteShareInfo(linfo.Token,sinfo)
 	if err!=nil{

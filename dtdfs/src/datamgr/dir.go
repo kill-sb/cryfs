@@ -60,9 +60,9 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
 		}
 		return nil
 	})
-	if ouid!=0{
+/*	if ouid!=0{
 		ChOwner(ofile,true)
-	}
+	}*/
     return pdata.Uuid,nil
 }
 

@@ -7,3 +7,4 @@ modified kernel(finished and tested seems ok)
 //fixme: import will cause file access leaking-- ongoing
 3. default -in -out dir and config file
 4. reduce import files info ?
+//5. setuid back in datamgr in possible switch
