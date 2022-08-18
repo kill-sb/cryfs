@@ -537,6 +537,7 @@ func MountObjs(linfo *core.LoginInfo, inputs []string, tool string){
 			}else{
 					fmt.Println("Register rc error:",err)
 			}
+			ChEncOwner(outpath,outpath+"/"+outuuid)
 			fmt.Println("New data generated:",outuuid)
 		}else{
 			fmt.Println("Empty output, no new data registered")

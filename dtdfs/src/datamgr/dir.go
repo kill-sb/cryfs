@@ -2,11 +2,18 @@ package main
 
 import(
     "os"
+	"unsafe"
     "fmt"
+	"errors"
+	"syscall"
     "path/filepath"
     "strings"
 	core "coredata"
 )
+/*
+#include <stdlib.h>
+*/
+import "C"
 
 func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , error){
     /* 
@@ -55,6 +62,7 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
 		}
 		return nil
 	})
+	ChEncOwner(opath,ofile)
     return pdata.Uuid,nil
 }
 
@@ -129,3 +137,24 @@ func DecodeCSDToDir(ifile,opath string, passwd []byte)error{
 	})
 	return nil
 }
+
+func ChEncOwner(src,dst string)error{
+	fi,err:=os.Stat(src)
+	if err!=nil{
+		return err
+	}
+	if !fi.IsDir(){
+		return errors.New("error: src path is not a dir")
+	}
+	sys := fi.Sys().(*syscall.Stat_t)
+    if sys != nil {
+		cmd:=fmt.Sprintf("chown -R %d:%d %s %s>/dev/null 2>/dev/null", sys.Uid,sys.Gid,dst,dst+".tag")
+	    ccmd:=C.CString(cmd)
+		defer C.free(unsafe.Pointer(ccmd))
+		C.system(ccmd)
+		return nil
+	}else{
+		return errors.New("System error")
+	}
+}
+
