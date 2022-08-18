@@ -390,7 +390,7 @@ func doTraceAll(){
 		token=linfo.Token
 		defer Logout(linfo)
 	}
-
+	fmt.Println("Tracing "+inpath+" ...")
 	ftype:=GetDataType(inpath)
 	switch ftype{
 	case core.ENCDATA:

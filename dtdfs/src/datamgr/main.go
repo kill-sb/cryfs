@@ -179,8 +179,15 @@ func main(){
 	uuidmap =make(map[string]*core.EncryptedData)
 	useridmap=make(map[int32]string)
 	fun:=GetFunction()
-	inpath=strings.TrimSuffix(inpath,"/")
-	outpath=strings.TrimSuffix(outpath,"/")
+	if inpath!=""{
+		inpath=strings.TrimSuffix(inpath,"/")
+	}
+	if mntimport!=""{
+		mntimport=strings.TrimSuffix(mntimport,"/")
+	}
+	if outpath!=""{
+		outpath=strings.TrimSuffix(outpath,"/")
+	}
 	switch fun{
 /*	case core.LOGIN:
 //		doAuth(loginuser)
