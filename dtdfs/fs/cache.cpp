@@ -1,3 +1,47 @@
+/*
+ * cache strategy:
+ * ALL DATA IN CACHE ARE PLAIN
+ * used only for cache read
+ * no dirty page, pages will writeback immediately
+ * 
+ * data structure:
+ *  map<absname,cache_in_file_map> global_map 
+ *  	map<nblock,cache_page> cache_in_file_map
+ *  		cache_page{
+ *  			const char* absname;
+ *  			ulong blk_in_file; 
+ *  			ulong visit_timestamp;
+ *  			char buf[PAGE_SIZE];
+ *  			int buf_len;
+ *  		}
+ *
+ *  map<lru_time, cache_page> lru_list;
+ *
+ * readblk: 
+ *   check cache  -hit-> update lru list -> return buffer
+ * 		|
+ * 		|-miss->encrypt from disk -> "try add cache" -ok/error->return as well
+ *
+ * writeblk:
+ * 	 check cache -hit-> write cache ->update lru-> return
+ * 	 	|
+ * 	 	|-miss->"try and cache"-ok->return
+ * 							|
+ * 							|-error->write back to disk -> return
+ *
+ * try and cache:
+ * 	try to free 1/10 of all pages in lru list
+ *	free page: remove from cache_in_file, lru_list
+ *
+ * umount:
+ *	drop pages in filesytem
+ *
+ * unlink file:
+ * 	drop all cache pages
+ *
+ */
+
+
 #include <map>
 #include <sys/time.h>
 #include <string>
