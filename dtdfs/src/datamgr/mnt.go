@@ -13,7 +13,7 @@ int mount_cmfs(const char* cmfsbin,const char* src, const char* dst,const char* 
     if(fork()==0){
         close(fd[1]);
         dup2(fd[0],0);
-        execlp(cmfsbin,cmfsbin,src,dst,"-o",opt,NULL); // TODO verify checksum later
+        execlp(cmfsbin,cmfsbin,src,dst,"-o","kernel_cache","-o","big_writes", "-o", "max_write=65535", "-o",opt,NULL); // TODO verify checksum later
     }else{
         close(fd[0]);
         write(fd[1],passwd,16);
@@ -237,7 +237,7 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 			}
 			// check readonly
 			if sinfo.LeftUse==0{
-				return rdonly,errors.New(idata+"  invalid user or open times exhausted")
+				return rdonly,errors.New(idata+"  invalid user or open times exhaused")
 			}
 
 			strexp:=strings.Replace(sinfo.Expire," ","T",1)+"+08:00"

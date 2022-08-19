@@ -7,7 +7,7 @@ subdir:
 	make -C fs
 
 cmfs:fs/cmfs
-	ln fs/cmfs cmfs
+	ln -f fs/cmfs cmfs
 
 dtdfs:src/dtdfs/*.go src/coredata/*.go 
 	go build dtdfs
