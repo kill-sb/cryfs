@@ -141,9 +141,9 @@ func DecodeCSDToDir(ifile,opath string, passwd []byte)error{
 func ChOwner(dst string,addtag bool)error{
 	var cmd string
 	if addtag{
-		cmd=fmt.Sprintf("chown -R %d:%d %s %s >/dev/null 2>/dev/null", ouid,ouid,dst,dst+".tag")
+		cmd=fmt.Sprintf("chown -R %d:%d %s %s >/dev/null 2>/dev/null", ouid,ogid,dst,dst+".tag")
 	}else{
-		cmd=fmt.Sprintf("chown -R %d:%d %s >/dev/null 2>/dev/null", ouid,ouid,dst)
+		cmd=fmt.Sprintf("chown -R %d:%d %s >/dev/null 2>/dev/null", ouid,ogid,dst)
 	}
 	ccmd:=C.CString(cmd)
 	defer C.free(unsafe.Pointer(ccmd))

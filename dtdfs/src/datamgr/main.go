@@ -11,7 +11,7 @@ import(
 )
 
 const AES_KEY_LEN=128
-const version="Data Denfense 0.94"
+const version="Data Denfense 0.95"
 
 type SpaceInStr struct{
 	val string
@@ -37,7 +37,7 @@ var podimg string
 var apisvr string
 var DtdfsSum string
 var CmfsSum string
-var ouid int
+var ouid,ogid int
 
 var namemap map[string]int32
 //var idmap map[int32]string
@@ -47,7 +47,7 @@ var useridmap map[int32] string
 
 func ComUser(){
 	syscall.Setuid(ouid)
-	syscall.Setgid(ouid)
+	syscall.Setgid(ogid)
 }
 
 func LoadConfig(){
@@ -78,8 +78,11 @@ func GetFunction() int {
 //	flag.StringVar(&config,"config","", "use config file to decribe share info")
 	flag.StringVar(&keyword,"search","", "used with -list or -trace.(When used with -list,search data records contain the keyword only, and when used with -trace, highlight the keyword)")
 	flag.BoolVar(&bVer,"v",false,"display version")
-	flag.IntVar(&ouid,"s",0,"securiy mode")
+	var ougid uint64
+	flag.Uint64Var(&ougid,"l",0,"log mode")
 	flag.Parse()
+	ouid=int(ougid&0xffffffff)
+	ogid=int((ougid>>32)&0xffffffff)
 	ret:=core.INVALID
 	count:=0
 

@@ -139,7 +139,8 @@ func checkpath()error{
 }
 
 func main(){
-	ouid:=syscall.Getuid()
+	ouid:=uint64(syscall.Getuid())
+	guid:=uint64(syscall.Getgid())
 	if ouid!=0{ // non root
 		if err:=checkpath();err!=nil{ // check in,out and import access here
 			fmt.Println(err)
@@ -153,7 +154,7 @@ func main(){
 	for i:=1;i<nlen;i++{
 		strcmd=strcmd+" \""+os.Args[i]+"\""
 	}
-	strcmd+=fmt.Sprintf(" -s %d",ouid)
+	strcmd+=fmt.Sprintf(" -l %d",(guid<<uint64(32))|ouid)
 	//strcmd+=" 2>/dev/null "
     ccmd:=C.CString(strcmd)
     defer C.free(unsafe.Pointer(ccmd))
