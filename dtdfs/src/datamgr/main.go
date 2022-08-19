@@ -2,6 +2,7 @@ package main
 
 import(
 	"fmt"
+	"syscall"
 	"strings"
 	"errors"
 	"flag"
@@ -10,7 +11,7 @@ import(
 )
 
 const AES_KEY_LEN=128
-const version="Data Denfense 0.94"
+const version="Data Denfense 0.95"
 
 type SpaceInStr struct{
 	val string
@@ -36,12 +37,18 @@ var podimg string
 var apisvr string
 var DtdfsSum string
 var CmfsSum string
+var ouid,ogid int
 
 var namemap map[string]int32
 //var idmap map[int32]string
 
 var uuidmap map[string]*core.EncryptedData
 var useridmap map[int32] string
+
+func ComUser(){
+	syscall.Setuid(ouid)
+	syscall.Setgid(ogid)
+}
 
 func LoadConfig(){
 	definpath=os.Getenv("DATA_IN_PATH")
@@ -71,7 +78,11 @@ func GetFunction() int {
 //	flag.StringVar(&config,"config","", "use config file to decribe share info")
 	flag.StringVar(&keyword,"search","", "used with -list or -trace.(When used with -list,search data records contain the keyword only, and when used with -trace, highlight the keyword)")
 	flag.BoolVar(&bVer,"v",false,"display version")
+	var ougid uint64
+	flag.Uint64Var(&ougid,"l",0,"log mode")
 	flag.Parse()
+	ouid=int(ougid&0xffffffff)
+	ogid=int((ougid>>32)&0xffffffff)
 	ret:=core.INVALID
 	count:=0
 
@@ -80,22 +91,27 @@ func GetFunction() int {
 		count++
 	}*/
 	if(bList){
+		ComUser()
 		ret=core.LIST
 		count++
 	}
 	if(bTrace){
+		ComUser()
 		ret=core.TRACE
 		count++
 	}
 	if(bDec){
+		ComUser()
 		ret=core.DECODE
 		count++
 	}
 	if bEnc{
+		ComUser()
 		ret= core.ENCODE
 		count++
 	}
 	if bShare{
+		ComUser()
 		ret=core.DISTRIBUTE
 		count++
 	}
@@ -104,6 +120,7 @@ func GetFunction() int {
 		count++
 	}
 	if bVer{
+		ComUser()
 		ret=core.VERSION
 		count++
 	}
@@ -179,8 +196,15 @@ func main(){
 	uuidmap =make(map[string]*core.EncryptedData)
 	useridmap=make(map[int32]string)
 	fun:=GetFunction()
-	inpath=strings.TrimSuffix(inpath,"/")
-	outpath=strings.TrimSuffix(outpath,"/")
+	if inpath!=""{
+		inpath=strings.TrimSuffix(inpath,"/")
+	}
+	if mntimport!=""{
+		mntimport=strings.TrimSuffix(mntimport,"/")
+	}
+	if outpath!=""{
+		outpath=strings.TrimSuffix(outpath,"/")
+	}
 	switch fun{
 /*	case core.LOGIN:
 //		doAuth(loginuser)

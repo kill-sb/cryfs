@@ -2,11 +2,16 @@ package main
 
 import(
     "os"
+	"unsafe"
     "fmt"
     "path/filepath"
     "strings"
 	core "coredata"
 )
+/*
+#include <stdlib.h>
+*/
+import "C"
 
 func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , error){
     /* 
@@ -55,6 +60,9 @@ func EncodeDir(ipath string, opath string, linfo *core.LoginInfo) (string , erro
 		}
 		return nil
 	})
+/*	if ouid!=0{
+		ChOwner(ofile,true)
+	}*/
     return pdata.Uuid,nil
 }
 
@@ -129,3 +137,17 @@ func DecodeCSDToDir(ifile,opath string, passwd []byte)error{
 	})
 	return nil
 }
+
+func ChOwner(dst string,addtag bool)error{
+	var cmd string
+	if addtag{
+		cmd=fmt.Sprintf("chown -R %d:%d %s %s >/dev/null 2>/dev/null", ouid,ogid,dst,dst+".tag")
+	}else{
+		cmd=fmt.Sprintf("chown -R %d:%d %s >/dev/null 2>/dev/null", ouid,ogid,dst)
+	}
+	ccmd:=C.CString(cmd)
+	defer C.free(unsafe.Pointer(ccmd))
+	C.system(ccmd)
+	return nil
+}
+

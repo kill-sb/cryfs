@@ -18,6 +18,20 @@ import (
 */
 import "C"
 
+func GetParentDir(path string)string{
+	if path==""{
+		return ""
+	}
+	for{
+		if !strings.HasSuffix(path,"/"){
+			break
+		}
+		path=strings.TrimSuffix(path,"/")
+	}
+	entries:=strings.Split(path,"/")
+	return strings.TrimSuffix(path,entries[len(entries)-1])
+}
+
 func TestRead(path string)error{
 	if err:=syscall.Access(path,4);err!=nil{
 		return errors.New(fmt.Sprintf("%s can't be read, check the pathname or permission.",path))
@@ -27,7 +41,7 @@ func TestRead(path string)error{
 
 func TestWrite(path string)error{
 	if err:=syscall.Access(path,2);err!=nil{
-		return errors.New(fmt.Sprintf("%s can't be written, check the pathname or permission.",path))
+		return errors.New(fmt.Sprintf("%s is not writable, check the pathname or permission.",path))
 	}
 	return nil
 }
@@ -49,11 +63,34 @@ func CheckIn(path string) error{
 }
 
 func CheckOut(path string) error{
+	/*
+	permission check:
+		if exist  
+			-> if isdir  ->check self 
+			-> else if isfile -> check parentdir
+		else // not exist
+			check parentdir
+	*/
 	apath,err:=filepath.Abs(path)
 	if err!=nil{
 		return err
 	}
-	return TestWrite(apath)
+	fi,err:=os.Stat(apath)
+	if err!=nil{ // not exist or no permission
+		pdir:=GetParentDir(apath)
+		if pdir==""{
+			return errors.New("Invalid -out parameter:"+path)
+		}
+		return TestWrite(pdir)
+	}
+	if fi.IsDir(){
+		return TestWrite(apath)
+	}
+	pdir:=GetParentDir(apath)
+	if pdir==""{
+		return errors.New("Invalid -out parameter:"+path)
+	}
+	return TestWrite(pdir)
 }
 
 func CheckTool(path string) error{
@@ -102,7 +139,9 @@ func checkpath()error{
 }
 
 func main(){
-	if syscall.Getuid()!=0{ // non root
+	ouid:=uint64(syscall.Getuid())
+	guid:=uint64(syscall.Getgid())
+	if ouid!=0{ // non root
 		if err:=checkpath();err!=nil{ // check in,out and import access here
 			fmt.Println(err)
 			return
@@ -115,6 +154,7 @@ func main(){
 	for i:=1;i<nlen;i++{
 		strcmd=strcmd+" \""+os.Args[i]+"\""
 	}
+	strcmd+=fmt.Sprintf(" -l %d",(guid<<uint64(32))|ouid)
 	//strcmd+=" 2>/dev/null "
     ccmd:=C.CString(strcmd)
     defer C.free(unsafe.Pointer(ccmd))

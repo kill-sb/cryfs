@@ -292,6 +292,9 @@ func EncodeFile(ipath string, opath string, linfo *core.LoginInfo) (string,error
 	ofile:=opath+"/"+pdata.Uuid
 	DoEncodeFileInC(ipath,ofile,passwd)
 	RecordMetaFromRaw(pdata,linfo.Keylocalkey,passwd,linfo.Token)
+/*	if ouid!=0{
+		ChOwner(ofile,true);
+	}*/
 	return pdata.Uuid,nil
 }
 
@@ -301,10 +304,12 @@ func doDecode(){
 		return
 	}
 	if outpath==""{
-		outpath="./"
+        fmt.Println("You should set outpath explicitly")
+        return
 	}else{
 		os.MkdirAll(outpath,0755)
 	}
+
 	finfo,err:=os.Stat(inpath)
 	if err!=nil{
 		fmt.Println("Can't find ",inpath)
@@ -418,7 +423,8 @@ func doEncode(){
 		return
 	}
 	if outpath==""{
-		outpath="./"
+		fmt.Println("You should set outpath explicitly")
+		return
 	}else{
 		os.MkdirAll(outpath,0755)
 	}
