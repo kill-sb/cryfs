@@ -237,7 +237,7 @@ func ValidateInputs(linfo *core.LoginInfo,inputs []string)(bool, error){
 			}
 			// check readonly
 			if sinfo.LeftUse==0{
-				return rdonly,errors.New(idata+"  invalid user or open times exhaused")
+				return rdonly,errors.New(idata+"  invalid user or open times exhausted")
 			}
 
 			strexp:=strings.Replace(sinfo.Expire," ","T",1)+"+08:00"

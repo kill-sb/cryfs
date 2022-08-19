@@ -11,7 +11,7 @@ import(
 )
 
 const AES_KEY_LEN=128
-const version="Data Denfense 0.95"
+const version="Data Defense 0.95"
 
 type SpaceInStr struct{
 	val string
